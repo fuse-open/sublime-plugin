@@ -1,18 +1,36 @@
 import sublime, sublime_plugin, json, threading, time
 from Fuse.interop_win import *
+from Fuse.cmdParser import *
 
 items = []
 autoCompleteEvent = threading.Event()
 
 def recv(msg):
-	command = json.loads(msg)	
-	suggestions = json.loads(command["Arguments"])["CodeSuggestions"]
+	command = json.loads(msg)
+	parsedRes = CmdParser.ParseCommand(command)
+	name = parsedRes[0]
+	args = parsedRes[1]
+
+	if name == "SetCodeSuggestions":
+		HandleCodeSuggestion(args)
+	if name == "WriteToConsole":
+		WriteToConsole(args)
+
+def WriteToConsole(cmd):
+	print(cmd["Text"])
+
+def HandleCodeSuggestion(cmd):
+	suggestions = cmd["CodeSuggestions"]
 		
 	global items
 	items = []
 	for suggestion in suggestions:
 		suggestionText = suggestion["Suggestion"]
-		text = suggestionText + "\t(" + suggestion["Type"] + ")" 
+		text = suggestionText + "\t(" + suggestion["Type"] + ")"
+
+		if suggestion["PreText"] != "":
+			suggestionText = suggestion["PreText"] + suggestion["PostText"]
+
 		items.append((text, suggestionText))
 
 	autoCompleteEvent.set()
@@ -31,7 +49,7 @@ class DevconnectCommand(sublime_plugin.TextCommand):
 
 class HandshakeCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
-		interop.Send(json.dumps({"Command":"SetFeatures", "Arguments":{"Features":[{"Name":"TextManager"}, {"Name":"CodeCompletion"}]}}))
+		interop.Send(json.dumps({"Command":"SetFeatures", "Arguments":{"Features":[{"Name":"TextManager"}, {"Name":"CodeCompletion"}, {"Name": "Console"}]}}))
 
 class FuseAutoComplete(sublime_plugin.EventListener):
 	def RequestAutoComplete(self, view, prefix):
@@ -54,6 +72,13 @@ class FuseAutoComplete(sublime_plugin.EventListener):
 		
 		data = (items, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
 		return data
+
+	def on_commit_completion(self):
+		pass
+
+	def on_text_command(self, view, command_name, args):
+		if(command_name == "commit_completion"):
+			print("Commit completion")
 
 class DisconnectCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
