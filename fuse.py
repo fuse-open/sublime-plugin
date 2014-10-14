@@ -1,6 +1,7 @@
 import sublime, sublime_plugin, json, threading, time
 from Fuse.interop_win import *
-from Fuse.cmdParser import *
+from Fuse.cmd_parser import *
+from Fuse.fuse_util import *
 
 items = []
 autoCompleteEvent = threading.Event()
@@ -62,6 +63,9 @@ class FuseAutoComplete(sublime_plugin.EventListener):
 			"Type": "uno", "Caret":caret}}))
 
 	def on_query_completions(self, view, prefix, locations):
+		if GetSetting("fuse_completion") == False:
+			return
+
 		if not interop.IsConnected():
 			view.run_command("devconnect")
 
@@ -72,13 +76,6 @@ class FuseAutoComplete(sublime_plugin.EventListener):
 		
 		data = (items, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
 		return data
-
-	def on_commit_completion(self):
-		pass
-
-	def on_text_command(self, view, command_name, args):
-		if(command_name == "commit_completion"):
-			print("Commit completion")
 
 class DisconnectCommand(sublime_plugin.TextCommand):
 	def run(self, edit):
