@@ -1,7 +1,7 @@
 import struct
 import threading
 
-class Interop:
+class InteropWin:
 	def __init__(self, on_recv):
 		self.inputPipe = None
 		self.outputPipe = None
@@ -14,14 +14,24 @@ class Interop:
 
 	def Connect(self):
 		print("Connecting...")
-		self.inputPipe = open(r'\\.\pipe\FuseOutput', "rb")
-		self.outputPipe = open(r"\\.\pipe\FuseInput", "wb")
-		self.StartPollMessages()
+		try:		
+			self.inputPipe = open(r'\\.\pipe\FuseOutput', "rb")
+			self.outputPipe = open(r"\\.\pipe\FuseInput", "wb")
+			self.StartPollMessages()
+		except FileNotFoundError:
+			print("Couldn't connect to fuse")
 
 	def Send(self, msg):
-		msgInBytes = bytes(str(len(msg)) + "\n" + msg, "UTF-8")
-		self.outputPipe.write(msgInBytes)
-		self.outputPipe.seek(0)
+		try:
+			if self.outputPipe == None:
+				return
+
+			msgInBytes = bytes(str(len(msg)) + "\n" + msg, "UTF-8")
+			self.outputPipe.write(msgInBytes)
+			self.outputPipe.seek(0)
+		except (IOError, ValueError, OSError):
+			self.Disconnect()
+			raise
 
 	def StartPollMessages(self):		
 		self.pipeWorkerStopEvent = threading.Event()
@@ -37,7 +47,7 @@ class Interop:
 
 	def PollMessage(self):
 		while not self.pipeWorkerStopEvent.is_set():
-			if self.inputPipe is None:
+			if self.inputPipe == None:
 				break
 
 			lengthStr = self.inputPipe.readline()			
@@ -56,10 +66,14 @@ class Interop:
 
 	def Disconnect(self):		
 		print("Disconnecting...")
-		self.StopPollMessages()
-		if self.outputPipe:
-			self.outputPipe.close()
-			self.outputPipe = None
-		if self.inputPipe:
-			self.inputPipe.close()
+		try:
+			self.StopPollMessages()
+			if self.outputPipe:
+				self.outputPipe.close()			
+			if self.inputPipe:
+				self.inputPipe.close()
+		except IOError:
+			pass
+		finally:
 			self.inputPipe = None
+			self.outputPipe = None				
