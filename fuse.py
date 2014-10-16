@@ -1,5 +1,5 @@
 import sublime, sublime_plugin 
-import json, threading, time, sys
+import json, threading, time, sys, os
 from Fuse.interop_win import *
 from Fuse.interop_unix import *
 from Fuse.cmd_parser import *
@@ -19,9 +19,14 @@ def recv(msg):
 		HandleCodeSuggestion(args)
 	if name == "WriteToConsole":
 		WriteToConsole(args)
+	if name == "Error":
+		Error(args)
 
 def WriteToConsole(cmd):
-	print(cmd["Text"])
+	print("Fuse: " + cmd["Text"])
+
+def Error(cmd):
+	print("Fuse - Error: " + cmd["ErrorString"])
 
 def HandleCodeSuggestion(cmd):
 	suggestions = cmd["CodeSuggestions"]
@@ -50,9 +55,6 @@ def plugin_loaded():
 	items = []
 	autoCompleteEvent = threading.Event()
 
-	#if sys.platform == "win32":	
-	#	interop = InteropWin(recv)
-	#else:
 	interop = InteropUnix(recv)
 
 	thread = threading.Thread(target = TryConnect)
@@ -68,6 +70,10 @@ def TryConnect():
 
 		time.sleep(1)
 
+def GetExtension(path):
+	base = os.path.basename(path)
+	return os.path.splitext(base)[0] 
+
 class ConnectCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
 		interop.Connect()
@@ -82,20 +88,24 @@ class HandshakeCommand(sublime_plugin.ApplicationCommand):
 		interop.Send(json.dumps({"Command":"SetFeatures", "Arguments":{"Features":[{"Name":"TextManager"}, {"Name":"CodeCompletion"}, {"Name": "Console"}]}}))
 
 class FuseAutoComplete(sublime_plugin.EventListener):
-	def RequestAutoComplete(self, view, prefix):
+	def RequestAutoComplete(self, view, prefix, syntaxName):		
 		fileName = view.file_name()
 		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
 		interop.Send(json.dumps({"Command":"RequestCodeCompletion", "Arguments":{
 			"QueryID": 1,
 			"Path": fileName, "Text":text, 
-			"Type": "uno", "Caret":caret}}))
+			"Type": syntaxName, "Caret":caret}}))
 
 	def on_query_completions(self, view, prefix, locations):
 		if GetSetting("fuse_completion") == False or not interop.IsConnected():
 			return
 
-		self.RequestAutoComplete(view, prefix)
+		syntaxName = GetExtension(view.settings().get("syntax"))
+		if syntaxName != "Uno" and syntaxName != "UX":
+			return
+
+		self.RequestAutoComplete(view, prefix, syntaxName)
 
 		autoCompleteEvent.wait(0.2)
 		
