@@ -62,7 +62,10 @@ def plugin_loaded():
 def TryConnect():
 	while True:
 		if GetSetting("fuse_enabled") == True and not interop.IsConnected():
-			sublime.run_command("devconnect");
+			interop.Connect()
+			if interop.IsConnected():
+				sublime.run_command("handshake")
+
 		time.sleep(1)
 
 class ConnectCommand(sublime_plugin.ApplicationCommand):
@@ -92,7 +95,7 @@ class FuseAutoComplete(sublime_plugin.EventListener):
 		if GetSetting("fuse_completion") == False or not interop.IsConnected():
 			return
 
-		self.RequestAutoComplete(view, prefix)			
+		self.RequestAutoComplete(view, prefix)
 
 		autoCompleteEvent.wait(0.2)
 		
