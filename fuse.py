@@ -66,28 +66,25 @@ def TryConnect():
 		if GetSetting("fuse_enabled") == True and not interop.IsConnected():
 			interop.Connect()
 			if interop.IsConnected():
-				sublime.run_command("handshake")
+				SendHandshake()
 
 		time.sleep(1)
 
 def GetExtension(path):
 	base = os.path.basename(path)
-	return os.path.splitext(base)[0] 
+	return os.path.splitext(base)[0]
 
-class ConnectCommand(sublime_plugin.ApplicationCommand):
-	def run(self):
-		interop.Connect()
+def SendHandshake():
+	interop.Send(json.dumps({"Command":"SetFeatures", "Arguments":
+		{"Features":[{"Name":"TextManager"}, {"Name":"CodeCompletion"}, {"Name": "Console"}]}}))
 
-class DevconnectCommand(sublime_plugin.ApplicationCommand):
-	def run(self):
-		sublime.run_command("connect")
-		sublime.run_command("handshake")
-
-class HandshakeCommand(sublime_plugin.ApplicationCommand):
-	def run(self):
-		interop.Send(json.dumps({"Command":"SetFeatures", "Arguments":{"Features":[{"Name":"TextManager"}, {"Name":"CodeCompletion"}, {"Name": "Console"}]}}))
+def SendInvalidation(view):
+	interop.Send(json.dumps({"Command":"InvalidateFile", "Arguments":{"Path": view.file_name()}}))
 
 class FuseAutoComplete(sublime_plugin.EventListener):
+	def on_post_save_async(self, view):
+		SendInvalidation(view)
+
 	def RequestAutoComplete(self, view, prefix, syntaxName):		
 		fileName = view.file_name()
 		text = view.substr(sublime.Region(0,view.size()))
