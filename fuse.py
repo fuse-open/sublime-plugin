@@ -21,12 +21,25 @@ def recv(msg):
 		WriteToConsole(args)
 	if name == "Error":
 		Error(args)
+	if name == "GoToDefinitionResponse":
+		GoToDefinition(args)
 
 def WriteToConsole(cmd):
 	print("Fuse: " + cmd["Text"])
 
 def Error(cmd):
 	print("Fuse - Error: " + cmd["ErrorString"])
+
+def GoToDefinition(cmd):
+	window = sublime.active_window()
+	path = cmd["Path"]
+
+	view = window.find_open_file(path)
+	if view == None:
+		view = window.open_file(cmd["Path"], sublime.TRANSIENT)
+
+	view.run_command("setcaret", {"caretPos": cmd["Offset"]})
+	window.focus_view(view)		
 
 def HandleCodeSuggestion(cmd):
 	suggestions = cmd["CodeSuggestions"]
@@ -81,6 +94,9 @@ def SendHandshake():
 def SendInvalidation(view):
 	interop.Send(json.dumps({"Command":"InvalidateFile", "Arguments":{"Path": view.file_name()}}))
 
+def IsSupportedSyntax(syntaxName):	
+	return syntaxName == "Uno" or syntaxName == "UX"
+
 class FuseAutoComplete(sublime_plugin.EventListener):
 	def on_post_save_async(self, view):
 		SendInvalidation(view)
@@ -99,7 +115,7 @@ class FuseAutoComplete(sublime_plugin.EventListener):
 			return
 
 		syntaxName = GetExtension(view.settings().get("syntax"))
-		if syntaxName != "Uno" and syntaxName != "UX":
+		if not IsSupportedSyntax(syntaxName):
 			return
 
 		self.RequestAutoComplete(view, prefix, syntaxName)
@@ -112,3 +128,27 @@ class FuseAutoComplete(sublime_plugin.EventListener):
 class DisconnectCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
 		interop.Disconnect()
+
+class SetcaretCommand(sublime_plugin.TextCommand):
+	def run(self, edit, caretPos):
+		print(caretPos)
+		view = self.view
+		view.sel().clear()
+		view.sel().add(sublime.Region(caretPos, caretPos))
+		view.show_at_center(caretPos)
+
+class GotodefinitionCommand(sublime_plugin.TextCommand):
+	def run(self, edit):		
+		view = self.view
+
+		syntaxName = GetExtension(view.settings().get("syntax"))
+		text = view.substr(sublime.Region(0,view.size()))
+		if not IsSupportedSyntax(syntaxName) or len(view.sel()) == 0:
+			return
+
+		caret = view.sel()[0].a
+		interop.Send(json.dumps({"Command": "GoToDefinition", "Arguments":{
+			"Path": view.file_name(),
+			"Text": text,
+			"Caret": caret,
+			"QueryID": 0}}))

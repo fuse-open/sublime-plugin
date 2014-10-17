@@ -1,0 +1,6 @@
+[
+    {
+        "caption": "Go to definition",
+        "command": "gotodefinition"
+    }
+]
