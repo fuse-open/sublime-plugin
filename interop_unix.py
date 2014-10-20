@@ -32,6 +32,9 @@ class InteropUnix:
 		self.StartPollMessages()				
 
 	def Send(self, msg):
+		if not self.IsConnected():
+			return;
+
 		try:
 			msgInBytes = bytes(str(len(msg)) + "\n" + msg, "UTF-8")
 			self.socketMutex.acquire()
