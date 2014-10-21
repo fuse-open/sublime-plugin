@@ -34,6 +34,9 @@ def Error(cmd):
 caretHack = -1
 
 def GoToDefinition(cmd):
+	if cmd["FoundDefinition"] == False:
+		return
+
 	window = sublime.active_window()
 	path = cmd["Path"]
 
