@@ -10,6 +10,7 @@ items = None
 autoCompleteEvent = None
 closeEvent = None
 interop = None
+buildResults = BuildResults()
 
 def Recv(msg):
 	command = json.loads(msg)
@@ -35,14 +36,7 @@ def Error(cmd):
 	print("Fuse - Error: " + cmd["ErrorString"])
 
 def BuildEventRaised(cmd):
-	window = sublime.active_window()
-	path = cmd["Path"]
-
-	view = window.find_open_file(path)
-	if view == None:		
-		view = window.open_file(cmd["Path"], sublime.TRANSIENT)
-	else:
-		window.focus_view(view)
+	buildResults.AddError(cmd)
 
 def HandleCodeSuggestion(cmd):
 	suggestions = cmd["CodeSuggestions"]
@@ -93,7 +87,7 @@ def TryConnect():
 
 def SendHandshake():
 	interop.Send(json.dumps({"Command":"SetFeatures", "Arguments":
-		{"Features":[{"Name":"CodeCompletion"}, {"Name": "Console"}]}}))
+		{"Features":[{"Name":"CodeCompletion"}, {"Name": "Console"}, {"Name": "BuildEvent"}]}}))
 
 def SendInvalidation(view):
 	interop.Send(json.dumps({"Command":"InvalidateFile", "Arguments":{"Path": view.file_name()}}))

@@ -45,6 +45,6 @@
 		</dict>
 	</array>
 	<key>scopeName</key>
-	<string>text.find-in-files</string>
+	<string>text.build-results</string>
 </dict>
 </plist>

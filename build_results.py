@@ -1,39 +1,96 @@
 import sublime, sublime_plugin
 
+def NameRegions(view):
+	return view.find_by_selector("entity.name.filename.find-in-files")
+
+def FileRegions(view):
+	regions = NameRegions(view)
+	lastRegion = view.find("^\!\=", 0)
+	newRegions = []
+	for i in range(0, len(regions)):
+		lastPoint = lastRegion.a - 1
+		if i + 1 < len(regions):
+			lastPoint = regions[i+1].a - 1
+
+		newRegions.append(sublime.Region(regions[i].b, lastPoint - 1))
+	return newRegions
+
 class BuildResults:
-	def __init__(self, cmd):
-		self.__CreateViewModel(cmd)
+	def __init__(self):
+		self.__output = ""
+		self.__CreateViewModel()		
 	
-	def __CreateViewModel(self, cmd):
-		pass
+	def __CreateViewModel(self):
+		self.__output = "- Errors -\n"
+
+	def AddError(self, cmd):
+		filePath = cmd["Path"]
+		startLine = cmd["StartPosition"]["Line"]
+		message = cmd["Message"]
+		self.__output += "{Path}:\n\t{Line}:{Message}".format(Path = filePath, Line = startLine, Message = message)
+		self.Show()
 
 	def Show(self):
 		window = sublime.active_window()
-		window.run_command("build_results")
+		window.run_command("build_results", { "data": self.__output })
 
 class BuildResultsCommand(sublime_plugin.WindowCommand):
-	def run(self):		
+	def run(self, data):		
 		window = self.window
 		view = window.create_output_panel("FuseBuildResults")
 		view.set_read_only(False)
 		view.set_name("Fuse - Build Results")		
 		view.set_syntax_file("Packages/Fuse/Build Results.tmLanguage")		
-		view.run_command("append", {"characters": text})
-		
-		regions = view.find_all("^([^ ].*):$", 0)
-		lastRegion = view.find("^\!\=", 0)
-		newRegions = []
-		for i in range(0, len(regions)):
-			lastPoint = lastRegion.a - 1
-			if i + 1 < len(regions):
-				lastPoint = regions[i+1].a
+		view.run_command("append", {"characters": data})
 
-			newRegions.append(sublime.Region(regions[i].b, lastPoint - 1)) 
-
-		view.fold(newRegions)
+		view.fold(FileRegions(view))
 		view.set_read_only(True)
 		window.run_command("show_panel", {"panel": "output.FuseBuildResults"})
 
+class GotoLocationCommand(sublime_plugin.TextCommand):
+	def run(self, edit):
+		view = self.view
+		window = view.window()
+		sel = view.sel()[0]
+		scope = view.scope_name(sel.a)
+
+		if scope.find(".name.") > -1:
+			filePath = view.substr(view.extract_scope(sel.a))
+			window.open_file(filePath+":0", sublime.ENCODED_POSITION)
+		else:
+			allLocations = view.find_by_selector("constant.numeric.line-number.match.find-in-files")
+			foundSelLoc = None
+			for location in allLocations:
+				if view.line(location).contains(sel):
+					foundSelLoc = location
+					break
+
+			if foundSelLoc == None:
+				return
+
+			fileRegions = FileRegions(view)
+
+			foundRegion = None
+			for region in fileRegions:
+				if region.contains(sel):
+					foundRegion = sublime.Region(region.a-1, region.b)
+
+			if foundRegion != None:
+				nameRegions = NameRegions(view)
+				for region in nameRegions:
+					if region.intersects(foundRegion) == True:
+						filePath = view.substr(view.extract_scope(region.a+1))
+						line = view.substr(foundSelLoc)						
+						window.open_file(filePath+":" + line, sublime.ENCODED_POSITION)
+						break
+
+
+
+class BuildResultListener(sublime_plugin.EventListener):
+	def on_text_command(self, view, command_name, args):
+		if command_name == "drag_select" and "by" in args.keys() and args["by"] == "words":
+			view.run_command("goto_location")
+				
 
 text = r"""- Errors -
 
