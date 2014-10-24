@@ -1,6 +1,5 @@
 import sublime, sublime_plugin 
 import json, threading, time, sys, os
-from Fuse.interop_win import *
 from Fuse.interop_unix import *
 from Fuse.cmd_parser import *
 from Fuse.fuse_util import *
@@ -10,7 +9,7 @@ autoCompleteEvent = None
 closeEvent = None
 interop = None
 
-def recv(msg):
+def Recv(msg):
 	command = json.loads(msg)
 	parsedRes = CmdParser.ParseCommand(command)
 	name = parsedRes[0]
@@ -24,6 +23,8 @@ def recv(msg):
 		Error(args)
 	if name == "GoToDefinitionResponse":
 		GoToDefinition(args)
+	if name == "BuildEventRaised":
+		BuildEventRaised(args)
 
 def WriteToConsole(cmd):
 	print("Fuse: " + cmd["Text"])
@@ -31,31 +32,15 @@ def WriteToConsole(cmd):
 def Error(cmd):
 	print("Fuse - Error: " + cmd["ErrorString"])
 
-caretHack = -1
-
-def GoToDefinition(cmd):
-	if cmd["FoundDefinition"] == False:
-		return
-
+def BuildEventRaised(cmd):
 	window = sublime.active_window()
 	path = cmd["Path"]
-
-	global caretHack
-	caretHack = cmd["Offset"]
 
 	view = window.find_open_file(path)
 	if view == None:		
 		view = window.open_file(cmd["Path"], sublime.TRANSIENT)
-		sublime.set_timeout(SetCaretTimeout, 100)
 	else:
-		window.focus_view(view)	
-		SetCaretTimeout()
-
-def SetCaretTimeout():	
-	global caretHack
-	if caretHack >= 0:
-		sublime.active_window().active_view().run_command("setcaret", {"caretPos": caretHack})		
-		caretHack = -1
+		window.focus_view(view)
 
 def HandleCodeSuggestion(cmd):
 	suggestions = cmd["CodeSuggestions"]
@@ -85,7 +70,7 @@ def plugin_loaded():
 	autoCompleteEvent = threading.Event()
 	closeEvent = threading.Event()
 
-	interop = InteropUnix(recv)
+	interop = InteropUnix(Recv)
 
 	thread = threading.Thread(target = TryConnect)
 	thread.daemon = True
@@ -102,10 +87,7 @@ def TryConnect():
 				SendHandshake()
 
 		time.sleep(1)
-
-def GetExtension(path):
-	base = os.path.basename(path)
-	return os.path.splitext(base)[0]
+	interop.Disconnect()
 
 def SendHandshake():
 	interop.Send(json.dumps({"Command":"SetFeatures", "Arguments":
@@ -114,10 +96,7 @@ def SendHandshake():
 def SendInvalidation(view):
 	interop.Send(json.dumps({"Command":"InvalidateFile", "Arguments":{"Path": view.file_name()}}))
 
-def IsSupportedSyntax(syntaxName):	
-	return syntaxName == "Uno" or syntaxName == "UX"
-
-class FuseAutoComplete(sublime_plugin.EventListener):
+class FuseEventListener(sublime_plugin.EventListener):
 	def on_post_save_async(self, view):
 		SendInvalidation(view)		
 
@@ -149,14 +128,13 @@ class DisconnectCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
 		interop.Disconnect()
 
-class SetcaretCommand(sublime_plugin.TextCommand):
-	def run(self, edit, caretPos):
-		view = self.view		
-		view.sel().clear()
-		view.sel().add(sublime.Region(caretPos, caretPos))
-		view.show_at_center(caretPos)
+class ShowErrorLine(sublime_plugin.TextCommand):
+	def run(self, edit, key, region):
+		view = self.view
+		view.add_regions(key, [region], "keyword", "bookmark", 
+			sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE | sublime.PERSISTENT | sublime.DRAW_SQUIGGLY_UNDERLINE)
 
-class GotodefinitionCommand(sublime_plugin.TextCommand):
+class Goto_definitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
 		view = self.view
 
