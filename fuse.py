@@ -3,6 +3,8 @@ import json, threading, time, sys, os
 from Fuse.interop_unix import *
 from Fuse.cmd_parser import *
 from Fuse.fuse_util import *
+from Fuse.go_to_definition import *
+from Fuse.build_results import *
 
 items = None
 autoCompleteEvent = None
@@ -22,7 +24,7 @@ def Recv(msg):
 	if name == "Error":
 		Error(args)
 	if name == "GoToDefinitionResponse":
-		GoToDefinition(args)
+		GoToDefinition(args)		
 	if name == "BuildEventRaised":
 		BuildEventRaised(args)
 
@@ -98,7 +100,7 @@ def SendInvalidation(view):
 
 class FuseEventListener(sublime_plugin.EventListener):
 	def on_post_save_async(self, view):
-		SendInvalidation(view)		
+		SendInvalidation(view)
 
 	def RequestAutoComplete(self, view, prefix, syntaxName):		
 		fileName = view.file_name()
@@ -134,15 +136,15 @@ class ShowErrorLine(sublime_plugin.TextCommand):
 		view.add_regions(key, [region], "keyword", "bookmark", 
 			sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE | sublime.PERSISTENT | sublime.DRAW_SQUIGGLY_UNDERLINE)
 
-class Goto_definitionCommand(sublime_plugin.TextCommand):
+class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
 		view = self.view
 
-		syntaxName = GetExtension(view.settings().get("syntax"))
-		text = view.substr(sublime.Region(0,view.size()))
+		syntaxName = GetExtension(view.settings().get("syntax"))		
 		if not IsSupportedSyntax(syntaxName) or len(view.sel()) == 0:
 			return
 
+		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
 		interop.Send(json.dumps({"Command": "GoToDefinition", "Arguments":{
 			"Path": view.file_name(),

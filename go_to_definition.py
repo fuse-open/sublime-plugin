@@ -4,9 +4,9 @@ import Fuse.fuse_util
 class GoToDefinition:
 	def __init__(self, cmd):
 		self.caretHack = -1
-		self.GoToDefinitionInternal(cmd)
+		self.__GoToDefinition(cmd)
 
-	def GoToDefinitionInternal(self, cmd):
+	def __GoToDefinition(self, cmd):
 		if cmd["FoundDefinition"] == False:
 			return
 
