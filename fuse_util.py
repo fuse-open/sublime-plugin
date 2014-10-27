@@ -11,3 +11,7 @@ def IsSupportedSyntax(syntaxName):
 def GetExtension(path):
 	base = os.path.basename(path)
 	return os.path.splitext(base)[0]
+
+def LoadFile(filePath):
+	f = open(filePath, "r")
+	return f.read()

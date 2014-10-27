@@ -1,4 +1,7 @@
 import sublime, sublime_plugin
+from Fuse.fuse_util import *
+
+paths = []
 
 def NameRegions(view):
 	return view.find_by_selector("entity.name.filename.find-in-files")
@@ -21,8 +24,10 @@ def FileRegions(view):
 class BuildResults:
 	def __init__(self):
 		self.__output = ""
-		self.__CreateViewModel()		
-	
+		self.__CreateViewModel()
+		global paths	
+		paths = []
+
 	def __CreateViewModel(self):
 		self.__output = "- Errors -\n"
 
@@ -31,7 +36,33 @@ class BuildResults:
 		startLine = cmd["StartPosition"]["Line"]
 		message = cmd["Message"]		
 
-		self.__output += "\n{Path}:\n   {Line}: - {Message} -\n".format(Path = filePath, Line = startLine, Message = message)
+		fileData = LoadFile(filePath)
+		lines = fileData.split('\n')
+		line = int(startLine)
+
+		dataBefore = ""
+		for i in range(line - 5, line-1):
+			if i < 0:
+				continue
+			if i > len(lines):
+				continue
+
+			dataBefore += "   " + str(i+1) + " " + lines[i] + "\n"
+
+		dataAfter = ""
+		for i in range(line, line+5):
+			if i < 0:
+				continue
+			if i >= len(lines):
+				continue
+
+			dataAfter += "   " + str(i+1) + " " + lines[i] + "\n"
+
+		paths.append([len(self.__output) + 1, filePath])		
+
+		self.__output += "\n{Message} - {Path}:\n{DataBefore}   {Line}:{LineData}\n{DataAfter}".format(
+			Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
+
 		self.Show()
 
 	def Show(self):
@@ -49,9 +80,23 @@ class BuildResultsCommand(sublime_plugin.WindowCommand):
 
 		view.fold(FileRegions(view))
 		view.set_read_only(True)
+
+		codePoints = view.find_by_selector("constant.numeric.line-number.match.find-in-files")
+		lines = []
+		for codePoint in codePoints:
+			lines.append(view.line(codePoint))
+
+		view.add_regions("errors", lines, "keyword", "bookmark", 
+			sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE | sublime.PERSISTENT | sublime.DRAW_SQUIGGLY_UNDERLINE)
+
 		window.run_command("show_panel", {"panel": "output.FuseBuildResults"})
 
 class GotoLocationCommand(sublime_plugin.TextCommand):
+	def GetPath(self, region):
+		for path in paths:
+			if region.contains(path[0]):
+				return path[1]
+
 	def run(self, edit):
 		view = self.view
 		window = view.window()
@@ -59,7 +104,8 @@ class GotoLocationCommand(sublime_plugin.TextCommand):
 		scope = view.scope_name(sel.a)
 
 		if scope.find(".name.") > -1:
-			filePath = view.substr(view.extract_scope(sel.a))
+			scope = view.extract_scope(sel.a)
+			filePath = self.GetPath(scope)
 			window.open_file(filePath+":0", sublime.ENCODED_POSITION)
 		else:
 			allLocations = view.find_by_selector("constant.numeric.line-number.match.find-in-files")
@@ -83,7 +129,8 @@ class GotoLocationCommand(sublime_plugin.TextCommand):
 				nameRegions = NameRegions(view)
 				for region in nameRegions:
 					if region.intersects(foundRegion) == True:
-						filePath = view.substr(view.extract_scope(region.a+1))
+						scope = view.extract_scope(region.a+1)			
+						filePath = self.GetPath(scope)
 						line = view.substr(foundSelLoc)						
 						window.open_file(filePath+":" + line, sublime.ENCODED_POSITION)
 						break
