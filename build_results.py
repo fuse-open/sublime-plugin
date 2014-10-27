@@ -6,6 +6,9 @@ def NameRegions(view):
 def FileRegions(view):
 	regions = NameRegions(view)
 	lastRegion = view.find("^\!\=", 0)
+	if lastRegion.a < 0:
+		lastRegion = sublime.Region(view.size(), 0)
+
 	newRegions = []
 	for i in range(0, len(regions)):
 		lastPoint = lastRegion.a - 1
@@ -26,8 +29,9 @@ class BuildResults:
 	def AddError(self, cmd):
 		filePath = cmd["Path"]
 		startLine = cmd["StartPosition"]["Line"]
-		message = cmd["Message"]
-		self.__output += "{Path}:\n\t{Line}:{Message}".format(Path = filePath, Line = startLine, Message = message)
+		message = cmd["Message"]		
+
+		self.__output += "\n{Path}:\n   {Line}: - {Message} -\n".format(Path = filePath, Line = startLine, Message = message)
 		self.Show()
 
 	def Show(self):
@@ -88,7 +92,7 @@ class GotoLocationCommand(sublime_plugin.TextCommand):
 
 class BuildResultListener(sublime_plugin.EventListener):
 	def on_text_command(self, view, command_name, args):
-		if command_name == "drag_select" and "by" in args.keys() and args["by"] == "words":
+		if command_name == "drag_select" and "by" in args.keys() and args["by"] == "words" and view.name() == "Fuse - Build Results":
 			view.run_command("goto_location")
 				
 

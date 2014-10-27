@@ -11,6 +11,7 @@ autoCompleteEvent = None
 closeEvent = None
 interop = None
 buildResults = BuildResults()
+connectThread = None
 
 def Recv(msg):
 	command = json.loads(msg)
@@ -28,6 +29,9 @@ def Recv(msg):
 		GoToDefinition(args)		
 	if name == "BuildEventRaised":
 		BuildEventRaised(args)
+	if name == "NewBuild":
+		global buildResults
+		buildResults = BuildResults()
 
 def WriteToConsole(cmd):
 	print("Fuse: " + cmd["Text"])
@@ -68,12 +72,15 @@ def plugin_loaded():
 
 	interop = InteropUnix(Recv)
 
-	thread = threading.Thread(target = TryConnect)
-	thread.daemon = True
-	thread.start()
+	global connectThread
+
+	connectThread = threading.Thread(target = TryConnect)
+	connectThread.daemon = True
+	connectThread.start()
 
 def plugin_unloaded():
 	closeEvent.set()
+	connectThread.join(1)
 
 def TryConnect():	
 	while not closeEvent.is_set():
