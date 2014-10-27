@@ -58,7 +58,7 @@ class BuildResults:
 
 			dataAfter += "   " + str(i+1) + " " + lines[i] + "\n"
 
-		paths.append([len(self.__output) + 1, filePath])		
+		paths.append([len(self.__output) + 1, filePath, line])		
 
 		self.__output += "\n{Message} - {Path}:\n{DataBefore}   {Line}:{LineData}\n{DataAfter}".format(
 			Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
@@ -95,7 +95,7 @@ class GotoLocationCommand(sublime_plugin.TextCommand):
 	def GetPath(self, region):
 		for path in paths:
 			if region.contains(path[0]):
-				return path[1]
+				return (path[1], path[2])
 
 	def run(self, edit):
 		view = self.view
@@ -106,7 +106,7 @@ class GotoLocationCommand(sublime_plugin.TextCommand):
 		if scope.find(".name.") > -1:
 			scope = view.extract_scope(sel.a)
 			filePath = self.GetPath(scope)
-			window.open_file(filePath+":0", sublime.ENCODED_POSITION)
+			window.open_file(filePath[0]+":"+str(filePath[1]), sublime.ENCODED_POSITION)
 		else:
 			allLocations = view.find_by_selector("constant.numeric.line-number.match.find-in-files")
 			foundSelLoc = None
@@ -130,12 +130,10 @@ class GotoLocationCommand(sublime_plugin.TextCommand):
 				for region in nameRegions:
 					if region.intersects(foundRegion) == True:
 						scope = view.extract_scope(region.a+1)			
-						filePath = self.GetPath(scope)
+						filePath = self.GetPath(scope)[0]
 						line = view.substr(foundSelLoc)						
 						window.open_file(filePath+":" + line, sublime.ENCODED_POSITION)
 						break
-
-
 
 class BuildResultListener(sublime_plugin.EventListener):
 	def on_text_command(self, view, command_name, args):
