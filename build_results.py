@@ -2,6 +2,7 @@ import sublime, sublime_plugin
 from Fuse.fuse_util import *
 
 paths = []
+outputPanel = None
 
 def NameRegions(view):
 	return view.find_by_selector("entity.name.filename.find-in-files")
@@ -69,10 +70,22 @@ class BuildResults:
 		window = sublime.active_window()
 		window.run_command("build_results", { "data": self.__output })
 
+	def Close(self):
+		global outputPanel
+
+		if outputPanel:
+			sublime.active_window().run_command("hide_panel", {"cancel": True})
+			outputPanel = None
+		else:
+			self.Show()
+
 class BuildResultsCommand(sublime_plugin.WindowCommand):
-	def run(self, data):		
+	def run(self, data):
+		global outputPanel
+
 		window = self.window
 		view = window.create_output_panel("FuseBuildResults")
+		outputPanel = view
 		view.set_read_only(False)
 		view.set_name("Fuse - Build Results")		
 		view.set_syntax_file("Packages/Fuse/Build Results.tmLanguage")		
@@ -108,13 +121,10 @@ class GotoLocationCommand(sublime_plugin.TextCommand):
 			filePath = self.GetPath(scope)
 			window.open_file(filePath[0]+":"+str(filePath[1]), sublime.ENCODED_POSITION)
 		else:
-			allLocations = view.find_by_selector("constant.numeric.line-number.match.find-in-files")
-			foundSelLoc = None
-			for location in allLocations:
-				if view.line(location).contains(sel):
-					foundSelLoc = location
-					break
+			self.OpenBasedOnNumericLine(window, view, sel)
 
+	def OpenBasedOnNumericLine(self, window, view, sel):
+			foundSelLoc = self.FindSelectionLocation(view, sel)
 			if foundSelLoc == None:
 				return
 
@@ -128,12 +138,18 @@ class GotoLocationCommand(sublime_plugin.TextCommand):
 			if foundRegion != None:
 				nameRegions = NameRegions(view)
 				for region in nameRegions:
-					if region.intersects(foundRegion) == True:
+					if region.intersects(foundRegion):
 						scope = view.extract_scope(region.a+1)			
 						filePath = self.GetPath(scope)[0]
 						line = view.substr(foundSelLoc)						
 						window.open_file(filePath+":" + line, sublime.ENCODED_POSITION)
 						break
+
+	def FindSelectionLocation(self, view, sel):
+		allLocations = view.find_by_selector("constant.numeric.line-number.match.find-in-files")
+		for location in allLocations:
+			if view.line(location).contains(sel):
+				return location
 
 class BuildResultListener(sublime_plugin.EventListener):
 	def on_text_command(self, view, command_name, args):

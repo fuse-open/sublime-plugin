@@ -53,5 +53,20 @@
                 ]
             }
         ]
+    },
+
+    {
+        "caption": "Fuse",
+        "mnemonic": "F",
+        "id": "fuse",
+        "children":
+        [
+            {
+                "caption": "Error List",
+                "command":"toggle_buildres",
+                "children":
+                []
+            }
+        ]
     }
 ]

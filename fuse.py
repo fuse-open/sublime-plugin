@@ -1,5 +1,5 @@
-import sublime, sublime_plugin 
-import json, threading, time, sys, os
+import sublime, sublime_plugin
+import json, threading, time, sys, os, asyncore
 from Fuse.interop_unix import *
 from Fuse.cmd_parser import *
 from Fuse.fuse_util import *
@@ -63,17 +63,15 @@ def HandleCodeSuggestion(cmd):
 def plugin_loaded():
 	global items
 	global autoCompleteEvent
-	global interop
 	global closeEvent
+	global interop
 
 	items = []
 	autoCompleteEvent = threading.Event()
 	closeEvent = threading.Event()
-
 	interop = InteropUnix(Recv)
 
 	global connectThread
-
 	connectThread = threading.Thread(target = TryConnect)
 	connectThread.daemon = True
 	connectThread.start()
@@ -81,6 +79,9 @@ def plugin_loaded():
 def plugin_unloaded():
 	closeEvent.set()
 	connectThread.join(1)
+
+	global interop
+	interop = None	
 
 def TryConnect():	
 	while not closeEvent.is_set():
@@ -97,6 +98,10 @@ def SendHandshake():
 		{"Features":[{"Name":"CodeCompletion"}, {"Name": "Console"}, {"Name": "BuildEvent"}]}}))
 
 def SendInvalidation(view):
+	syntaxName = GetExtension(view.settings().get("syntax"))	
+	if not IsSupportedSyntax(syntaxName):		
+		return
+
 	interop.Send(json.dumps({"Command":"InvalidateFile", "Arguments":{"Path": view.file_name()}}))
 
 class FuseEventListener(sublime_plugin.EventListener):
@@ -131,11 +136,9 @@ class DisconnectCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
 		interop.Disconnect()
 
-class ShowErrorLine(sublime_plugin.TextCommand):
-	def run(self, edit, key, region):
-		view = self.view
-		view.add_regions(key, [region], "keyword", "bookmark", 
-			sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE | sublime.PERSISTENT | sublime.DRAW_SQUIGGLY_UNDERLINE)
+class ToggleBuildresCommand(sublime_plugin.ApplicationCommand):
+	def run(self):	
+		buildResults.Close()
 
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
