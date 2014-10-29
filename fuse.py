@@ -14,24 +14,27 @@ buildResults = BuildResults()
 connectThread = None
 
 def Recv(msg):
-	command = json.loads(msg)
-	parsedRes = CmdParser.ParseCommand(command)
-	name = parsedRes[0]
-	args = parsedRes[1]
+	try:
+		command = json.loads(msg)
+		parsedRes = CmdParser.ParseCommand(command)
+		name = parsedRes[0]
+		args = parsedRes[1]
 
-	if name == "SetCodeSuggestions":
-		HandleCodeSuggestion(args)
-	if name == "WriteToConsole":
-		WriteToConsole(args)
-	if name == "Error":
-		Error(args)
-	if name == "GoToDefinitionResponse":
-		GoToDefinition(args)		
-	if name == "BuildEventRaised":
-		BuildEventRaised(args)
-	if name == "NewBuild":
-		global buildResults
-		buildResults = BuildResults()
+		if name == "SetCodeSuggestions":
+			HandleCodeSuggestion(args)
+		if name == "WriteToConsole":
+			WriteToConsole(args)
+		if name == "Error":
+			Error(args)
+		if name == "GoToDefinitionResponse":
+			GoToDefinition(args)		
+		if name == "BuildEventRaised":
+			BuildEventRaised(args)
+		if name == "NewBuild":
+			global buildResults
+			buildResults = BuildResults()
+	except:
+		pass
 
 def WriteToConsole(cmd):
 	print("Fuse: " + cmd["Text"])
@@ -83,15 +86,18 @@ def plugin_unloaded():
 	global interop
 	interop = None	
 
-def TryConnect():	
-	while not closeEvent.is_set():
-		if GetSetting("fuse_enabled") == True and not interop.IsConnected():
-			interop.Connect()
-			if interop.IsConnected():
-				SendHandshake()
+def TryConnect():
+	try:
+		while not closeEvent.is_set():
+			if GetSetting("fuse_enabled") == True and not interop.IsConnected():
+				interop.Connect()
+				if interop.IsConnected():
+					SendHandshake()
 
-		time.sleep(1)
-	interop.Disconnect()
+			time.sleep(1)
+		interop.Disconnect()
+	except:
+		interop.Disconnect()
 
 def SendHandshake():
 	interop.Send(json.dumps({"Command":"SetFeatures", "Arguments":
@@ -150,7 +156,7 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 
 		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
-		interop.Send(json.dumps({"Command": "GoToDefinition", "Arguments":{
+		interop.Send(json.dumps({"Command": "GotoDefinition", "Arguments":{
 			"Path": view.file_name(),
 			"Text": text,
 			"Type": syntaxName,

@@ -88,7 +88,7 @@ class BuildResultsCommand(sublime_plugin.WindowCommand):
 		outputPanel = view
 		view.set_read_only(False)
 		view.set_name("Fuse - Build Results")		
-		view.set_syntax_file("Packages/Fuse/Build Results.tmLanguage")		
+		view.set_syntax_file("Packages/Fuse/Build Results.hidden-tmLanguage")		
 		view.run_command("append", {"characters": data})
 
 		view.fold(FileRegions(view))
