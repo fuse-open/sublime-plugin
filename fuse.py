@@ -121,7 +121,7 @@ class FuseEventListener(sublime_plugin.EventListener):
 		interop.Send(json.dumps({"Command":"RequestCodeCompletion", "Arguments":{
 			"QueryID": 1,
 			"Path": fileName, "Text":text, 
-			"Type": syntaxName, "Caret":caret}}))
+			"Type": syntaxName, "CaretPosition": GetRowCol(view, caret)}}))
 
 	def on_query_completions(self, view, prefix, locations):
 		if GetSetting("fuse_completion") == False or not interop.IsConnected():
@@ -156,9 +156,10 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 
 		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
+
 		interop.Send(json.dumps({"Command": "GotoDefinition", "Arguments":{
 			"Path": view.file_name(),
 			"Text": text,
 			"Type": syntaxName,
-			"Caret": caret,
+			"CaretPosition": GetRowCol(view, caret),
 			"QueryID": 0}}))

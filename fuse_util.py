@@ -15,3 +15,8 @@ def GetExtension(path):
 def LoadFile(filePath):
 	f = open(filePath, "r")
 	return f.read()
+
+def GetRowCol(view, pos):
+	rowcol = view.rowcol(pos)
+	rowcol = (rowcol[0] + 1, rowcol[1] + 1)
+	return {"Line": rowcol[0], "Character": rowcol[1]}
