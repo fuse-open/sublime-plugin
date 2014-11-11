@@ -33,6 +33,8 @@ def Recv(msg):
 		if name == "NewBuild":
 			global buildResults
 			buildResults = BuildResults()
+		if name == "CloseConnection":
+			interop.Disconnect();
 	except:
 		pass
 
