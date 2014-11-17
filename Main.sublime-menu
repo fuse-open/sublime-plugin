@@ -62,7 +62,7 @@
         "children":
         [
             {
-                "caption": "Error List",
+                "caption": "Build result",
                 "command":"toggle_buildres",
                 "children":
                 []
