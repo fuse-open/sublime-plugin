@@ -30,12 +30,13 @@ class BuildResults:
 		paths = []
 
 	def __CreateViewModel(self):
-		self.__output = "- Errors -\n"
+		self.__output = "- Build Result -\n"
 
-	def AddError(self, cmd):
+	def Add(self, cmd):
 		filePath = cmd["Path"]
 		startLine = cmd["StartPosition"]["Line"]
-		message = cmd["Message"]		
+		message = cmd["Message"]
+		eventType = cmd["Type"]				
 
 		fileData = LoadFile(filePath)
 		lines = fileData.split('\n')
@@ -61,8 +62,12 @@ class BuildResults:
 
 		paths.append([len(self.__output) + 1, filePath, line])		
 
-		self.__output += "\n{Message} - {Path}:\n{DataBefore}   {Line}:{LineData}\n{DataAfter}".format(
-			Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
+		if eventType == "Error" or eventType == "FatalError" or eventType == "Warning":
+			self.__output += "\n{Message} - {Path}:\n{DataBefore}   {Line}:{LineData}\n{DataAfter}".format(
+				Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
+		else:
+			self.__output += "\n{Message} - {Path}:\n{DataBefore}	{Line}{LineData}\n{DataAfter}".format(
+				Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
 
 		self.Show()
 

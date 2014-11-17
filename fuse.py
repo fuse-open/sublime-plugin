@@ -45,7 +45,7 @@ def Error(cmd):
 	print("Fuse - Error: " + cmd["ErrorString"])
 
 def BuildEventRaised(cmd):
-	buildResults.AddError(cmd)
+	buildResults.Add(cmd)
 
 def HandleCodeSuggestion(cmd):
 	suggestions = cmd["CodeSuggestions"]
