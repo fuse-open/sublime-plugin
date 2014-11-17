@@ -66,7 +66,7 @@ class BuildResults:
 			self.__output += "\n{Message} - {Path}:\n{DataBefore}   {Line}:{LineData}\n{DataAfter}".format(
 				Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
 		else:
-			self.__output += "\n{Message} - {Path}:\n{DataBefore}	{Line}{LineData}\n{DataAfter}".format(
+			self.__output += "\n{Message} - {Path}:\n{DataBefore}   {Line}{LineData}\n{DataAfter}".format(
 				Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
 
 		self.Show()

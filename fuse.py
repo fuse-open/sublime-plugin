@@ -138,6 +138,9 @@ class FuseEventListener(sublime_plugin.EventListener):
 		autoCompleteEvent.wait(0.2)
 		
 		data = (items, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+		if len(items) == 0:
+			return
+
 		return data
 
 class DisconnectCommand(sublime_plugin.ApplicationCommand):
