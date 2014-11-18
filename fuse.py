@@ -1,6 +1,6 @@
 import sublime, sublime_plugin
 import json, threading, time, sys, os, asyncore
-from Fuse.interop_unix import *
+from Fuse.interop import *
 from Fuse.cmd_parser import *
 from Fuse.fuse_util import *
 from Fuse.go_to_definition import *
@@ -74,7 +74,7 @@ def plugin_loaded():
 	items = []
 	autoCompleteEvent = threading.Event()
 	closeEvent = threading.Event()
-	interop = InteropUnix(Recv)
+	interop = Interop(Recv)
 
 	global connectThread
 	connectThread = threading.Thread(target = TryConnect)
@@ -97,8 +97,7 @@ def TryConnect():
 					SendHandshake()
 
 			time.sleep(1)
-		interop.Disconnect()
-	except:
+	finally:
 		interop.Disconnect()
 
 def SendHandshake():

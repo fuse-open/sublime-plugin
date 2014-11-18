@@ -1,7 +1,7 @@
 import socket
 import threading
 
-class InteropUnix:
+class Interop:
 	def __init__(self, on_recv):
 		self.readWorker = None
 		self.readWorkerStopEvent = None
@@ -29,7 +29,7 @@ class InteropUnix:
 		self.socketMutex.release()	
 		
 		self.readFile = self.socket.makefile("r")
-		self.StartPollMessages()				
+		self.StartPollMessages()		
 
 	def Send(self, msg):
 		if not self.IsConnected():
@@ -85,8 +85,7 @@ class InteropUnix:
 			if self.socket != None:
 				self.socket.shutdown(socket.SHUT_RDWR)
 				self.socket.close()
-			self.socketMutex.release()
-		except:
+		finally:
 			self.socketMutex.release()
 
 		if self.readFile != None:

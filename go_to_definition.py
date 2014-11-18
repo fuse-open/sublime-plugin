@@ -3,7 +3,6 @@ import Fuse.fuse_util
 
 class GoToDefinition:
 	def __init__(self, cmd):
-		self.caretHack = -1
 		self.__GoToDefinition(cmd)
 
 	def __GoToDefinition(self, cmd):

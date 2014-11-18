@@ -57,12 +57,13 @@
 
     {
         "caption": "Fuse",
-        "mnemonic": "F",
+        "mnemonic": "u",
         "id": "fuse",
         "children":
         [
             {
                 "caption": "Build result",
+                "mnemonic": "B",
                 "command":"toggle_buildres",
                 "children":
                 []
