@@ -75,7 +75,7 @@ class BuildResults:
 		window = sublime.active_window()
 		window.run_command("build_results", { "data": self.__output })
 
-	def Close(self):
+	def ToggleShow(self):
 		global outputPanel
 
 		if outputPanel:

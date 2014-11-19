@@ -5,12 +5,14 @@ from Fuse.cmd_parser import *
 from Fuse.fuse_util import *
 from Fuse.go_to_definition import *
 from Fuse.build_results import *
+from Fuse.output_view import *
 
 items = None
 autoCompleteEvent = None
 closeEvent = None
 interop = None
 buildResults = BuildResults()
+outputView = OutputView()
 connectThread = None
 
 def Recv(msg):
@@ -23,7 +25,7 @@ def Recv(msg):
 		if name == "SetCodeSuggestions":
 			HandleCodeSuggestion(args)
 		if name == "WriteToConsole":
-			WriteToConsole(args)
+			outputView.Write(args["Text"])
 		if name == "Error":
 			Error(args)
 		if name == "GoToDefinitionResponse":
@@ -37,9 +39,6 @@ def Recv(msg):
 			interop.Disconnect();
 	except:
 		pass
-
-def WriteToConsole(cmd):
-	print("Fuse: " + cmd["Text"])
 
 def Error(cmd):
 	print("Fuse - Error: " + cmd["ErrorString"])
@@ -104,24 +103,14 @@ def SendHandshake():
 	interop.Send(json.dumps({"Command":"SetFeatures", "Arguments":
 		{"Features":[{"Name":"CodeCompletion"}, {"Name": "Console"}, {"Name": "BuildEvent"}]}}))
 
-def SendInvalidation(view):
-	syntaxName = GetExtension(view.settings().get("syntax"))	
-	if not IsSupportedSyntax(syntaxName):		
-		return
-
-	interop.Send(json.dumps({"Command":"InvalidateFile", "Arguments":{"Path": view.file_name()}}))
-
 class FuseEventListener(sublime_plugin.EventListener):
-	def on_post_save_async(self, view):
-		SendInvalidation(view)
-
 	def RequestAutoComplete(self, view, prefix, syntaxName):		
 		fileName = view.file_name()
 		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
 		interop.Send(json.dumps({"Command":"RequestCodeCompletion", "Arguments":{
 			"QueryID": 1,
-			"Path": fileName, "Text":text, 
+			"Path": fileName, "Text": text, 
 			"Type": syntaxName, "CaretPosition": GetRowCol(view, caret)}}))
 
 	def on_query_completions(self, view, prefix, locations):
@@ -148,7 +137,11 @@ class DisconnectCommand(sublime_plugin.ApplicationCommand):
 
 class ToggleBuildresCommand(sublime_plugin.ApplicationCommand):
 	def run(self):	
-		buildResults.Close()
+		buildResults.ToggleShow()
+
+class ToggleOutputviewCommand(sublime_plugin.ApplicationCommand):
+	def run(self):
+		outputView.ToggleShow()
 
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		

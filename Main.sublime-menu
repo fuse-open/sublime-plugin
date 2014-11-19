@@ -67,6 +67,13 @@
                 "command":"toggle_buildres",
                 "children":
                 []
+            },
+            {
+                "caption": "Output",
+                "mnemonic": "O",
+                "command":"toggle_outputview",
+                "children":
+                []
             }
         ]
     }

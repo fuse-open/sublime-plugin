@@ -19,7 +19,7 @@ class Interop:
 	def Connect(self):		
 		try:			
 			tmpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			tmpSocket.connect(("localhost", 12121))
+			tmpSocket.connect(("localhost", 12122))
 		except OSError:
 			print("Couldn't connect to fuse...")
 			return
