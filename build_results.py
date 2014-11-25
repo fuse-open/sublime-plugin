@@ -62,7 +62,10 @@ class BuildResults:
 
 		paths.append([len(self.__output) + 1, filePath, line])		
 
-		if eventType == "Error" or eventType == "FatalError" or eventType == "Warning":
+		if eventType == "Error" or eventType == "FatalError":
+			self.__output += "\n{Message} - {Path}:E\n{DataBefore}   {Line}:{LineData}\n{DataAfter}".format(
+				Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
+		elif eventType == "Warning":
 			self.__output += "\n{Message} - {Path}:\n{DataBefore}   {Line}:{LineData}\n{DataAfter}".format(
 				Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
 		else:

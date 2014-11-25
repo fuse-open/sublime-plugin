@@ -1,3 +1,4 @@
+import asyncore
 import sublime, sublime_plugin
 import json, threading, time, sys, os, asyncore
 from Fuse.interop import *
@@ -35,13 +36,13 @@ def Recv(msg):
 		if name == "NewBuild":
 			global buildResults
 			buildResults = BuildResults()
-		if name == "CloseConnection":
-			interop.Disconnect();
 	except:
 		pass
 
 def Error(cmd):
 	print("Fuse - Error: " + cmd["ErrorString"])
+	autoCompleteEvent.set()
+	autoCompleteEvent.clear()
 
 def BuildEventRaised(cmd):
 	buildResults.Add(cmd)
@@ -73,7 +74,7 @@ def plugin_loaded():
 	items = []
 	autoCompleteEvent = threading.Event()
 	closeEvent = threading.Event()
-	interop = Interop(Recv)
+	interop = Interop(Recv, SendHandshake)
 
 	global connectThread
 	connectThread = threading.Thread(target = TryConnect)
@@ -87,13 +88,12 @@ def plugin_unloaded():
 	global interop
 	interop = None	
 
-def TryConnect():
-	try:
+def TryConnect():	
+	try:		
 		while not closeEvent.is_set():
 			if GetSetting("fuse_enabled") == True and not interop.IsConnected():
 				interop.Connect()
-				if interop.IsConnected():
-					SendHandshake()
+				asyncore.loop()					
 
 			time.sleep(1)
 	finally:
@@ -133,7 +133,7 @@ class FuseEventListener(sublime_plugin.EventListener):
 
 class DisconnectCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
-		interop.Disconnect()
+		interop.Disconnect()	
 
 class ToggleBuildresCommand(sublime_plugin.ApplicationCommand):
 	def run(self):	

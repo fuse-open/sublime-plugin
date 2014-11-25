@@ -43,5 +43,7 @@ class OutputViewCommand(sublime_plugin.WindowCommand):
 		view.set_name("Fuse - Output")
 		AppendStrToReadonlyPanel(view, data)
 
+		view.run_command("move_to", {"to": "eol", "extend": false});
+
 		window.run_command("show_panel", {"panel": "output.FuseOutput"})
 		outputViewIsOpen = True

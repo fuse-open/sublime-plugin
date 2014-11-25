@@ -1,6 +1,2 @@
 [
-    {
-        "caption": "Go to definition",
-        "command": "goto_definition"
-    }
 ]

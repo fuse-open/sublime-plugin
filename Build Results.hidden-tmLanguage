@@ -21,6 +21,18 @@
 		</dict>
 		<dict>
 			<key>match</key>
+			<string>^([^ ].*):E$</string>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>entity.name.tag.xml</string>
+				</dict>
+			</dict>
+		</dict>
+		<dict>
+			<key>match</key>
 			<string>^ +([0-9]+) </string>
 			<key>captures</key>
 			<dict>
