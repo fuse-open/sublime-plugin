@@ -13,8 +13,11 @@ def GetExtension(path):
 	return os.path.splitext(base)[0]
 
 def LoadFile(filePath):
-	f = open(filePath, "r")
-	return f.read()
+	try:
+		f = open(filePath, "r")
+		return f.read()
+	except IOError:
+		return ""	
 
 def GetRowCol(view, pos):
 	rowcol = view.rowcol(pos)

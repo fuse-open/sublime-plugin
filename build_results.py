@@ -33,44 +33,61 @@ class BuildResults:
 		self.__output = "- Build Result -\n"
 
 	def Add(self, cmd):
+		print(cmd)
+
 		filePath = cmd["Path"]
-		startLine = cmd["StartPosition"]["Line"]
+		startPos = cmd["StartPosition"]
+
+		if startPos == None:
+			startPos = {"Line": 0, "Character": 0} 
+
+		startLine = startPos["Line"]
+		startCol = startPos["Character"]
 		message = cmd["Message"]
 		eventType = cmd["Type"]				
 
 		fileData = LoadFile(filePath)
-		lines = fileData.split('\n')
-		line = int(startLine)
 
-		dataBefore = ""
-		for i in range(line - 5, line-1):
-			if i < 0:
-				continue
-			if i > len(lines):
-				continue
-
-			dataBefore += "   " + str(i+1) + " " + lines[i] + "\n"
-
-		dataAfter = ""
-		for i in range(line, line+5):
-			if i < 0:
-				continue
-			if i >= len(lines):
-				continue
-
-			dataAfter += "   " + str(i+1) + " " + lines[i] + "\n"
-
-		paths.append([len(self.__output) + 1, filePath, line])		
-
-		if eventType == "Error" or eventType == "FatalError":
-			self.__output += "\n{Message} - {Path}:E\n{DataBefore}   {Line}:{LineData}\n{DataAfter}".format(
-				Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
-		elif eventType == "Warning":
-			self.__output += "\n{Message} - {Path}:\n{DataBefore}   {Line}:{LineData}\n{DataAfter}".format(
-				Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
+		if fileData == "":
+			if eventType == "Error" or eventType == "FatalError":
+				self.__output += "\n{Message} - {Path}({Line}:{Col}):E".format(Path = filePath, Message = message, 
+					Line = startLine, Col = startCol)
+			else:
+				self.__output += "\n{Message} - {Path}({Line}:{Col}):".format(Path = filePath, Message = message, 
+					Line = startLine, Col = startCol)
 		else:
-			self.__output += "\n{Message} - {Path}:\n{DataBefore}   {Line}{LineData}\n{DataAfter}".format(
-				Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
+			lines = fileData.split('\n')
+			line = int(startLine)
+
+			dataBefore = ""
+			for i in range(line - 5, line-1):
+				if i < 0:
+					continue
+				if i > len(lines):
+					continue
+
+				dataBefore += "   " + str(i+1) + " " + lines[i] + "\n"
+
+			dataAfter = ""
+			for i in range(line, line+5):
+				if i < 0:
+					continue
+				if i >= len(lines):
+					continue
+
+				dataAfter += "   " + str(i+1) + " " + lines[i] + "\n"
+
+			paths.append([len(self.__output) + 1, filePath, line])		
+
+			if eventType == "Error" or eventType == "FatalError":
+				self.__output += "\n{Message} - {Path}:E\n{DataBefore}   {Line}:{LineData}\n{DataAfter}".format(
+					Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
+			elif eventType == "Warning":
+				self.__output += "\n{Message} - {Path}:\n{DataBefore}   {Line}:{LineData}\n{DataAfter}".format(
+					Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
+			else:
+				self.__output += "\n{Message} - {Path}:\n{DataBefore}   {Line}{LineData}\n{DataAfter}".format(
+					Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
 
 		self.Show()
 
