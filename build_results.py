@@ -33,8 +33,6 @@ class BuildResults:
 		self.__output = "- Build Result -\n"
 
 	def Add(self, cmd):
-		print(cmd)
-
 		filePath = cmd["Path"]
 		startPos = cmd["StartPosition"]
 
