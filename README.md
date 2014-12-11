@@ -1,6 +1,6 @@
-SublimeIntegration
+Sublime Plugin
 ==================
-Sublime integration for Fuse Editor
+Sublime plugin for Fuse Editor
 
 How to install
 =================
