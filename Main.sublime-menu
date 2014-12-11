@@ -74,7 +74,14 @@
                 "command":"toggle_outputview",
                 "children":
                 []
-            }
+            },
+            {
+                "caption": "Refresh Viewports",
+                "mnemonic": "R",
+                "command":"fuse_refresh",
+                "children":
+                []
+            }            
         ]
     }
 ]

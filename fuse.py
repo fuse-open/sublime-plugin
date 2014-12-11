@@ -101,7 +101,10 @@ def TryConnect():
 
 def SendHandshake():
 	interop.Send(json.dumps({"Command":"SetFeatures", "Arguments":
-		{"Features":[{"Name":"CodeCompletion"}, {"Name": "Console"}, {"Name": "BuildEvent"}]}}))
+		{"Features":[{"Name":"CodeCompletion"}, 
+		{"Name": "Console"}, 
+		{"Name": "BuildEvent"},
+		{"Name": "ShortcutFeature"}]}}))
 
 class FuseEventListener(sublime_plugin.EventListener):
 	def RequestAutoComplete(self, view, prefix, syntaxName):		
@@ -160,3 +163,7 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 			"Type": syntaxName,
 			"CaretPosition": GetRowCol(view, caret),
 			"QueryID": 0}}))
+
+class FuseRefreshCommand(sublime_plugin.ApplicationCommand):
+	def run(self):
+		interop.Send(json.dumps({"Command": "RefreshViewports"}))

@@ -1,0 +1,6 @@
+[
+	{ 
+		"keys": ["f5"],
+		"command": "fuse_refresh"
+	}
+]
