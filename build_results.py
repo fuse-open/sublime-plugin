@@ -177,5 +177,4 @@ class GotoLocationCommand(sublime_plugin.TextCommand):
 class BuildResultListener(sublime_plugin.EventListener):
 	def on_text_command(self, view, command_name, args):
 		if command_name == "drag_select" and "by" in args.keys() and args["by"] == "words" and view.name() == "Fuse - Build Results":
-			view.run_command("goto_location")
-				
+			view.run_command("goto_location")				
