@@ -62,19 +62,26 @@
         "children":
         [
             {
-                "caption": "Build result",
+                "caption": "Build Result",
                 "mnemonic": "B",
                 "command":"toggle_buildres",
                 "children":
                 []
             },
             {
+                "caption": "Build Log",
+                "mnemonic": "U",
+                "command":"toggle_buildoutput",
+                "children":
+                []
+            }, 
+            {
                 "caption": "Output",
                 "mnemonic": "O",
                 "command":"toggle_outputview",
                 "children":
                 []
-            },
+            },  
             {
                 "caption": "Refresh Viewports",
                 "mnemonic": "R",
