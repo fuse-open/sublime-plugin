@@ -7,6 +7,7 @@ from Fuse.fuse_util import *
 from Fuse.go_to_definition import *
 from Fuse.build_results import *
 from Fuse.output_view import *
+from Fuse.build_output import *
 
 items = None
 autoCompleteEvent = None
@@ -14,6 +15,7 @@ closeEvent = None
 interop = None
 buildResults = BuildResults()
 outputView = OutputView()
+buildOutput = BuildOutputView()
 connectThread = None
 
 def Recv(msg):
@@ -26,7 +28,7 @@ def Recv(msg):
 		if name == "SetCodeSuggestions":
 			HandleCodeSuggestion(args)
 		if name == "WriteToConsole":
-			outputView.Write(args["Text"])
+			WriteToConsole(args)
 		if name == "Error":
 			Error(args)
 		if name == "GoToDefinitionResponse":
@@ -43,6 +45,13 @@ def Error(cmd):
 	print("Fuse - Error: " + cmd["ErrorString"])
 	autoCompleteEvent.set()
 	autoCompleteEvent.clear()
+
+def WriteToConsole(args):
+	typeOfConsole = args["Type"]
+	if typeOfConsole == "DebugLog":
+		outputView.Write(args["Text"])
+	elif typeOfConsole == "BuildLog":
+		buildOutput.Write(args["Text"])
 
 def BuildEventRaised(cmd):
 	buildResults.Add(cmd)
@@ -145,6 +154,10 @@ class ToggleBuildresCommand(sublime_plugin.ApplicationCommand):
 class ToggleOutputviewCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
 		outputView.ToggleShow()
+
+class ToggleBuildoutputCommand(sublime_plugin.ApplicationCommand):
+	def run(self):
+		buildOutput.ToggleShow()
 
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
