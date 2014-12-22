@@ -2,7 +2,8 @@ import json
 
 class CmdParser:
 	def ParseCommand(cmdData):
-		cmdName = cmdData["Command"]
-		cmdValue = json.loads(cmdData["Arguments"])
+		cmdParsed = json.loads(cmdData)
+		cmdName = cmdParsed["Command"]
+		cmdValue =  json.loads(cmdParsed["Arguments"])
 
 		return (cmdName, cmdValue)
