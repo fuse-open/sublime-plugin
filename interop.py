@@ -42,6 +42,7 @@ class Interop(asyncore.dispatcher):
 		message = self.readBuffer.decode("utf-8")
 		self.readBuffer = self.readBuffer[length:]
 		self.on_recv(message)
+		self.parseReadData()
 
 	def parseLength(self, lenStr):
 		try:
@@ -52,11 +53,8 @@ class Interop(asyncore.dispatcher):
 
 	def handle_write(self):
 		sent = self.send(self.writeBuffer)
-		self.writeBufferMutex.acquire()
-		try:
+		with self.writeBufferMutex:
 			self.writeBuffer = self.writeBuffer[sent:]
-		finally:
-			self.writeBufferMutex.release()
 
 	def IsConnected(self):
 		return self.__isConnected
@@ -72,11 +70,8 @@ class Interop(asyncore.dispatcher):
 
 		msgInBytes = bytes(str(len(msg)) + "\n" + msg, "UTF-8")
 
-		self.writeBufferMutex.acquire()
-		try:
-			self.writeBuffer = self.writeBuffer + msgInBytes
-		finally:
-			self.writeBufferMutex.release()
+		with self.writeBufferMutex:
+			self.writeBuffer = self.writeBuffer + msgInBytes		
 
 	def Disconnect(self):
 		self.handle_close()
