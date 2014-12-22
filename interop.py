@@ -38,9 +38,9 @@ class Interop(asyncore.dispatcher):
 		if len(self.readBuffer) - sizeOfLengthStr < length:
 			return 		
 
-		self.readBuffer = self.readBuffer[sizeOfLengthStr:]
-		message = self.readBuffer.decode("utf-8")
-		self.readBuffer = self.readBuffer[length:]
+		tmpStr = self.readBuffer[sizeOfLengthStr:length + sizeOfLengthStr]
+		message = tmpStr.decode("utf-8")
+		self.readBuffer = self.readBuffer[sizeOfLengthStr + length:]
 		self.on_recv(message)
 		self.parseReadData()
 
