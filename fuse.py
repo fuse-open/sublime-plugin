@@ -121,7 +121,7 @@ class FuseEventListener(sublime_plugin.EventListener):
 		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
 		interop.Send(json.dumps({"Command":"RequestCodeCompletion", "Arguments":{
-			"QueryID": 1,
+			"QueryId": 0,
 			"Path": fileName, "Text": text, 
 			"Type": syntaxName, "CaretPosition": GetRowCol(view, caret)}}))
 
@@ -175,7 +175,7 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 			"Text": text,
 			"Type": syntaxName,
 			"CaretPosition": GetRowCol(view, caret),
-			"QueryID": 0}}))
+			"QueryId": 0}}))
 
 class FuseRefreshCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
