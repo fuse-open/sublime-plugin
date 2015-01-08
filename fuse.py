@@ -20,8 +20,7 @@ connectThread = None
 
 def Recv(msg):
 	try:
-		command = json.loads(msg)
-		parsedRes = CmdParser.ParseCommand(command)
+		parsedRes = CmdParser.ParseCommand(msg)
 		name = parsedRes[0]
 		args = parsedRes[1]
 
@@ -100,7 +99,7 @@ def plugin_unloaded():
 def TryConnect():	
 	try:		
 		while not closeEvent.is_set():
-			if GetSetting("fuse_enabled") == True and not interop.IsConnected():
+			if GetSetting("fuse_enabled") == True:
 				interop.Connect()
 				asyncore.loop()					
 

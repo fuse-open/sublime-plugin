@@ -34,29 +34,31 @@ class Interop(asyncore.dispatcher):
 
 		lengthStr = strData[:firstNewLine]
 		length = self.parseLength(lengthStr)
+		if length == -1:
+			self.readBuffer = b"";
+			return
+
 		sizeOfLengthStr = len(bytes(lengthStr, "utf-8")) + 1
 		if len(self.readBuffer) - sizeOfLengthStr < length:
 			return 		
 
-		self.readBuffer = self.readBuffer[sizeOfLengthStr:]
-		message = self.readBuffer.decode("utf-8")
-		self.readBuffer = self.readBuffer[length:]
+		tmpStr = self.readBuffer[sizeOfLengthStr:length + sizeOfLengthStr]
+		message = tmpStr.decode("utf-8")
+		self.readBuffer = self.readBuffer[sizeOfLengthStr + length:]
 		self.on_recv(message)
+		self.parseReadData()
 
 	def parseLength(self, lenStr):
 		try:
 			return int(lenStr)
 		except ValueError:
-			print("Couldn't parse packet.")
-			return 2147483647
+			print("Couldn't parse packet length, got " + lenStr)
+			return -1
 
 	def handle_write(self):
 		sent = self.send(self.writeBuffer)
-		self.writeBufferMutex.acquire()
-		try:
+		with self.writeBufferMutex:
 			self.writeBuffer = self.writeBuffer[sent:]
-		finally:
-			self.writeBufferMutex.release()
 
 	def IsConnected(self):
 		return self.__isConnected
@@ -72,11 +74,8 @@ class Interop(asyncore.dispatcher):
 
 		msgInBytes = bytes(str(len(msg)) + "\n" + msg, "UTF-8")
 
-		self.writeBufferMutex.acquire()
-		try:
-			self.writeBuffer = self.writeBuffer + msgInBytes
-		finally:
-			self.writeBufferMutex.release()
+		with self.writeBufferMutex:
+			self.writeBuffer = self.writeBuffer + msgInBytes		
 
 	def Disconnect(self):
 		self.handle_close()
