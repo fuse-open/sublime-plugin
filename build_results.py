@@ -5,7 +5,7 @@ paths = []
 outputPanel = None
 
 def NameRegions(view):
-	return view.find_by_selector("entity.name.filename.find-in-files")
+	return view.find_by_selector("entity.name.filename.find-in-files") + view.find_by_selector("entity.name.tag.xml")
 
 def FileRegions(view):
 	regions = NameRegions(view)
