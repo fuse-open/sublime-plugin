@@ -34,6 +34,10 @@ class Interop(asyncore.dispatcher):
 
 		lengthStr = strData[:firstNewLine]
 		length = self.parseLength(lengthStr)
+		if length == -1:
+			self.readBuffer = b"";
+			return
+
 		sizeOfLengthStr = len(bytes(lengthStr, "utf-8")) + 1
 		if len(self.readBuffer) - sizeOfLengthStr < length:
 			return 		
@@ -48,8 +52,8 @@ class Interop(asyncore.dispatcher):
 		try:
 			return int(lenStr)
 		except ValueError:
-			print("Couldn't parse packet.")
-			return 2147483647
+			print("Couldn't parse packet length, got " + lenStr)
+			return -1
 
 	def handle_write(self):
 		sent = self.send(self.writeBuffer)
