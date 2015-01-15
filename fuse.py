@@ -99,9 +99,11 @@ def plugin_unloaded():
 def TryConnect():	
 	try:		
 		while not closeEvent.is_set():
-			if GetSetting("fuse_enabled") == True:
+			if GetSetting("fuse_enabled") == True and not interop.IsConnected():
 				interop.Connect()
-				asyncore.loop()					
+				if interop.IsConnected():
+					SendHandshake()
+				#asyncore.loop()					
 
 			time.sleep(1)
 	finally:

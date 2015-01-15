@@ -1,30 +1,74 @@
-import asyncore, socket
+import socket
 import threading
-import sys
 
-class Interop(asyncore.dispatcher):
+class Interop:
 	def __init__(self, on_recv, on_connect):
-		asyncore.dispatcher.__init__(self)
-		self.writeBuffer = bytes()
-		self.writeBufferMutex = threading.Lock()
+		self.readWorker = None
+		self.readWorkerStopEvent = None
 		self.readBuffer = bytes()
-		self.__isConnected = False
+		self.socket = None
 		self.on_recv = on_recv
-		self.on_connect = on_connect
+		self.socketMutex = threading.Lock()
 
-	def handle_connect(self):
-		print("Connected to Fuse.")
-		self.__isConnected = True
-		self.on_connect()
+	def IsConnected(self):
+		self.socketMutex.acquire()		
+		isConnected = self.socket != None
+		self.socketMutex.release()
+		return isConnected
 
-	def handle_close(self):
-		print("Disconnected from Fuse.")
-		self.__isConnected = False
-		self.close()		
+	def Connect(self):		
+		try:			
+			tmpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			tmpSocket.connect(("localhost", 12122))
+		except OSError:
+			print("Couldn't connect to fuse...")
+			tmpSocket.close()
+			return
 
-	def handle_read(self):
-		self.readBuffer = self.readBuffer + self.recv(8192)
-		self.parseReadData()
+		self.socketMutex.acquire()			
+		self.socket = tmpSocket
+		self.socketMutex.release()
+
+		self.startPollMessages()		
+
+	def Send(self, msg):
+		if not self.IsConnected():
+			return;
+
+		try:
+			msgInBytes = bytes(str(len(msg)) + "\n" + msg, "UTF-8")
+			self.socketMutex.acquire()
+			self.socket.sendall(msgInBytes)
+		except:
+			self.Disconnect()
+		finally:
+			self.socketMutex.release()
+
+	def startPollMessages(self):		
+		self.readWorkerStopEvent = threading.Event()
+		self.readWorker = threading.Thread(target = self.pollMessages)
+		self.readWorker.daemon = True
+		self.readWorker.start()
+
+		print("Starting to poll messages")
+
+	def stopPollMessages(self):				
+		self.readWorkerStopEvent.set()	
+		print ("Stopping message poll")
+
+	def pollMessages(self):
+		try:
+			while not self.readWorkerStopEvent.is_set():
+				tmpData = self.socket.recv(4096)
+				if len(tmpData) == 0:
+					print("Lost connection")
+					self.Disconnect()
+					return
+
+				self.readBuffer = self.readBuffer + tmpData
+				self.parseReadData()
+		except:
+			return
 
 	def parseReadData(self):
 		strData = self.readBuffer.decode("utf-8")
@@ -55,27 +99,23 @@ class Interop(asyncore.dispatcher):
 			print("Couldn't parse packet length, got " + lenStr)
 			return -1
 
-	def handle_write(self):
-		sent = self.send(self.writeBuffer)
-		with self.writeBufferMutex:
-			self.writeBuffer = self.writeBuffer[sent:]
+	def Disconnect(self):		
+		print("Disconnecting...")	
 
-	def IsConnected(self):
-		return self.__isConnected
+		if self.readWorkerStopEvent != None:
+			self.stopPollMessages()
 
-	def Connect(self):
-		print("Trying to connect to fuse")
-		self.create_socket(socket.AF_INET, socket.SOCK_STREAM)		
-		self.connect(("localhost", 12122))
+		try:
+			self.socketMutex.acquire()
+			if self.socket != None:
+				self.socket.shutdown(socket.SHUT_RDWR)
+				self.socket.close()		
+		except:
+			pass
+		finally:
+			self.socketMutex.release()
+			self.socket = None
+			self.readWorkerStopEvent = None
+			self.readBuffer = bytes()		
 
-	def Send(self, msg):
-		if not self.IsConnected():
-			return;
-
-		msgInBytes = bytes(str(len(msg)) + "\n" + msg, "UTF-8")
-
-		with self.writeBufferMutex:
-			self.writeBuffer = self.writeBuffer + msgInBytes		
-
-	def Disconnect(self):
-		self.handle_close()
+			print("Disconnected")
