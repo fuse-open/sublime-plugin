@@ -102,8 +102,7 @@ def TryConnect():
 			if GetSetting("fuse_enabled") == True and not interop.IsConnected():
 				interop.Connect()
 				if interop.IsConnected():
-					SendHandshake()
-				#asyncore.loop()					
+					SendHandshake()				
 
 			time.sleep(1)
 	finally:
