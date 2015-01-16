@@ -1,6 +1,6 @@
 [
 	{ 
-		"keys": ["f5"],
+		"keys": ["super+r"],
 		"command": "fuse_refresh"
 	}
 ]
