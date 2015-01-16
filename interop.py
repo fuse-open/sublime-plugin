@@ -68,7 +68,7 @@ class Interop:
 				self.readBuffer = self.readBuffer + tmpData
 				self.parseReadData()
 		except:
-			return
+			self.Disconnect()
 
 	def parseReadData(self):
 		strData = self.readBuffer.decode("utf-8")
