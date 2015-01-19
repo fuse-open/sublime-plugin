@@ -1,4 +1,5 @@
 {
 	"fuse_enabled": true,
-	"fuse_completion": true
+	"fuse_completion": true,
+	"fuse_open_files_in_same_window": true
 }

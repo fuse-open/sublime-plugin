@@ -89,6 +89,12 @@ def plugin_loaded():
 	connectThread.daemon = True
 	connectThread.start()
 
+	s = sublime.load_settings("Preferences.sublime-settings")
+	if GetSetting("fuse_open_files_in_same_window"):
+		s.set("open_files_in_new_window", False)
+	else:
+		s.set("open_files_in_new_window", True)
+
 def plugin_unloaded():
 	closeEvent.set()
 	connectThread.join(1)
