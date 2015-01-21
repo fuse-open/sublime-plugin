@@ -22,7 +22,7 @@ This is a temporary install solution. There will be an eaiser way of doing this 
 
 Current Features
 =================
-* Code completion, however not for UX attributes
+* Code completion
 * Goto definition (F12) or in the menu called Goto->Goto definition
 * Build result(should open automatically if errors or warnings) but can be found in the menu called Fuse->Build result
 * Debug log ouput can be found in the menu called Fuse->Output
