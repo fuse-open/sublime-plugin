@@ -21,7 +21,6 @@ class Interop:
 			tmpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			tmpSocket.connect(("localhost", 12122))
 		except OSError:
-			print("Couldn't connect to fuse...")
 			tmpSocket.close()
 			return
 
@@ -29,7 +28,8 @@ class Interop:
 		self.socket = tmpSocket
 		self.socketMutex.release()
 
-		self.startPollMessages()		
+		self.startPollMessages()
+		print("Connected to Fuse")		
 
 	def Send(self, msg):
 		if not self.IsConnected():
@@ -50,11 +50,8 @@ class Interop:
 		self.readWorker.daemon = True
 		self.readWorker.start()
 
-		print("Starting to poll messages")
-
 	def stopPollMessages(self):				
-		self.readWorkerStopEvent.set()	
-		print ("Stopping message poll")
+		self.readWorkerStopEvent.set()
 
 	def pollMessages(self):
 		try:
@@ -69,6 +66,7 @@ class Interop:
 				self.parseReadData()
 		except:
 			self.Disconnect()
+			return
 
 	def parseReadData(self):
 		strData = self.readBuffer.decode("utf-8")
@@ -100,8 +98,6 @@ class Interop:
 			return -1
 
 	def Disconnect(self):		
-		print("Disconnecting...")	
-
 		if self.readWorkerStopEvent != None:
 			self.stopPollMessages()
 

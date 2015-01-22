@@ -2,7 +2,7 @@ import sublime, sublime_plugin
 from Fuse.fuse_util import *
 
 paths = []
-outputPanel = None
+buildResultPanel = None
 
 def NameRegions(view):
 	return view.find_by_selector("entity.name.filename.find-in-files") + view.find_by_selector("entity.name.tag.xml")
@@ -23,14 +23,20 @@ def FileRegions(view):
 	return newRegions
 
 class BuildResults:
-	def __init__(self):
-		self.__output = ""
-		self.__CreateViewModel()
+	def __init__(self, window):
 		global paths	
 		paths = []
 
+		global buildResultPanel
+		buildResultPanel = window.create_output_panel("FuseBuildResults")
+		buildResultPanel.set_name("Fuse - Build Results")
+		buildResultPanel.set_syntax_file("Packages/Fuse/Build Results.hidden-tmLanguage")
+
+		self.__CreateViewModel()
+		self.Show()
+
 	def __CreateViewModel(self):
-		self.__output = "- Build Result -\n"
+		self.Append("- Build Result -\n")
 
 	def Add(self, cmd):
 		filePath = cmd["Path"]
@@ -45,13 +51,14 @@ class BuildResults:
 		eventType = cmd["Type"]				
 
 		fileData = LoadFile(filePath)
+		output = ""
 
 		if fileData == "":
 			if eventType == "Error" or eventType == "FatalError":
-				self.__output += "\n{Message} - {Path}({Line}:{Col}):E".format(Path = filePath, Message = message, 
+				output += "\n{Message} - {Path}({Line}:{Col}):E\n".format(Path = filePath, Message = message, 
 					Line = startLine, Col = startCol)
 			else:
-				self.__output += "\n{Message} - {Path}({Line}:{Col}):".format(Path = filePath, Message = message, 
+				output += "\n{Message} - {Path}({Line}:{Col}):\n".format(Path = filePath, Message = message, 
 					Line = startLine, Col = startCol)
 		else:
 			lines = fileData.split('\n')
@@ -75,47 +82,25 @@ class BuildResults:
 
 				dataAfter += "   " + str(i+1) + " " + lines[i] + "\n"
 
-			paths.append([len(self.__output) + 1, filePath, line])		
+			paths.append([buildResultPanel.size() + 1, filePath, line])		
 
 			if eventType == "Error" or eventType == "FatalError":
-				self.__output += "\n{Message} - {Path}:E\n{DataBefore}   {Line}:{LineData}\n{DataAfter}".format(
+				output += "\n{Message} - {Path}:E\n{DataBefore}   {Line}:{LineData}\n{DataAfter}".format(
 					Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
 			elif eventType == "Warning":
-				self.__output += "\n{Message} - {Path}:\n{DataBefore}   {Line}:{LineData}\n{DataAfter}".format(
+				output += "\n{Message} - {Path}:\n{DataBefore}   {Line}:{LineData}\n{DataAfter}".format(
 					Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
 			else:
-				self.__output += "\n{Message} - {Path}:\n{DataBefore}   {Line}{LineData}\n{DataAfter}".format(
-					Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
+				output += "\n{Message} - {Path}:\n{DataBefore}   {Line}{LineData}\n{DataAfter}".format(
+					Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)		
 
-		self.Show()
+		self.Append(output)
 
-	def Show(self):
-		window = sublime.active_window()
-		window.run_command("build_results", { "data": self.__output })
-
-	def ToggleShow(self):
-		global outputPanel
-
-		if outputPanel:
-			sublime.active_window().run_command("hide_panel", {"cancel": True})
-			outputPanel = None
-		else:
-			self.Show()
-
-class BuildResultsCommand(sublime_plugin.WindowCommand):
-	def run(self, data):
-		global outputPanel
-
-		window = self.window
-		view = window.create_output_panel("FuseBuildResults")
-		outputPanel = view
-		view.set_read_only(False)
-		view.set_name("Fuse - Build Results")		
-		view.set_syntax_file("Packages/Fuse/Build Results.hidden-tmLanguage")		
+	def Append(self, data):
+		view = buildResultPanel
 		view.run_command("append", {"characters": data})
 
 		view.fold(FileRegions(view))
-		view.set_read_only(True)
 
 		codePoints = view.find_by_selector("constant.numeric.line-number.match.find-in-files")
 		lines = []
@@ -125,7 +110,17 @@ class BuildResultsCommand(sublime_plugin.WindowCommand):
 		view.add_regions("errors", lines, "keyword", "bookmark", 
 			sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE | sublime.PERSISTENT | sublime.DRAW_SQUIGGLY_UNDERLINE)
 
-		window.run_command("show_panel", {"panel": "output.FuseBuildResults"})
+	def Show(self):
+		window = sublime.active_window()
+		window.run_command("build_results")
+
+	def ToggleShow(self):
+		self.Show()
+
+class BuildResultsCommand(sublime_plugin.WindowCommand):
+	def run(self):
+		window = self.window
+		window.run_command("show_panel", {"panel": "output.FuseBuildResults" })
 
 class GotoLocationCommand(sublime_plugin.TextCommand):
 	def GetPath(self, region):
