@@ -13,7 +13,7 @@ items = None
 autoCompleteEvent = None
 closeEvent = None
 interop = None
-buildResults = BuildResults()
+buildResults = None
 outputView = OutputView()
 buildOutput = BuildOutputView()
 connectThread = None
@@ -36,7 +36,7 @@ def Recv(msg):
 			BuildEventRaised(args)
 		if name == "NewBuild":
 			global buildResults
-			buildResults = BuildResults()
+			buildResults = BuildResults(sublime.active_window())
 	except:
 		pass
 
@@ -78,11 +78,13 @@ def plugin_loaded():
 	global autoCompleteEvent
 	global closeEvent
 	global interop
+	global buildResults
 
 	items = []
 	autoCompleteEvent = threading.Event()
 	closeEvent = threading.Event()
 	interop = Interop(Recv, SendHandshake)
+	buildResults = BuildResults(sublime.active_window())
 
 	global connectThread
 	connectThread = threading.Thread(target = TryConnect)
