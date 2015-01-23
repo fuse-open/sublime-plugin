@@ -14,7 +14,7 @@ class BuildOutputView:
 		AppendStrToPanel(buildOutPanel, strData)
 
 	def ToggleShow(self):
-		self.Show()
+		self.Show()		
 
 class BuildOutputCommand(sublime_plugin.WindowCommand):
 	def __init__(self, window):
@@ -25,4 +25,4 @@ class BuildOutputCommand(sublime_plugin.WindowCommand):
 
 	def run(self):
 		window = self.window	
-		window.run_command("show_panel", {"panel": "output.FuseBuildOutput", "toggle": True })
+		window.run_command("show_panel", {"panel": "output.FuseBuildOutput", "toggle": True})		
