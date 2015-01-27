@@ -8,12 +8,9 @@ class Interop:
 		self.readBuffer = bytes()
 		self.socket = None
 		self.on_recv = on_recv
-		self.socketMutex = threading.Lock()
 
-	def IsConnected(self):
-		self.socketMutex.acquire()		
+	def IsConnected(self):	
 		isConnected = self.socket != None
-		self.socketMutex.release()
 		return isConnected
 
 	def Connect(self):		
@@ -23,11 +20,8 @@ class Interop:
 		except OSError:
 			tmpSocket.close()
 			return
-
-		self.socketMutex.acquire()			
+		
 		self.socket = tmpSocket
-		self.socketMutex.release()
-
 		self.startPollMessages()
 		print("Connected to Fuse")		
 
@@ -37,12 +31,9 @@ class Interop:
 
 		try:
 			msgInBytes = bytes(str(len(msg)) + "\n" + msg, "UTF-8")
-			self.socketMutex.acquire()
 			self.socket.sendall(msgInBytes)
 		except:
 			self.Disconnect()
-		finally:
-			self.socketMutex.release()
 
 	def startPollMessages(self):		
 		self.readWorkerStopEvent = threading.Event()
@@ -102,14 +93,12 @@ class Interop:
 			self.stopPollMessages()
 
 		try:
-			self.socketMutex.acquire()
 			if self.socket != None:
 				self.socket.shutdown(socket.SHUT_RDWR)
 				self.socket.close()		
 		except:
 			pass
 		finally:
-			self.socketMutex.release()
 			self.socket = None
 			self.readWorkerStopEvent = None
 			self.readBuffer = bytes()		
