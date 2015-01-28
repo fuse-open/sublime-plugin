@@ -147,7 +147,10 @@ class FuseEventListener(sublime_plugin.EventListener):
 		
 		data = (items, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
 		if len(items) == 0:
-			return
+			if GetSetting("fuse_if_no_completion_use_sublime") == False:
+				return ([("Updating suggestion cache...", "_"), ("", "")], sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+			else:
+				return
 
 		return data
 
