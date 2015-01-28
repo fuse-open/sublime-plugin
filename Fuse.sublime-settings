@@ -2,5 +2,5 @@
 	"fuse_enabled": true,
 	"fuse_completion": true,
 	"fuse_open_files_in_same_window": true,
-	"fuse_if_no_completion_use_sublime": false,
+	"fuse_if_no_completion_use_sublime": true,
 }

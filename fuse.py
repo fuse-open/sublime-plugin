@@ -10,6 +10,7 @@ from Fuse.output_view import *
 from Fuse.build_output import *
 
 items = None
+isUpdatingCache = False
 autoCompleteEvent = None
 closeEvent = None
 interop = None
@@ -59,6 +60,8 @@ def HandleCodeSuggestion(cmd):
 	suggestions = cmd["CodeSuggestions"]
 		
 	global items
+	global isUpdatingCache
+	isUpdatingCache = cmd["IsUpdatingCache"]
 	items = []
 	
 	for suggestion in suggestions:
@@ -147,8 +150,11 @@ class FuseEventListener(sublime_plugin.EventListener):
 		
 		data = (items, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
 		if len(items) == 0:
-			if GetSetting("fuse_if_no_completion_use_sublime") == False:
-				return ([("Updating suggestion cache...", "_"), ("", "")], sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+			if isUpdatingCache == True:
+				return ([("Updating suggestion cache...", "_"), ("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
+
+			if GetSetting("fuse_if_no_completion_use_sublime") == False:				
+				return ([("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
 			else:
 				return
 
