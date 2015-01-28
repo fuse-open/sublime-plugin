@@ -1,6 +1,5 @@
-import asyncore
 import sublime, sublime_plugin
-import json, threading, time, sys, os, asyncore
+import json, threading, time, sys, os, time
 from Fuse.interop import *
 from Fuse.cmd_parser import *
 from Fuse.fuse_util import *
@@ -38,8 +37,10 @@ def Recv(msg):
 		if name == "NewBuild":
 			global buildResults
 			buildResults = BuildResults(sublime.active_window())
+
+		time.sleep(0.005)
 	except:
-		pass
+		print(sys.exc_info()[0])
 
 def Error(cmd):
 	print("Fuse - Error: " + cmd["ErrorString"])
