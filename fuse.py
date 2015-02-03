@@ -36,9 +36,7 @@ def Recv(msg):
 			BuildEventRaised(args)
 		if name == "NewBuild":
 			global buildResults
-			buildResults = BuildResults(sublime.active_window())
-
-		time.sleep(0.005)
+			buildResults = BuildResults(sublime.active_window())		
 	except:
 		print(sys.exc_info()[0])
 
