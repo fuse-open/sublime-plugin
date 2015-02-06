@@ -1,3 +1,9 @@
 {
-	"extensions": ["ux"]
+	"extensions": ["ux"],
+	"auto_complete_triggers":
+	[
+		{
+			"characters": ":"
+		}
+	]
 }
