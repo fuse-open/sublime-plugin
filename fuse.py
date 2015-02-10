@@ -136,6 +136,8 @@ class FuseEventListener(sublime_plugin.EventListener):
 			"Type": syntaxName, "CaretPosition": GetRowCol(view, caret)}}))
 
 	def on_query_completions(self, view, prefix, locations):
+		global items
+
 		if GetSetting("fuse_completion") == False or not interop.IsConnected():
 			return
 
@@ -156,7 +158,8 @@ class FuseEventListener(sublime_plugin.EventListener):
 				return ([("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
 			else:
 				return
-
+						
+		items = []
 		return data
 
 class DisconnectCommand(sublime_plugin.ApplicationCommand):
