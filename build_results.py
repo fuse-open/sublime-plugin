@@ -7,21 +7,6 @@ buildResultPanel = None
 def NameRegions(view):
 	return view.find_by_selector("entity.name.filename.find-in-files") + view.find_by_selector("entity.name.tag.xml")
 
-def FileRegions(view):
-	regions = NameRegions(view)
-	lastRegion = view.find("^\!\=", 0)
-	if lastRegion.a < 0:
-		lastRegion = sublime.Region(view.size(), 0)
-
-	newRegions = []
-	for i in range(0, len(regions)):
-		lastPoint = lastRegion.a - 1
-		if i + 1 < len(regions):
-			lastPoint = regions[i+1].a - 1
-
-		newRegions.append(sublime.Region(regions[i].b, lastPoint - 1))
-	return newRegions
-
 class BuildResults:
 	def __init__(self, window):
 		global paths	
@@ -50,57 +35,22 @@ class BuildResults:
 		message = cmd["Message"]
 		eventType = cmd["Type"]				
 
-		fileData = LoadFile(filePath)
 		output = ""
 
-		if fileData == "":
-			if eventType == "Error" or eventType == "FatalError":
-				output += "\n{Message} - {Path}({Line}:{Col}):E\n".format(Path = filePath, Message = message, 
-					Line = startLine, Col = startCol)
-			else:
-				output += "\n{Message} - {Path}({Line}:{Col}):\n".format(Path = filePath, Message = message, 
-					Line = startLine, Col = startCol)
+		paths.append([buildResultPanel.size() + 1, filePath, int(startLine)])
+
+		if eventType == "Error" or eventType == "FatalError":
+			output += "\n{Message} - {Path}({Line}:{Col}):E\n".format(Path = filePath, Message = message, 
+				Line = startLine, Col = startCol)
 		else:
-			lines = fileData.split('\n')
-			line = int(startLine)
-
-			dataBefore = ""
-			for i in range(line - 5, line-1):
-				if i < 0:
-					continue
-				if i > len(lines):
-					continue
-
-				dataBefore += "   " + str(i+1) + " " + lines[i] + "\n"
-
-			dataAfter = ""
-			for i in range(line, line+5):
-				if i < 0:
-					continue
-				if i >= len(lines):
-					continue
-
-				dataAfter += "   " + str(i+1) + " " + lines[i] + "\n"
-
-			paths.append([buildResultPanel.size() + 1, filePath, line])		
-
-			if eventType == "Error" or eventType == "FatalError":
-				output += "\n{Message} - {Path}:E\n{DataBefore}   {Line}:{LineData}\n{DataAfter}".format(
-					Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
-			elif eventType == "Warning":
-				output += "\n{Message} - {Path}:\n{DataBefore}   {Line}:{LineData}\n{DataAfter}".format(
-					Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)
-			else:
-				output += "\n{Message} - {Path}:\n{DataBefore}   {Line}{LineData}\n{DataAfter}".format(
-					Path = filePath, Line = startLine, LineData = lines[line-1], Message = message, DataBefore = dataBefore, DataAfter = dataAfter)		
+			output += "\n{Message} - {Path}({Line}:{Col}):\n".format(Path = filePath, Message = message, 
+				Line = startLine, Col = startCol)
 
 		self.Append(output)
 
 	def Append(self, data):
 		view = buildResultPanel
 		view.run_command("append", {"characters": data})
-
-		view.fold(FileRegions(view))
 
 		codePoints = view.find_by_selector("constant.numeric.line-number.match.find-in-files")
 		lines = []
@@ -145,13 +95,6 @@ class GotoLocationCommand(sublime_plugin.TextCommand):
 			foundSelLoc = self.FindSelectionLocation(view, sel)
 			if foundSelLoc == None:
 				return
-
-			fileRegions = FileRegions(view)
-
-			foundRegion = None
-			for region in fileRegions:
-				if region.contains(sel):
-					foundRegion = sublime.Region(region.a-1, region.b)
 
 			if foundRegion != None:
 				nameRegions = NameRegions(view)
