@@ -1,7 +1,8 @@
 import sublime, sublime_plugin
 import queue, threading, time
 
-buildOutPanel = None
+buildOutPanels = []
+windowsWithPanel = []
 
 def AppendStrToPanel(panel, strData):
 	panel.run_command("append", {"characters": strData})
@@ -30,7 +31,9 @@ class BuildOutputView:
 			while not self.queue.empty():
 				res += self.queue.get_nowait()
 
-			AppendStrToPanel(buildOutPanel, res)
+			for panel in buildOutPanels:
+				AppendStrToPanel(panel, res)
+			
 			time.sleep(0.05)
 
 	def ToggleShow(self):
@@ -38,9 +41,13 @@ class BuildOutputView:
 
 class BuildOutputCommand(sublime_plugin.WindowCommand):
 	def __init__(self, window):
-		global buildOutPanel
-		buildOutPanel = window.create_output_panel("FuseBuildOutput")
-		buildOutPanel.set_name("Fuse - Build Output")
+		if window not in windowsWithPanel:
+			windowsWithPanel.append(window)
+
+			buildOutPanel = window.create_output_panel("FuseBuildOutput")
+			buildOutPanel.set_name("Fuse - Build Output")
+			buildOutPanels.append(buildOutPanel)
+
 		self.window = window
 
 	def run(self):
