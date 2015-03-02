@@ -1,9 +1,11 @@
 Sublime Plugin
 ==================
-Sublime plugin for Fuse Editor
+Sublime plugin for Fuse Editor. 
 
 How to install on Windows
 =================
+Fuse will install the plugin on demand, so the steps below are in normal circumstances not neccessary.  
+
 Go to AppData/Roaming (Type %appdata% in file explorer). Find the "Sublime Text 3" folder, and go into "Packages".
 Clone repo into this folder, and RENAME the folder to "Fuse", and restart sublime if it's already open.
 
@@ -13,6 +15,8 @@ This is a temporary install solution. There will be an eaiser way of doing this 
 
 How to install on Mac OS X
 =================
+Fuse will install the plugin on demand, so the steps below are in normal circumstances not neccessary.  
+
 Go to ~/Library/Application Support. Find the "Sublime Text 3" folder, and go into "Packages".
 Clone repo into this folder, and RENAME the folder to "Fuse", and restart sublime if it's already open.
 
