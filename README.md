@@ -17,7 +17,7 @@ This is a temporary install solution. There will be an eaiser way of doing this 
 
 How to install on Mac OS X
 =================
-Fuse will install the plugin on demand, so the steps below arenot neccessary in normal circumstances. 
+Fuse will install the plugin on demand, so the steps below are not neccessary in normal circumstances. 
 
 NOTE: The automatically installer does not work if you have installed the plugin manually
 
