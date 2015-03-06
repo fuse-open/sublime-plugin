@@ -57,15 +57,26 @@ def BuildEventRaised(cmd):
 
 def HandleCodeSuggestion(cmd):
 	suggestions = cmd["CodeSuggestions"]
-		
+
 	global items
 	global isUpdatingCache
 	isUpdatingCache = cmd["IsUpdatingCache"]
 	items = []
 	
+
 	for suggestion in suggestions:
 		suggestionText = suggestion["Suggestion"]
-		text = suggestionText + "\t(" + suggestion["Type"] + ")"
+		descriptionText = suggestion["Description"]
+		typeDescription = suggestion["Type"]
+		access = suggestion["Access"]
+
+		if descriptionText != "":
+			typeDescription = descriptionText
+
+		#if access != "":
+		#	typeDescription = access+" "+typeDescription
+
+		text = suggestionText + "\t" + typeDescription
 
 		if suggestion["PreText"] != "":
 			suggestionText = suggestion["PreText"] + suggestion["PostText"]
