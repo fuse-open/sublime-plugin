@@ -55,6 +55,44 @@ def WriteToConsole(args):
 def BuildEventRaised(cmd):
 	buildResults.Add(cmd)
 
+# Rebuild a sequence as a list of n-tuples
+def Group(lst, n):
+    return zip(*[lst[i::n] for i in range(n)]) 
+
+def TrimType(typeDesc):
+	return typeDesc.rpartition(".")[2]
+
+# Parse a method into tab completion text, type hint and verbose hint
+def ParseMethod(access, methodName, arguments, returntype):
+	args = Group(arguments, 2)
+	verboseHint = " ".join(access)
+	methodText = methodName+"("
+	typeHint = "("
+
+	print("Parsing method: "+methodName+", "+str(access))
+
+	count = 1
+	for arg in args:
+		if(count>1):
+			methodText += ", "
+			typeHint += ", "
+		argName = arg[1]
+		isOut = argName.find("&") > -1
+		if isOut:
+			argName = argName.replace("&", "")
+			methodText += "out ${" + str(count) + ":" + argName + "}"
+			typeHint += "out "
+		else:
+			methodText += "${" + str(count) + ":" + argName + "}"
+
+		typeHint += TrimType(arg[0])
+		count += 1
+
+	typeHint += "):" + TrimType(returntype)
+	methodText += ")"
+
+	return (methodText, typeHint, verboseHint)
+
 def HandleCodeSuggestion(cmd):
 	suggestions = cmd["CodeSuggestions"]
 
@@ -62,26 +100,38 @@ def HandleCodeSuggestion(cmd):
 	global isUpdatingCache
 	isUpdatingCache = cmd["IsUpdatingCache"]
 	items = []
-	
 
+	print("Received "+str(len(suggestions)))
 	for suggestion in suggestions:
+
 		suggestionText = suggestion["Suggestion"]
-		descriptionText = suggestion["Description"]
-		typeDescription = suggestion["Type"]
-		access = suggestion["Access"]
+		memberType = suggestion["Type"]
+		# new stuff
+		accessModifiers = suggestion["AccessModifiers"]
+		fieldModifiers = suggestion["FieldModifiers"]
+		descriptionText = suggestion["TypeDescription"]
+		arguments = suggestion["MethodArguments"]
 
-		if descriptionText != "":
-			typeDescription = descriptionText
+		verboseHint = ""
 
-		#if access != "":
-		#	typeDescription = access+" "+typeDescription
+		if descriptionText == "":
+			descriptionText = memberType 
 
-		text = suggestionText + "\t" + typeDescription
+		outtext = suggestionText 
+
+		if memberType == "Method":
+			# Build sublime tab completion, type hint and verbose type hint
+			parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, descriptionText)
+			suggestionText = parsedMethod[0]
+			descriptionText = parsedMethod[1]
+			verboseHint = parsedMethod[2]
 
 		if suggestion["PreText"] != "":
 			suggestionText = suggestion["PreText"] + suggestion["PostText"]
 
-		items.append((text, suggestionText))
+		outtext += "\t" + descriptionText
+
+		items.append((outtext, suggestionText, verboseHint))
 
 	autoCompleteEvent.set()
 	autoCompleteEvent.clear()
