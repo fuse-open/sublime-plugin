@@ -126,6 +126,9 @@ def HandleCodeSuggestion(cmd):
 			descriptionText = parsedMethod[1]
 			verboseHintText = parsedMethod[2]
 
+		if memberType == "Field" or memberType == "Property":
+			descriptionText = TrimType(descriptionText)
+
 		if suggestion["PreText"] != "":
 			suggestionText = suggestion["PreText"] + suggestion["PostText"]
 
