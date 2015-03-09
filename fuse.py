@@ -131,7 +131,7 @@ def HandleCodeSuggestion(cmd):
 
 		outtext += "\t" + descriptionText
 
-		items.append((outtext, suggestionText, verboseHint))
+		items.append((outtext, suggestionText))
 
 	autoCompleteEvent.set()
 	autoCompleteEvent.clear()
