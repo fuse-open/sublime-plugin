@@ -65,7 +65,7 @@ def TrimType(typeDesc):
 # Parse a method into tab completion text, type hint and verbose hint
 def ParseMethod(access, methodName, arguments, returntype):
 	args = Group(arguments, 2)
-	verboseHint = " ".join(access)
+	verboseHintText = " ".join(access)
 	methodText = methodName+"("
 	typeHint = "("
 
@@ -81,17 +81,17 @@ def ParseMethod(access, methodName, arguments, returntype):
 		if isOut:
 			argName = argName.replace("&", "")
 			methodText += "out ${" + str(count) + ":" + argName + "}"
-			typeHint += "out "
+			typeHint += "out ";
 		else:
 			methodText += "${" + str(count) + ":" + argName + "}"
 
-		typeHint += TrimType(arg[0])
+		typeHint += TrimType(arg[0]) + " " + argName
 		count += 1
 
 	typeHint += "):" + TrimType(returntype)
 	methodText += ")"
 
-	return (methodText, typeHint, verboseHint)
+	return (methodText, typeHint, verboseHintText)
 
 def HandleCodeSuggestion(cmd):
 	suggestions = cmd["CodeSuggestions"]
@@ -112,7 +112,7 @@ def HandleCodeSuggestion(cmd):
 		descriptionText = suggestion["TypeDescription"]
 		arguments = suggestion["MethodArguments"]
 
-		verboseHint = ""
+		verboseHintText = ""
 
 		if descriptionText == "":
 			descriptionText = memberType 
@@ -124,7 +124,7 @@ def HandleCodeSuggestion(cmd):
 			parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, descriptionText)
 			suggestionText = parsedMethod[0]
 			descriptionText = parsedMethod[1]
-			verboseHint = parsedMethod[2]
+			verboseHintText = parsedMethod[2]
 
 		if suggestion["PreText"] != "":
 			suggestionText = suggestion["PreText"] + suggestion["PostText"]
