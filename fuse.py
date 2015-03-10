@@ -62,14 +62,16 @@ def Group(lst, n):
 def TrimType(typeDesc):
 	return typeDesc.rpartition(".")[2]
 
-# Parse a method into tab completion text, type hint and verbose hint
-def ParseMethod(access, methodName, arguments, returntype):
+# Parse a method or constructor into tab completion text, type hint and verbose hint
+def ParseMethod(access, methodName, arguments, returntype, asCtor):
 	args = Group(arguments, 2)
 	verboseHintText = " ".join(access)
 	methodText = methodName+"("
-	typeHint = "("
-
-	print("Parsing method: "+methodName+", "+str(access))
+		
+	if asCtor:
+		typeHint = "Class ("
+	else:
+		typeHint = "("
 
 	count = 1
 	for arg in args:
@@ -88,7 +90,10 @@ def ParseMethod(access, methodName, arguments, returntype):
 		typeHint += TrimType(arg[0]) + " " + argName
 		count += 1
 
-	typeHint += "):" + TrimType(returntype)
+	if asCtor:
+		typeHint += ")"
+	else:
+		typeHint += "):" + TrimType(returntype)
 	methodText += ")"
 
 	return (methodText, typeHint, verboseHintText)
@@ -119,9 +124,9 @@ def HandleCodeSuggestion(cmd):
 
 		outtext = suggestionText 
 
-		if memberType == "Method":
+		if memberType == "Method" or memberType == "Constructor":
 			# Build sublime tab completion, type hint and verbose type hint
-			parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, descriptionText)
+			parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, descriptionText, memberType == "Constructor")
 			suggestionText = parsedMethod[0]
 			descriptionText = parsedMethod[1]
 			verboseHintText = parsedMethod[2]
