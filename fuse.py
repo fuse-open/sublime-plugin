@@ -24,6 +24,8 @@ def Recv(msg):
 		name = parsedRes[0]
 		args = parsedRes[1]
 
+		if name == "NewFileCreated":
+			HandleNewFileCreated(args)
 		if name == "SetCodeSuggestions":
 			HandleCodeSuggestion(args)
 		if name == "WriteToConsole":
@@ -67,7 +69,7 @@ def ParseMethod(access, methodName, arguments, returntype, asCtor):
 	args = Group(arguments, 2)
 	verboseHintText = " ".join(access)
 	methodText = methodName+"("
-		
+
 	if asCtor:
 		typeHint = "Class ("
 	else:
@@ -97,6 +99,10 @@ def ParseMethod(access, methodName, arguments, returntype, asCtor):
 	methodText += ")"
 
 	return (methodText, typeHint, verboseHintText)
+
+def HandleNewFileCreated(cmd):
+	filePath = cmd["FilePath"]
+	active_window.open_file(filePath)
 
 def HandleCodeSuggestion(cmd):
 	suggestions = cmd["CodeSuggestions"]
