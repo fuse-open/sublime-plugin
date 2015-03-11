@@ -24,8 +24,6 @@ def Recv(msg):
 		name = parsedRes[0]
 		args = parsedRes[1]
 
-		if name == "NewFileCreated":
-			HandleNewFileCreated(args)
 		if name == "SetCodeSuggestions":
 			HandleCodeSuggestion(args)
 		if name == "WriteToConsole":
@@ -100,10 +98,6 @@ def ParseMethod(access, methodName, arguments, returntype, asCtor):
 
 	return (methodText, typeHint, verboseHintText)
 
-def HandleNewFileCreated(cmd):
-	filePath = cmd["FilePath"]
-	active_window.open_file(filePath)
-
 def HandleCodeSuggestion(cmd):
 	suggestions = cmd["CodeSuggestions"]
 
@@ -112,40 +106,39 @@ def HandleCodeSuggestion(cmd):
 	isUpdatingCache = cmd["IsUpdatingCache"]
 	items = []
 
-	print("Received "+str(len(suggestions)))
 	for suggestion in suggestions:
 
 		suggestionText = suggestion["Suggestion"]
-		memberType = suggestion["Type"]
-		# new stuff
+		suggestionType = suggestion["Type"]
+
 		accessModifiers = suggestion["AccessModifiers"]
 		fieldModifiers = suggestion["FieldModifiers"]
-		descriptionText = suggestion["TypeDescription"]
+		hintText = suggestion["ReturnType"]
 		arguments = suggestion["MethodArguments"]
 
 		verboseHintText = ""
 
-		if descriptionText == "":
-			descriptionText = memberType 
+		if hintText == "":
+			hintText = suggestionType 
 
-		outtext = suggestionText 
+		outText = suggestionText 
 
-		if memberType == "Method" or memberType == "Constructor":
+		if suggestionType == "Method" or suggestionType == "Constructor":
 			# Build sublime tab completion, type hint and verbose type hint
-			parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, descriptionText, memberType == "Constructor")
+			parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, hintText, suggestionType == "Constructor")
 			suggestionText = parsedMethod[0]
-			descriptionText = parsedMethod[1]
+			hintText = parsedMethod[1]
 			verboseHintText = parsedMethod[2]
 
-		if memberType == "Field" or memberType == "Property":
-			descriptionText = TrimType(descriptionText)
+		if suggestionType == "Field" or suggestionType == "Property":
+			hintText = TrimType(hintText)
 
 		if suggestion["PreText"] != "":
 			suggestionText = suggestion["PreText"] + suggestion["PostText"]
 
-		outtext += "\t" + descriptionText
+		outText += "\t" + hintText
 
-		items.append((outtext, suggestionText))
+		items.append((outText, suggestionText))
 
 	autoCompleteEvent.set()
 	autoCompleteEvent.clear()
