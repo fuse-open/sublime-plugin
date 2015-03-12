@@ -55,22 +55,90 @@ def WriteToConsole(args):
 def BuildEventRaised(cmd):
 	buildResults.Add(cmd)
 
+# Rebuild a sequence as a list of n-tuples
+def Group(lst, n):
+    return zip(*[lst[i::n] for i in range(n)]) 
+
+def TrimType(typeDesc):
+	return typeDesc.rpartition(".")[2]
+
+# Parse a method or constructor into tab completion text, type hint and verbose hint
+def ParseMethod(access, methodName, arguments, returntype, asCtor):
+	args = Group(arguments, 2)
+	verboseHintText = " ".join(access)
+	methodText = methodName+"("
+
+	if asCtor:
+		typeHint = "Class ("
+	else:
+		typeHint = "("
+
+	count = 1
+	for arg in args:
+		if(count>1):
+			methodText += ", "
+			typeHint += ", "
+		argName = arg[1]
+		isOut = argName.find("&") > -1
+		if isOut:
+			argName = argName.replace("&", "")
+			methodText += "out ${" + str(count) + ":" + argName + "}"
+			typeHint += "out ";
+		else:
+			methodText += "${" + str(count) + ":" + argName + "}"
+
+		typeHint += TrimType(arg[0]) + " " + argName
+		count += 1
+
+	if asCtor:
+		typeHint += ")"
+	else:
+		typeHint += "):" + TrimType(returntype)
+	methodText += ")"
+
+	return (methodText, typeHint, verboseHintText)
+
 def HandleCodeSuggestion(cmd):
 	suggestions = cmd["CodeSuggestions"]
-		
+
 	global items
 	global isUpdatingCache
 	isUpdatingCache = cmd["IsUpdatingCache"]
 	items = []
-	
+
 	for suggestion in suggestions:
+
 		suggestionText = suggestion["Suggestion"]
-		text = suggestionText + "\t(" + suggestion["Type"] + ")"
+		suggestionType = suggestion["Type"]
+
+		accessModifiers = suggestion["AccessModifiers"]
+		fieldModifiers = suggestion["FieldModifiers"]
+		hintText = suggestion["ReturnType"]
+		arguments = suggestion["MethodArguments"]
+
+		verboseHintText = ""
+
+		if hintText == "":
+			hintText = suggestionType 
+
+		outText = suggestionText 
+
+		if suggestionType == "Method" or suggestionType == "Constructor":
+			# Build sublime tab completion, type hint and verbose type hint
+			parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, hintText, suggestionType == "Constructor")
+			suggestionText = parsedMethod[0]
+			hintText = parsedMethod[1]
+			verboseHintText = parsedMethod[2]
+
+		if suggestionType == "Field" or suggestionType == "Property":
+			hintText = TrimType(hintText)
 
 		if suggestion["PreText"] != "":
 			suggestionText = suggestion["PreText"] + suggestion["PostText"]
 
-		items.append((text, suggestionText))
+		outText += "\t" + hintText
+
+		items.append((outText, suggestionText))
 
 	autoCompleteEvent.set()
 	autoCompleteEvent.clear()
