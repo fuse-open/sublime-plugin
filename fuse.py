@@ -24,6 +24,8 @@ def Recv(msg):
 		name = parsedRes[0]
 		args = parsedRes[1]
 
+		if name == "SetAPIVersion":
+			HandleAPIVersion(args)
 		if name == "SetCodeSuggestions":
 			HandleCodeSuggestion(args)
 		if name == "WriteToConsole":
@@ -39,6 +41,9 @@ def Recv(msg):
 			buildResults = BuildResults(sublime.active_window())		
 	except:
 		print(sys.exc_info()[0])
+
+def HandleAPIVersion(args):
+	print("Fuse plugin API version "+args["Version"])
 
 def Error(cmd):
 	print("Fuse - Error: " + cmd["ErrorString"])
@@ -110,28 +115,31 @@ def HandleCodeSuggestion(cmd):
 
 		suggestionText = suggestion["Suggestion"]
 		suggestionType = suggestion["Type"]
-
-		accessModifiers = suggestion["AccessModifiers"]
-		fieldModifiers = suggestion["FieldModifiers"]
 		hintText = suggestion["ReturnType"]
-		arguments = suggestion["MethodArguments"]
 
-		verboseHintText = ""
+		fallback = False
 
-		if hintText == "":
+		if hintText == None or hintText == "":
+			fallback = True
 			hintText = suggestionType 
+		else:
+			accessModifiers = suggestion["AccessModifiers"]
+			fieldModifiers = suggestion["FieldModifiers"]
+			arguments = suggestion["MethodArguments"]
+			verboseHintText = ""
 
 		outText = suggestionText 
 
-		if suggestionType == "Method" or suggestionType == "Constructor":
-			# Build sublime tab completion, type hint and verbose type hint
-			parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, hintText, suggestionType == "Constructor")
-			suggestionText = parsedMethod[0]
-			hintText = parsedMethod[1]
-			verboseHintText = parsedMethod[2]
+		if not fallback:
+			if suggestionType == "Method" or suggestionType == "Constructor":
+				# Build sublime tab completion, type hint and verbose type hint
+				parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, hintText, suggestionType == "Constructor")
+				suggestionText = parsedMethod[0]
+				hintText = parsedMethod[1]
+				verboseHintText = parsedMethod[2]
 
-		if suggestionType == "Field" or suggestionType == "Property":
-			hintText = TrimType(hintText)
+			if suggestionType == "Field" or suggestionType == "Property":
+				hintText = TrimType(hintText)
 
 		if suggestion["PreText"] != "":
 			suggestionText = suggestion["PreText"] + suggestion["PostText"]
