@@ -8,7 +8,7 @@ from Fuse.build_results import *
 from Fuse.output_view import *
 from Fuse.build_output import *
 
-apiVersion = (1,1)
+apiVersion = (1,2)
 remoteApiVersion = None
 items = None
 isUpdatingCache = False
@@ -76,8 +76,14 @@ def TrimType(typeDesc):
 	return typeDesc.rpartition(".")[2]
 
 # Parse a method or constructor into tab completion text, type hint and verbose hint
-def ParseMethod(access, methodName, arguments, returntype, asCtor):
-	args = Group(arguments, 2)
+def ParseMethod(access, methodName, arguments, returntype, asCtor, minorApiVersion):
+
+	args = None
+	if minorApiVersion <= 1:
+		args = Group(arguments, 2)
+	elif minorApiVersion >=2:
+		args = arguments
+
 	verboseHintText = " ".join(access)
 	methodText = methodName+"("
 
@@ -88,19 +94,33 @@ def ParseMethod(access, methodName, arguments, returntype, asCtor):
 
 	count = 1
 	for arg in args:
-		if(count>1):
+		if count>1:
 			methodText += ", "
 			typeHint += ", "
-		argName = arg[1]
-		isOut = argName.find("&") > -1
-		if isOut:
-			argName = argName.replace("&", "")
-			methodText += "out ${" + str(count) + ":" + argName + "}"
-			typeHint += "out ";
-		else:
-			methodText += "${" + str(count) + ":" + argName + "}"
 
-		typeHint += TrimType(arg[0]) + " " + argName
+		argName = ""
+
+		if minorApiVersion <= 1:
+			argName = arg[1]
+			isOut = argName.find("&") > -1
+			if isOut:
+				argName = argName.replace("&", "")
+				methodText += "out ${" + str(count) + ":" + argName + "}"
+				typeHint += "out "
+			else:
+				methodText += "${" + str(count) + ":" + argName + "}"
+			typeHint += TrimType(arg[0]) + " " + argName
+		elif minorApiVersion >= 2:
+			argName = arg["Name"]
+			
+			if arg["IsOut"]:
+				methodText += "out ${" + str(count) + ":" + argName + "}"
+				typeHint += "out "
+			else:
+				methodText += "${" + str(count) + ":" + argName + "}"
+
+			typeHint += TrimType(arg["ArgType"]) + " " + argName
+
 		count += 1
 
 	if asCtor:
@@ -141,11 +161,12 @@ def HandleCodeSuggestion(cmd):
 			fieldModifiers = suggestion["FieldModifiers"]
 			arguments = suggestion["MethodArguments"]
 
-			outText = suggestionText 
+			outText = suggestionText
 
 			if suggestionType == "Method" or suggestionType == "Constructor":
 				# Build sublime tab completion, type hint and verbose type hint
-				parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, hintText, suggestionType == "Constructor")
+				parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, hintText, suggestionType == "Constructor", minor)
+
 				suggestionText = parsedMethod[0]
 				hintText = parsedMethod[1]
 
