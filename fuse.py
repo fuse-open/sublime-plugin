@@ -1,5 +1,6 @@
 import sublime, sublime_plugin
 import json, threading, time, sys, os, time
+from types import *
 from Fuse.interop import *
 from Fuse.cmd_parser import *
 from Fuse.fuse_util import *
@@ -50,8 +51,9 @@ def HandleAPIVersion(args):
 	remoteApiVersion = (int(tags[0]), int(tags[1]))
 	print(str.format("Remote Fuse plugin API version {0}.{1}",remoteApiVersion[0], remoteApiVersion[1]))
 	print(str.format("Local Fuse plugin API version {0}.{1}",apiVersion[0], apiVersion[1]))
-	if apiVersion[0] > remoteApiVersion[0] or apiVersion[1] > remoteApiVersion[1]:
-		sublime.error_message(str.format("This plugin expects Fuse plugin API {0}.{1}\nAvailable plugin API is {2}.{3}\nMake sure you are running the latest version of Fuse.", apiVersion[0],apiVersion[1], remoteApiVersion[0], remoteApiVersion[1]))
+	if(remoteApiVersion[1]>1):
+		if apiVersion[0] > remoteApiVersion[0] or apiVersion[1] > remoteApiVersion[1]:
+			sublime.error_message(str.format("This plugin expects Fuse plugin API {0}.{1}\nAvailable plugin API is {2}.{3}\nMake sure you are running the latest version of Fuse.", apiVersion[0],apiVersion[1], remoteApiVersion[0], remoteApiVersion[1]))
 
 def Error(cmd):
 	print("Fuse - Error: " + cmd["ErrorString"])
@@ -90,6 +92,9 @@ def ParseMethod(access, methodName, arguments, returntype, asCtor):
 
 	count = 1
 	for arg in args:
+		if type(arg) is str:
+			break
+
 		if count>1:
 			methodText += ", "
 			typeHint += ", "
@@ -136,7 +141,7 @@ def HandleCodeSuggestion(cmd):
 		suggestionType = suggestion["Type"]
 		hintText = "" # The right-column hint text
 
-		if minor >= 2:
+		if minor >= 1:
 			hintText = suggestion["ReturnType"]
 			accessModifiers = suggestion["AccessModifiers"]
 			fieldModifiers = suggestion["FieldModifiers"]
