@@ -1,5 +1,6 @@
 import sublime, sublime_plugin
 import json, threading, time, sys, os, time
+from types import *
 from Fuse.interop import *
 from Fuse.cmd_parser import *
 from Fuse.fuse_util import *
@@ -8,6 +9,8 @@ from Fuse.build_results import *
 from Fuse.output_view import *
 from Fuse.build_output import *
 
+apiVersion = (1,2)
+remoteApiVersion = None
 items = None
 isUpdatingCache = False
 autoCompleteEvent = None
@@ -24,6 +27,8 @@ def Recv(msg):
 		name = parsedRes[0]
 		args = parsedRes[1]
 
+		if name == "SetAPIVersion":
+			HandleAPIVersion(args)
 		if name == "SetCodeSuggestions":
 			HandleCodeSuggestion(args)
 		if name == "WriteToConsole":
@@ -39,6 +44,16 @@ def Recv(msg):
 			buildResults = BuildResults(sublime.active_window())		
 	except:
 		print(sys.exc_info()[0])
+
+def HandleAPIVersion(args):
+	versionString = args["Version"]
+	tags = versionString.split(".")
+	remoteApiVersion = (int(tags[0]), int(tags[1]))
+	print(str.format("Remote Fuse plugin API version {0}.{1}",remoteApiVersion[0], remoteApiVersion[1]))
+	print(str.format("Local Fuse plugin API version {0}.{1}",apiVersion[0], apiVersion[1]))
+	if(remoteApiVersion[1]>1):
+		if apiVersion[0] > remoteApiVersion[0] or apiVersion[1] > remoteApiVersion[1]:
+			sublime.error_message(str.format("This plugin expects Fuse plugin API {0}.{1}\nAvailable plugin API is {2}.{3}\nMake sure you are running the latest version of Fuse.", apiVersion[0],apiVersion[1], remoteApiVersion[0], remoteApiVersion[1]))
 
 def Error(cmd):
 	print("Fuse - Error: " + cmd["ErrorString"])
@@ -64,7 +79,9 @@ def TrimType(typeDesc):
 
 # Parse a method or constructor into tab completion text, type hint and verbose hint
 def ParseMethod(access, methodName, arguments, returntype, asCtor):
-	args = Group(arguments, 2)
+
+	args = arguments
+
 	verboseHintText = " ".join(access)
 	methodText = methodName+"("
 
@@ -75,19 +92,23 @@ def ParseMethod(access, methodName, arguments, returntype, asCtor):
 
 	count = 1
 	for arg in args:
-		if(count>1):
+		if type(arg) is str:
+			break
+
+		if count>1:
 			methodText += ", "
 			typeHint += ", "
-		argName = arg[1]
-		isOut = argName.find("&") > -1
-		if isOut:
-			argName = argName.replace("&", "")
+
+		argName = arg["Name"]
+		
+		if arg["IsOut"]:
 			methodText += "out ${" + str(count) + ":" + argName + "}"
-			typeHint += "out ";
+			typeHint += "out "
 		else:
 			methodText += "${" + str(count) + ":" + argName + "}"
 
-		typeHint += TrimType(arg[0]) + " " + argName
+		typeHint += TrimType(arg["ArgType"]) + " " + argName
+
 		count += 1
 
 	if asCtor:
@@ -106,38 +127,43 @@ def HandleCodeSuggestion(cmd):
 	isUpdatingCache = cmd["IsUpdatingCache"]
 	items = []
 
+	# Determine which fields are enabled for completions
+	# If remoteApiVersion hasn't been defined, base fields on that
+	# Version no used to pick fields is determined from lowest minor version of local and remote
+
+	minor = apiVersion[1]
+	if remoteApiVersion != None:
+		minor = min(apiVersion[1], remoteApiVersion[1])
+
 	for suggestion in suggestions:
 
-		suggestionText = suggestion["Suggestion"]
+		outText = suggestionText = suggestion["Suggestion"]
 		suggestionType = suggestion["Type"]
+		hintText = "" # The right-column hint text
 
-		accessModifiers = suggestion["AccessModifiers"]
-		fieldModifiers = suggestion["FieldModifiers"]
-		hintText = suggestion["ReturnType"]
-		arguments = suggestion["MethodArguments"]
+		if minor >= 1:
+			hintText = suggestion["ReturnType"]
+			accessModifiers = suggestion["AccessModifiers"]
+			fieldModifiers = suggestion["FieldModifiers"]
+			arguments = suggestion["MethodArguments"]
 
-		verboseHintText = ""
+			outText = suggestionText
 
-		if hintText == "":
-			hintText = suggestionType 
+			if suggestionType == "Method" or suggestionType == "Constructor":
+				# Build sublime tab completion, type hint and verbose type hint
+				parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, hintText, suggestionType == "Constructor")
 
-		outText = suggestionText 
+				suggestionText = parsedMethod[0]
+				hintText = parsedMethod[1]
 
-		if suggestionType == "Method" or suggestionType == "Constructor":
-			# Build sublime tab completion, type hint and verbose type hint
-			parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, hintText, suggestionType == "Constructor")
-			suggestionText = parsedMethod[0]
-			hintText = parsedMethod[1]
-			verboseHintText = parsedMethod[2]
+			if suggestionType == "Field" or suggestionType == "Property":
+				hintText = TrimType(hintText)
 
-		if suggestionType == "Field" or suggestionType == "Property":
-			hintText = TrimType(hintText)
 
 		if suggestion["PreText"] != "":
 			suggestionText = suggestion["PreText"] + suggestion["PostText"]
 
 		outText += "\t" + hintText
-
 		items.append((outText, suggestionText))
 
 	autoCompleteEvent.set()
