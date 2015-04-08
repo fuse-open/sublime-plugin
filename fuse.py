@@ -1,4 +1,4 @@
-import sublime, sublime_plugin
+import sublime, sublime_plugin, traceback
 import json, threading, time, sys, os, time
 from types import *
 from Fuse.interop import *
@@ -20,6 +20,7 @@ buildResults = None
 outputView = OutputView()
 buildOutput = BuildOutputView()
 connectThread = None
+useShortCompletion = False
 
 def Recv(msg):
 	try:
@@ -124,47 +125,55 @@ def HandleCodeSuggestion(cmd):
 
 	global items
 	global isUpdatingCache
+	global useShortCompletion
+
 	isUpdatingCache = cmd["IsUpdatingCache"]
 	items = []
 
-	# Determine which fields are enabled for completions
-	# If remoteApiVersion hasn't been defined, base fields on that
-	# Version no used to pick fields is determined from lowest minor version of local and remote
+	try:
+		# Determine which fields are enabled for completions
+		# If remoteApiVersion hasn't been defined, base fields on that
+		# Version no used to pick fields is determined from lowest minor version of local and remote
 
-	minor = apiVersion[1]
-	if remoteApiVersion != None:
-		minor = min(apiVersion[1], remoteApiVersion[1])
+		minor = apiVersion[1]
+		if remoteApiVersion != None:
+			minor = min(apiVersion[1], remoteApiVersion[1])
 
-	for suggestion in suggestions:
+		for suggestion in suggestions:
 
-		outText = suggestionText = suggestion["Suggestion"]
-		suggestionType = suggestion["Type"]
-		hintText = "" # The right-column hint text
+			outText = suggestionText = suggestion["Suggestion"]
+			suggestionType = suggestion["Type"]
+			hintText = "" # The right-column hint text
 
-		if minor >= 1:
-			hintText = suggestion["ReturnType"]
-			accessModifiers = suggestion["AccessModifiers"]
-			fieldModifiers = suggestion["FieldModifiers"]
-			arguments = suggestion["MethodArguments"]
+			if minor >= 1:
+				hintText = suggestion["ReturnType"]
+				accessModifiers = suggestion["AccessModifiers"]
+				fieldModifiers = suggestion["FieldModifiers"]
+				arguments = suggestion["MethodArguments"]
 
-			outText = suggestionText
+				outText = suggestionText
 
-			if suggestionType == "Method" or suggestionType == "Constructor":
-				# Build sublime tab completion, type hint and verbose type hint
-				parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, hintText, suggestionType == "Constructor")
+				if suggestionType == "Method" or suggestionType == "Constructor":
+					# Build sublime tab completion, type hint and verbose type hint
+					parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, hintText, suggestionType == "Constructor")
 
-				suggestionText = parsedMethod[0]
-				hintText = parsedMethod[1]
+					if not useShortCompletion:
+						suggestionText = parsedMethod[0]
+					hintText = parsedMethod[1]
 
-			if suggestionType == "Field" or suggestionType == "Property":
-				hintText = TrimType(hintText)
+				if suggestionType == "Field" or suggestionType == "Property":
+					hintText = TrimType(hintText)
 
 
-		if suggestion["PreText"] != "":
-			suggestionText = suggestion["PreText"] + suggestion["PostText"]
+			if suggestion["PreText"] != "":
+				suggestionText = suggestion["PreText"] + suggestion["PostText"]
 
-		outText += "\t" + hintText
-		items.append((outText, suggestionText))
+
+			outText += "\t" + hintText
+			items.append((outText, suggestionText))
+
+	except:
+		traceback.print_exc()
 
 	autoCompleteEvent.set()
 	autoCompleteEvent.clear()
@@ -220,10 +229,16 @@ def SendHandshake():
 		{"Name": "ShortcutFeature"}]}}))
 
 class FuseEventListener(sublime_plugin.EventListener):
-	def RequestAutoComplete(self, view, prefix, syntaxName):		
+	def RequestAutoComplete(self, view, prefix, syntaxName):
+		global useShortCompletion
+
 		fileName = view.file_name()
 		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
+
+		if view.substr(caret) == "(": # TODO: Better detection of function call
+			useShortCompletion = True
+
 		interop.Send(json.dumps({"Command":"RequestCodeCompletion", "Arguments":{
 			"QueryId": 0,
 			"Path": fileName, "Text": text, 
@@ -252,7 +267,7 @@ class FuseEventListener(sublime_plugin.EventListener):
 				return ([("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
 			else:
 				return
-						
+
 		items = []
 		return data
 
