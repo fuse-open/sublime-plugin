@@ -305,6 +305,6 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 			"CaretPosition": GetRowCol(view, caret),
 			"QueryId": 0}}))
 
-class FuseRefreshCommand(sublime_plugin.ApplicationCommand):
+class FuseBuildRunCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
-		interop.Send(json.dumps({"Command": "RefreshViewports"}))
+		interop.Send(json.dumps({"Command": "BuildAndRun"}))
