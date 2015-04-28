@@ -83,9 +83,16 @@
                 []
             },  
             {
-                "caption": "Refresh Viewports",
+                "caption": "Build and Run",
                 "mnemonic": "R",
-                "command":"fuse_refresh",
+                "command":"fuse_build_run",
+                "children":
+                []
+            },
+            {
+                "caption": "Recompile",
+                "mnemonic": "C",
+                "command":"fuse_recompile",
                 "children":
                 []
             }            
