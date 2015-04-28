@@ -88,6 +88,13 @@
                 "command":"fuse_build_run",
                 "children":
                 []
+            },
+            {
+                "caption": "Recompile",
+                "mnemonic": "C",
+                "command":"fuse_recompile",
+                "children":
+                []
             }            
         ]
     }

@@ -2,5 +2,9 @@
 	{ 
 		"keys": ["super+e"],
 		"command": "fuse_buildRun"
+	},
+	{ 
+		"keys": ["shift+super+r"],
+		"command": "fuse_recompile"
 	}
 ]

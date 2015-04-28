@@ -308,3 +308,7 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 class FuseBuildRunCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
 		interop.Send(json.dumps({"Command": "BuildAndRun"}))
+
+class FuseRecompileCommand(sublime_plugin.ApplicationCommand):
+	def run(self):
+		interop.Send(json.dumps({"Command": "Recompile"}))
