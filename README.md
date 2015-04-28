@@ -35,4 +35,5 @@ Current Features
 * Build result(should open automatically if errors or warnings) but can be found in the menu called Fuse->Build result
 * Debug log ouput can be found in the menu called Fuse->Output
 * Build and run from sublime (F7 - Win, CMD+E - Mac OS X)
+* Recompile (F6 - Win, shift+Cmd+R - Mac OS X)
 * Build log found in the Fuse menu
