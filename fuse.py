@@ -126,6 +126,8 @@ def HandleCodeSuggestion(cmd):
 	global items
 	global isUpdatingCache
 	global useShortCompletion
+	global completionSyntax
+	global doCompleteAttribs
 
 	isUpdatingCache = cmd["IsUpdatingCache"]
 	items = []
@@ -146,23 +148,29 @@ def HandleCodeSuggestion(cmd):
 			hintText = "" # The right-column hint text
 
 			if minor >= 1:
-				hintText = suggestion["ReturnType"]
-				accessModifiers = suggestion["AccessModifiers"]
-				fieldModifiers = suggestion["FieldModifiers"]
-				arguments = suggestion["MethodArguments"]
 
-				outText = suggestionText
+				if completionSyntax == "UX":
+					hintText = suggestion["ReturnType"]
+					if doCompleteAttribs and suggestionType != "Class" and suggestionType != "Namespace":
+						suggestionText += '="${1}"'
+				else:
+					hintText = suggestion["ReturnType"]
+					accessModifiers = suggestion["AccessModifiers"]
+					fieldModifiers = suggestion["FieldModifiers"]
+					arguments = suggestion["MethodArguments"]
 
-				if suggestionType == "Method" or suggestionType == "Constructor":
-					# Build sublime tab completion, type hint and verbose type hint
-					parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, hintText, suggestionType == "Constructor")
+					outText = suggestionText
 
-					if not useShortCompletion:
-						suggestionText = parsedMethod[0]
-					hintText = parsedMethod[1]
+					if suggestionType == "Method" or suggestionType == "Constructor":
+						# Build sublime tab completion, type hint and verbose type hint
+						parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, hintText, suggestionType == "Constructor")
 
-				if suggestionType == "Field" or suggestionType == "Property":
-					hintText = TrimType(hintText)
+						if not useShortCompletion:
+							suggestionText = parsedMethod[0]
+						hintText = parsedMethod[1]
+
+					if suggestionType == "Field" or suggestionType == "Property":
+						hintText = TrimType(hintText)
 
 
 			if suggestion["PreText"] != "":
@@ -184,7 +192,10 @@ def plugin_loaded():
 	global closeEvent
 	global interop
 	global buildResults
+	global completionSyntax
+	global doCompleteAttribs
 
+	completionSyntax = ""
 	items = []
 	autoCompleteEvent = threading.Event()
 	closeEvent = threading.Event()
@@ -201,6 +212,8 @@ def plugin_loaded():
 		s.set("open_files_in_new_window", False)
 	else:
 		s.set("open_files_in_new_window", True)
+
+	doCompleteAttribs = GetSetting("fuse_ux_attrib_completion")
 
 def plugin_unloaded():
 	closeEvent.set()
@@ -246,6 +259,7 @@ class FuseEventListener(sublime_plugin.EventListener):
 
 	def on_query_completions(self, view, prefix, locations):
 		global items
+		global completionSyntax
 
 		if GetSetting("fuse_completion") == False or not interop.IsConnected():
 			return
@@ -253,6 +267,8 @@ class FuseEventListener(sublime_plugin.EventListener):
 		syntaxName = GetExtension(view.settings().get("syntax"))
 		if not IsSupportedSyntax(syntaxName):
 			return
+
+		completionSyntax = syntaxName
 
 		self.RequestAutoComplete(view, prefix, syntaxName)
 
@@ -308,3 +324,7 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 class FuseBuildRunCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
 		interop.Send(json.dumps({"Command": "BuildAndRun"}))
+
+class FuseRecompileCommand(sublime_plugin.ApplicationCommand):
+	def run(self):
+		interop.Send(json.dumps({"Command": "Recompile"}))

@@ -31,8 +31,9 @@ This is a temporary install solution. There will be an eaiser way of doing this 
 Current Features
 =================
 * Code completion
-* Goto definition (F12 - Win) or in the menu called Goto->Goto definition
-* Build result(should open automatically if errors or warnings) but can be found in the menu called Fuse->Build result
-* Debug log ouput can be found in the menu called Fuse->Output
-* Build and run from sublime (F7 - Win, CMD+E - Mac OS X)
-* Build log found in the Fuse menu
+* Goto definition
+* Build and run from sublime
+* Build result
+* Build log and Debug log found in the Fuse menu
+
+See [changelog](CHANGELOG.md) for recent feature details.
