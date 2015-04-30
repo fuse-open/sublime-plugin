@@ -22,8 +22,8 @@
                             },
                             {
                                 "command": "open_file",
-                                "args": {"file": "${packages}/Fuse/RELEASE-NOTES.md"},
-                                "caption": "Release Notes"
+                                "args": {"file": "${packages}/Fuse/CHANGELOG.md"},
+                                "caption": "CHANGELOG"
                             },
                             { "caption": "-" },
                             {
@@ -76,7 +76,7 @@
                 []
             }, 
             {
-                "caption": "Output",
+                "caption": "Debug Log",
                 "mnemonic": "O",
                 "command":"toggle_outputview",
                 "children":
@@ -95,7 +95,14 @@
                 "command":"fuse_recompile",
                 "children":
                 []
-            }            
+            },
+            {
+                "caption": "Goto Definition",
+                "mnemonic": "D",
+                "command":"goto_definition",
+                "children":
+                []
+            }             
         ]
     }
 ]
