@@ -151,7 +151,7 @@ def HandleCodeSuggestion(cmd):
 
 				if completionSyntax == "UX":
 					hintText = suggestion["ReturnType"]
-					if doCompleteAttribs and suggestionType != "Class" and suggestionType != "Namespace":
+					if doCompleteAttribs and suggestionType == "Property":
 						suggestionText += '="${1}"'
 				else:
 					hintText = suggestion["ReturnType"]
