@@ -248,8 +248,6 @@ class FuseEventListener(sublime_plugin.EventListener):
 		caret = view.sel()[0].a
 		vstr = view.substr(caret)
 
-		print("Vstr: "+vstr)
-
 		if vstr == "(" or vstr == "=": 
 			useShortCompletion = True
 		else:
