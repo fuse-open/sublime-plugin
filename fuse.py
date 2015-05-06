@@ -21,6 +21,9 @@ outputView = OutputView()
 buildOutput = BuildOutputView()
 connectThread = None
 useShortCompletion = False
+wordAtCaret = ""
+
+filterUXNamespaces = True
 
 def Recv(msg):
 	try:
@@ -128,6 +131,7 @@ def HandleCodeSuggestion(cmd):
 	global useShortCompletion
 	global completionSyntax
 	global doCompleteAttribs
+	global wordAtCaret
 
 	isUpdatingCache = cmd["IsUpdatingCache"]
 	items = []
@@ -141,6 +145,8 @@ def HandleCodeSuggestion(cmd):
 		if remoteApiVersion != None:
 			minor = min(apiVersion[1], remoteApiVersion[1])
 
+		suggestedUXNameSpaces = []
+
 		for suggestion in suggestions:
 
 			outText = suggestionText = suggestion["Suggestion"]
@@ -150,8 +156,21 @@ def HandleCodeSuggestion(cmd):
 			if minor >= 1:
 
 				if completionSyntax == "UX":
+					isNs = False
 					hintText = suggestion["ReturnType"]
-					if (not useShortCompletion) and doCompleteAttribs and suggestionType == "Property":
+					if filterUXNamespaces and wordAtCaret != ":":
+						colonIdx = suggestionText.find(":") + 1
+						if colonIdx > 0:
+							nsname = suggestionText[0:colonIdx]
+							hinted = nsname in suggestedUXNameSpaces
+							isNs = True
+							if not hinted:
+								suggestedUXNameSpaces.append(nsname)
+								outText = suggestionText = nsname
+							else:
+								continue
+
+					if not isNs and (not useShortCompletion) and doCompleteAttribs and suggestionType == "Property":
 						suggestionText += '="${1}"'
 				else:
 					hintText = suggestion["ReturnType"]
@@ -178,7 +197,8 @@ def HandleCodeSuggestion(cmd):
 
 
 			outText += "\t" + hintText
-			items.append((outText, suggestionText))
+			if(outText.find(wordAtCaret) > -1):
+				items.append((outText, suggestionText))
 
 	except:
 		traceback.print_exc()
@@ -243,23 +263,23 @@ def SendHandshake():
 
 class FuseEventListener(sublime_plugin.EventListener):
 
-	def on_selection_modified(self, view):
+	def on_modified(self, view):
 		global useShortCompletion
+		global wordAtCaret
 		caret = view.sel()[0].a
 		vstr = view.substr(caret)
+		wordAtCaret = view.substr(view.word(caret)).strip()
 
 		if vstr == "(" or vstr == "=": 
 			useShortCompletion = True
 		else:
 			useShortCompletion = False
 
-	def RequestAutoComplete(self, view, prefix, syntaxName):
+	def RequestAutoComplete(self, view, syntaxName):
 
 		fileName = view.file_name()
 		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
-
-		# self.ValidateShortCompletion(view)
 
 		interop.Send(json.dumps({"Command":"RequestCodeCompletion", "Arguments":{
 			"QueryId": 0,
@@ -279,7 +299,7 @@ class FuseEventListener(sublime_plugin.EventListener):
 
 		completionSyntax = syntaxName
 
-		self.RequestAutoComplete(view, prefix, syntaxName)
+		self.RequestAutoComplete(view, syntaxName)
 
 		autoCompleteEvent.wait(0.2)
 		
