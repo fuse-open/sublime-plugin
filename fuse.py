@@ -151,7 +151,7 @@ def HandleCodeSuggestion(cmd):
 
 				if completionSyntax == "UX":
 					hintText = suggestion["ReturnType"]
-					if doCompleteAttribs and suggestionType == "Property":
+					if (not useShortCompletion) and doCompleteAttribs and suggestionType == "Property":
 						suggestionText += '="${1}"'
 				else:
 					hintText = suggestion["ReturnType"]
@@ -242,15 +242,26 @@ def SendHandshake():
 		{"Name": "ShortcutFeature"}]}}))
 
 class FuseEventListener(sublime_plugin.EventListener):
-	def RequestAutoComplete(self, view, prefix, syntaxName):
+
+	def on_selection_modified(self, view):
 		global useShortCompletion
+		caret = view.sel()[0].a
+		vstr = view.substr(caret)
+
+		print("Vstr: "+vstr)
+
+		if vstr == "(" or vstr == "=": 
+			useShortCompletion = True
+		else:
+			useShortCompletion = False
+
+	def RequestAutoComplete(self, view, prefix, syntaxName):
 
 		fileName = view.file_name()
 		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
 
-		if view.substr(caret) == "(": # TODO: Better detection of function call
-			useShortCompletion = True
+		# self.ValidateShortCompletion(view)
 
 		interop.Send(json.dumps({"Command":"RequestCodeCompletion", "Arguments":{
 			"QueryId": 0,
