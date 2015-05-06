@@ -23,7 +23,7 @@ connectThread = None
 useShortCompletion = False
 wordAtCaret = ""
 
-filterUXNamespaces = True
+filterUXNamespaces = False
 
 def Recv(msg):
 	try:
@@ -166,7 +166,8 @@ def HandleCodeSuggestion(cmd):
 							isNs = True
 							if not hinted:
 								suggestedUXNameSpaces.append(nsname)
-								outText = suggestionText = nsname
+								outText = nsname
+								suggestionText = nsname[0:len(nsname)-1]
 							else:
 								continue
 
