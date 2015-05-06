@@ -23,7 +23,7 @@ connectThread = None
 useShortCompletion = False
 wordAtCaret = ""
 
-filterUXNamespaces = False
+filterUXNamespaces = True
 
 def Recv(msg):
 	try:
@@ -155,7 +155,7 @@ def HandleCodeSuggestion(cmd):
 
 			if minor >= 1:
 
-				if completionSyntax == "UX":
+				if doCompleteAttribs and completionSyntax == "UX" and suggestionType == "Property":
 					isNs = False
 					hintText = suggestion["ReturnType"]
 					if filterUXNamespaces and wordAtCaret != ":":
@@ -171,7 +171,7 @@ def HandleCodeSuggestion(cmd):
 							else:
 								continue
 
-					if not isNs and (not useShortCompletion) and doCompleteAttribs and suggestionType == "Property":
+					if not isNs and (not useShortCompletion):
 						suggestionText += '="${1}"'
 				else:
 					hintText = suggestion["ReturnType"]
@@ -198,7 +198,7 @@ def HandleCodeSuggestion(cmd):
 
 
 			outText += "\t" + hintText
-			if(outText.find(wordAtCaret) > -1):
+			if(outText.casefold().find(wordAtCaret.casefold()) > -1):
 				items.append((outText, suggestionText))
 
 	except:
