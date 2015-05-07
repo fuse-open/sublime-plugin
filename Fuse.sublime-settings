@@ -3,5 +3,6 @@
 	"fuse_completion": true, /* Use this to disable completion that you get from Fuse */
 	"fuse_open_files_in_same_window": true, /* If true, files opened from explorer will use the same Sublime window */
 	"fuse_if_no_completion_use_sublime": false, /* If Fuse couldn't create suggestions, set this if you want to use Sublime word suggestions instead. */
-	"fuse_ux_attrib_completion": true /* When completing an attribute on a UX node, this appends ="" and moves the caret. */
+	"fuse_ux_attrib_completion": true, /* When completing an attribute on a UX node, this appends ="" and moves the caret. */
+	"fuse_ux_attrib_folding": false /* Enables folding of namespaced attributes into single suggestions until the : has been typed past */
 }
