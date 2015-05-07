@@ -23,8 +23,6 @@ connectThread = None
 useShortCompletion = False
 wordAtCaret = ""
 
-filterUXNamespaces = True
-
 def Recv(msg):
 	try:
 		parsedRes = CmdParser.ParseCommand(msg)
@@ -131,6 +129,7 @@ def HandleCodeSuggestion(cmd):
 	global useShortCompletion
 	global completionSyntax
 	global doCompleteAttribs
+	global foldUXNameSpaces
 	global wordAtCaret
 
 	isUpdatingCache = cmd["IsUpdatingCache"]
@@ -158,7 +157,7 @@ def HandleCodeSuggestion(cmd):
 				if doCompleteAttribs and completionSyntax == "UX" and suggestionType == "Property":
 					isNs = False
 					hintText = suggestion["ReturnType"]
-					if filterUXNamespaces and wordAtCaret != ":":
+					if foldUXNameSpaces and wordAtCaret != ":":
 						colonIdx = suggestionText.find(":") + 1
 						if colonIdx > 0:
 							nsname = suggestionText[0:colonIdx]
@@ -215,6 +214,7 @@ def plugin_loaded():
 	global buildResults
 	global completionSyntax
 	global doCompleteAttribs
+	global foldUXNameSpaces
 
 	completionSyntax = ""
 	items = []
@@ -235,6 +235,8 @@ def plugin_loaded():
 		s.set("open_files_in_new_window", True)
 
 	doCompleteAttribs = GetSetting("fuse_ux_attrib_completion")
+	foldUXNameSpaces = GetSetting("fuse_ux_attrib_folding")
+
 
 def plugin_unloaded():
 	closeEvent.set()

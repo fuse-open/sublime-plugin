@@ -1,7 +1,5 @@
-# Fuse Sublime package 1.2.2
-This update offers a minor (but useful) addition to UX completion, and reflects the recent changes in the tool where automatic reload of source files makes manual refresh obsolete.
+# Fuse Sublime package 1.2.3
 
 ## New features
-* UX attribute completion now appends ="" to attributes when completing and moves your caret for you
-* Added shortcut for build-and-run (Win: F7, Mac: Cmd + E)
-* Refresh has been deprecated in favor of recompile (Win: F6, Mac: shift + Cmd + r) 
+* Suggestion matching should be more aggressive now, omitting more false positives.
+* Added experimental feature for folding attributes by namespace. For instance all ux: attributes such as ```ux:Name``` are folded into the single suggestion ```ux:``` until the ```:``` has been typed past. This feature is currently opt-in and can be enabled with the setting ```fuse_ux_attrib_folding```.
