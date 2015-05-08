@@ -213,8 +213,6 @@ def plugin_loaded():
 	global interop
 	global buildResults
 	global completionSyntax
-	global doCompleteAttribs
-	global foldUXNameSpaces
 
 	completionSyntax = ""
 	items = []
@@ -233,9 +231,6 @@ def plugin_loaded():
 		s.set("open_files_in_new_window", False)
 	else:
 		s.set("open_files_in_new_window", True)
-
-	doCompleteAttribs = GetSetting("fuse_ux_attrib_completion")
-	foldUXNameSpaces = GetSetting("fuse_ux_attrib_folding")
 
 
 def plugin_unloaded():
@@ -292,6 +287,8 @@ class FuseEventListener(sublime_plugin.EventListener):
 	def on_query_completions(self, view, prefix, locations):
 		global items
 		global completionSyntax
+		global doCompleteAttribs
+		global foldUXNameSpaces
 
 		if GetSetting("fuse_completion") == False or not interop.IsConnected():
 			return
@@ -299,6 +296,9 @@ class FuseEventListener(sublime_plugin.EventListener):
 		syntaxName = GetExtension(view.settings().get("syntax"))
 		if not IsSupportedSyntax(syntaxName):
 			return
+
+		doCompleteAttribs = GetSetting("fuse_ux_attrib_completion")
+		foldUXNameSpaces = GetSetting("fuse_ux_attrib_folding")
 
 		completionSyntax = syntaxName
 
