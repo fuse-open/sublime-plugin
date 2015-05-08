@@ -3,6 +3,7 @@ import json, threading, time, sys, os, time
 from types import *
 from Fuse.interop import *
 from Fuse.cmd_parser import *
+from Fuse.fuse_parseutils import *
 from Fuse.fuse_util import *
 from Fuse.go_to_definition import *
 from Fuse.build_results import *
@@ -72,55 +73,6 @@ def WriteToConsole(args):
 def BuildEventRaised(cmd):
 	buildResults.Add(cmd)
 
-# Rebuild a sequence as a list of n-tuples
-def Group(lst, n):
-    return zip(*[lst[i::n] for i in range(n)]) 
-
-def TrimType(typeDesc):
-	return typeDesc.rpartition(".")[2]
-
-# Parse a method or constructor into tab completion text, type hint and verbose hint
-def ParseMethod(access, methodName, arguments, returntype, asCtor):
-
-	args = arguments
-
-	verboseHintText = " ".join(access)
-	methodText = methodName+"("
-
-	if asCtor:
-		typeHint = "Class ("
-	else:
-		typeHint = "("
-
-	count = 1
-	for arg in args:
-		if type(arg) is str:
-			break
-
-		if count>1:
-			methodText += ", "
-			typeHint += ", "
-
-		argName = arg["Name"]
-		
-		if arg["IsOut"]:
-			methodText += "out ${" + str(count) + ":" + argName + "}"
-			typeHint += "out "
-		else:
-			methodText += "${" + str(count) + ":" + argName + "}"
-
-		typeHint += TrimType(arg["ArgType"]) + " " + argName
-
-		count += 1
-
-	if asCtor:
-		typeHint += ")"
-	else:
-		typeHint += "):" + TrimType(returntype)
-	methodText += ")"
-
-	return (methodText, typeHint, verboseHintText)
-
 def HandleCodeSuggestion(cmd):
 	suggestions = cmd["CodeSuggestions"]
 
@@ -153,36 +105,20 @@ def HandleCodeSuggestion(cmd):
 			hintText = "" # The right-column hint text
 
 			if minor >= 1:
-
-				if doCompleteAttribs and completionSyntax == "UX" and suggestionType == "Property":
-					isNs = False
-					hintText = suggestion["ReturnType"]
-					if foldUXNameSpaces and wordAtCaret != ":":
-						colonIdx = suggestionText.find(":") + 1
-						if colonIdx > 0:
-							nsname = suggestionText[0:colonIdx]
-							hinted = nsname in suggestedUXNameSpaces
-							isNs = True
-							if not hinted:
-								suggestedUXNameSpaces.append(nsname)
-								outText = nsname
-								suggestionText = nsname[0:len(nsname)-1]
-							else:
-								continue
-
-					if not isNs and (not useShortCompletion):
-						suggestionText += '="${1}"'
+				if completionSyntax == "UX" and doCompleteAttribs and suggestionType == "Property":
+					s = ParseUXSuggestion(wordAtCaret, suggestion, suggestedUXNameSpaces, useShortCompletion, foldUXNameSpaces)
+					if(s == None):
+						continue
+					else:
+						outText = s[0]
+						suggestionText = s[1]
+					
 				else:
 					hintText = suggestion["ReturnType"]
-					accessModifiers = suggestion["AccessModifiers"]
-					fieldModifiers = suggestion["FieldModifiers"]
-					arguments = suggestion["MethodArguments"]
-
-					outText = suggestionText
 
 					if suggestionType == "Method" or suggestionType == "Constructor":
 						# Build sublime tab completion, type hint and verbose type hint
-						parsedMethod = ParseMethod(accessModifiers, suggestionText, arguments, hintText, suggestionType == "Constructor")
+						parsedMethod = ParseMethod(suggestion["AccessModifiers"], suggestionText, suggestion["MethodArguments"], hintText, suggestionType == "Constructor")
 
 						if not useShortCompletion:
 							suggestionText = parsedMethod[0]
@@ -197,7 +133,7 @@ def HandleCodeSuggestion(cmd):
 
 
 			outText += "\t" + hintText
-			if(outText.casefold().find(wordAtCaret.casefold()) > -1):
+			if(wordAtCaret == "." or outText.casefold().find(wordAtCaret.casefold()) > -1):
 				items.append((outText, suggestionText))
 
 	except:
@@ -213,8 +149,6 @@ def plugin_loaded():
 	global interop
 	global buildResults
 	global completionSyntax
-	global doCompleteAttribs
-	global foldUXNameSpaces
 
 	completionSyntax = ""
 	items = []
@@ -233,9 +167,6 @@ def plugin_loaded():
 		s.set("open_files_in_new_window", False)
 	else:
 		s.set("open_files_in_new_window", True)
-
-	doCompleteAttribs = GetSetting("fuse_ux_attrib_completion")
-	foldUXNameSpaces = GetSetting("fuse_ux_attrib_folding")
 
 
 def plugin_unloaded():
@@ -292,6 +223,8 @@ class FuseEventListener(sublime_plugin.EventListener):
 	def on_query_completions(self, view, prefix, locations):
 		global items
 		global completionSyntax
+		global doCompleteAttribs
+		global foldUXNameSpaces
 
 		if GetSetting("fuse_completion") == False or not interop.IsConnected():
 			return
@@ -299,6 +232,9 @@ class FuseEventListener(sublime_plugin.EventListener):
 		syntaxName = GetExtension(view.settings().get("syntax"))
 		if not IsSupportedSyntax(syntaxName):
 			return
+
+		doCompleteAttribs = GetSetting("fuse_ux_attrib_completion")
+		foldUXNameSpaces = GetSetting("fuse_ux_attrib_folding")
 
 		completionSyntax = syntaxName
 
