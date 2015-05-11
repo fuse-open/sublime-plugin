@@ -111,7 +111,7 @@ def HandleCodeSuggestion(cmd):
 						continue
 					else:
 						outText = s[0]
-						suggestionText = s[1]
+						suggestionText = s[0]+s[1]
 					
 				else:
 					hintText = suggestion["ReturnType"]
