@@ -1,4 +1,4 @@
-# Fuse Sublime package 1.2.5
+# Fuse Sublime package 1.2.6
 
 ## New features
-* Fixed missing dot-completions for uno
+* Fixed broken ux completion behavior
