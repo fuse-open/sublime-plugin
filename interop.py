@@ -7,6 +7,7 @@ class Interop:
 		self.readWorkerStopEvent = None
 		self.readBuffer = bytes()
 		self.socket = None
+		self.on_connect = on_connect
 		self.on_recv = on_recv
 
 	def IsConnected(self):	
@@ -23,6 +24,7 @@ class Interop:
 		
 		self.socket = tmpSocket
 		self.startPollMessages()
+		self.on_connect()
 		print("Connected to Fuse")		
 
 	def Send(self, msg):
