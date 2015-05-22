@@ -1,9 +1,36 @@
 import json
 
-class CmdParser:
-	def ParseCommand(cmdData):
-		cmdParsed = json.loads(cmdData)
-		cmdName = cmdParsed["Command"]
-		cmdValue =  json.loads(cmdParsed["Arguments"])
+class Message:
+	def __init__(self, messageType):
+		self.messageType = messageType
 
-		return (cmdName, cmdValue)
+class Response(Message):
+	def __init__(self, type, id, status, errors, data):
+		super(Response, self).__init__("Response")
+		self.type = type
+		self.id = id
+		self.status = status
+		self.errors = errors
+		self.data = data
+
+class Event(Message):
+	def __init__(self, type, data):
+		super(Event, self).__init__("Event")
+		self.type = type
+		self.data = data
+
+class CmdParser:
+	def ParseCommand(message):		
+		messageParsed = json.loads(message)		
+		messageType = messageParsed["MessageType"]
+		dataType = messageParsed["Type"]
+		data = messageParsed["Data"]
+
+		if messageType == "Response":
+			return Response(dataType, messageParsed["Id"], messageParsed["Status"], messageParsed["Errors"], data)
+		elif messageType == "Event":
+			return Event(dataType, data)
+		else:
+			print("Fuse: Message type unknown.")
+
+		return None
