@@ -41,10 +41,12 @@ class Fuse():
 			if parsedRes.messageType == "Response":
 				if parsedRes.status == "Error":
 					self.HandleErrors(parsedRes.errors)
-				if parsedRes.type == "Hello":
+				elif parsedRes.type == "Hello":
 					print("Got hello response")
 				elif parsedRes.type == "Fuse.GetCodeSuggestions":
 					self.HandleCodeSuggestion(parsedRes.data)
+				elif parsedRes.type == "Fuse.GotoDefinition":
+					GotoDefinition(parsedRes.data)
 
 			if parsedRes.messageType == "Event":
 				if parsedRes.type == "Fuse.DebugLog":
@@ -159,6 +161,55 @@ class Fuse():
 		self.autoCompleteEvent.set()
 		self.autoCompleteEvent.clear()
 
+	def OnQueryCompletion(self, view):
+		if GetSetting("fuse_completion") == False or not self.interop.IsConnected():
+			return
+
+		syntaxName = GetExtension(view.settings().get("syntax"))
+		if not IsSupportedSyntax(syntaxName):
+			return
+
+		self.doCompleteAttribs = GetSetting("fuse_ux_attrib_completion")
+		self.foldUXNameSpaces = GetSetting("fuse_ux_attrib_folding")
+		self.completionSyntax = syntaxName
+
+		self.RequestAutoComplete(view, syntaxName)
+
+		self.autoCompleteEvent.wait(0.2)
+		
+		data = (self.items, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+		if len(self.items) == 0:
+			if self.isUpdatingCache == True:
+				return ([("Updating suggestion cache...", "_"), ("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
+
+			if GetSetting("fuse_if_no_completion_use_sublime") == False:				
+				return ([("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
+			else:
+				return
+
+		self.items = []
+		return data
+
+	def RequestAutoComplete(self, view, syntaxName):
+		fileName = view.file_name()
+		text = view.substr(sublime.Region(0,view.size()))
+		caret = view.sel()[0].a
+
+		gFuse.interop.Send(
+			json.dumps(
+			{
+				"MessageType":"Request",
+				"Id": 0,
+				"Type": "Fuse.GetCodeSuggestions",
+				"Data":
+				{				
+					"Path": fileName, 
+					"Text": text, 
+					"Type": syntaxName, 
+					"CaretPosition": GetRowCol(view, caret)
+				}
+			}))
+
 	def SendHello(self):
 		msg = json.dumps(
 			{
@@ -176,8 +227,7 @@ class Fuse():
 def plugin_loaded():
 	global gFuse
 	gFuse = Fuse()
-	gFuse.closeEvent = threading.Event()	
-	#gFuse.buildResults = BuildResults(sublime.active_window())
+	gFuse.closeEvent = threading.Event()
 
 	gFuse.connectThread = threading.Thread(target = TryConnect)
 	gFuse.connectThread.daemon = True
@@ -191,8 +241,10 @@ def plugin_loaded():
 
 def plugin_unloaded():
 	global gFuse
-	gFuse.closeEvent.set()
-	gFuse.connectThread.join(1)
+	if gFuse.closeEvent != None:
+		gFuse.closeEvent.set()
+		gFuse.connectThread.join(1)
+		
 	gFuse = None
 
 def TryConnect():	
@@ -206,7 +258,6 @@ def TryConnect():
 		gFuse.interop.Disconnect()
 
 class FuseEventListener(sublime_plugin.EventListener):
-
 	def on_modified(self, view):
 		global useShortCompletion
 		global wordAtCaret
@@ -219,59 +270,12 @@ class FuseEventListener(sublime_plugin.EventListener):
 		else:
 			useShortCompletion = False
 
-	def RequestAutoComplete(self, view, syntaxName):
-
-		fileName = view.file_name()
-		text = view.substr(sublime.Region(0,view.size()))
-		caret = view.sel()[0].a
-
-		gFuse.interop.Send(
-			json.dumps(
-			{
-				"MessageType":"Request",
-				"Id": 0,
-				"Type": "Fuse.GetCodeSuggestions",
-				"Data":
-				{				
-					#"Path": fileName, 
-					"Text": text, 
-					"Type": syntaxName, 
-					"CaretPosition": GetRowCol(view, caret)
-				}
-			}))
-
 	def on_query_completions(self, view, prefix, locations):
-		if GetSetting("fuse_completion") == False or not gFuse.interop.IsConnected():
-			return
-
-		syntaxName = GetExtension(view.settings().get("syntax"))
-		if not IsSupportedSyntax(syntaxName):
-			return
-
-		gFuse.doCompleteAttribs = GetSetting("fuse_ux_attrib_completion")
-		gFuse.foldUXNameSpaces = GetSetting("fuse_ux_attrib_folding")
-		gFuse.completionSyntax = syntaxName
-
-		self.RequestAutoComplete(view, syntaxName)
-
-		gFuse.autoCompleteEvent.wait(0.2)
-		
-		data = (gFuse.items, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
-		if len(gFuse.items) == 0:
-			if gFuse.isUpdatingCache == True:
-				return ([("Updating suggestion cache...", "_"), ("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
-
-			if GetSetting("fuse_if_no_completion_use_sublime") == False:				
-				return ([("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
-			else:
-				return
-
-		gFuse.items = []
-		return data
+		return gFuse.OnQueryCompletion(view)
 
 class DisconnectCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
-		gFuse.interop.Disconnect()	
+		gFuse.interop.Disconnect()
 
 class ToggleBuildresCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
@@ -299,12 +303,19 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
 
-		gFuse.interop.Send(json.dumps({"Command": "GotoDefinition", "Arguments":{
-			"Path": view.file_name(),
-			"Text": text,
-			"Type": syntaxName,
-			"CaretPosition": GetRowCol(view, caret),
-			"QueryId": 0}}))
+		gFuse.interop.Send(json.dumps(
+		{
+			"MessageType": "Request",
+			"Id": 0,
+			"Type": "Fuse.GotoDefinition", 
+			"Data":
+			{
+				"Path": view.file_name(),
+				"Text": text,
+				"Type": syntaxName,
+				"CaretPosition": GetRowCol(view, caret),					
+			}
+		}))
 
 class FuseBuildRunCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
