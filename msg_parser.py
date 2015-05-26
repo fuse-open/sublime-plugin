@@ -19,8 +19,8 @@ class Event(Message):
 		self.type = type
 		self.data = data
 
-class CmdParser:
-	def ParseCommand(message):		
+class MsgParser:
+	def Parse(message):
 		messageParsed = json.loads(message)		
 		messageType = messageParsed["MessageType"]
 		dataType = messageParsed["Type"]

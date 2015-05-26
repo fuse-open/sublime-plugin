@@ -2,7 +2,7 @@ import sublime, sublime_plugin, traceback
 import json, threading, time, sys, os, time
 from types import *
 from Fuse.interop import *
-from Fuse.cmd_parser import *
+from Fuse.msg_parser import *
 from Fuse.fuse_parseutils import *
 from Fuse.fuse_util import *
 from Fuse.go_to_definition import *
@@ -36,13 +36,11 @@ class Fuse():
 
 	def Recv(self, msg):
 		try:
-			parsedRes = CmdParser.ParseCommand(msg)
+			parsedRes = MsgParser.Parse(msg)
 
 			if parsedRes.messageType == "Response":
 				if parsedRes.status == "Error":
-					self.HandleErrors(parsedRes.errors)
-				elif parsedRes.type == "Hello":
-					print("Got hello response")
+					self.HandleErrors(parsedRes.errors)				
 				elif parsedRes.type == "Fuse.GetCodeSuggestions":
 					self.HandleCodeSuggestion(parsedRes.data)
 				elif parsedRes.type == "Fuse.GotoDefinition":
@@ -53,23 +51,12 @@ class Fuse():
 					self.LogEvent("DebugLog", parsedRes.data)
 				elif parsedRes.type == "Fuse.BuildLog":
 					self.LogEvent("BuildLog", parsedRes.data)
-
-			# if name == "SetAPIVersion":
-			# 	self.HandleAPIVersion(args)
-			# if name == "SetCodeSuggestions":
-			# 	self.HandleCodeSuggestion(args)
-			# if name == "WriteToConsole":
-			# 	self.WriteToConsole(args)
-			# if name == "Error":
-			# 	self.Error(args)
-			# if name == "GoToDefinitionResponse":
-			# 	self.GoToDefinition(args)		
-			# if name == "BuildEventRaised":
-			# 	self.BuildEventRaised(args)
-			# if name == "NewBuild":				
-			# 	self.buildResults = BuildResults(sublime.active_window())
+				elif parsedRes.type == "Fuse.BuildEventRaised":
+					self.BuildEventRaised(parsedRes.data)
+				elif parsedRes.type == "Fuse.NewBuild":
+		 			self.buildResults = BuildResults(sublime.active_window())
 		except:
-			print(sys.exc_info()[0])
+			traceback.print_exc()
 
 	def HandleAPIVersion(self, args):
 		versionString = args["Version"]
@@ -152,7 +139,10 @@ class Fuse():
 
 
 				outText += "\t" + hintText
-				if(wordAtCaret == "." or outText.casefold().find(wordAtCaret.casefold()) > -1):
+				if self.completionSyntax == "Uno":
+					if wordAtCaret == "." or outText.casefold().find(wordAtCaret.casefold()) > -1:
+						self.items.append((outText, suggestionText))
+				else:
 					self.items.append((outText, suggestionText))
 
 		except:
@@ -205,7 +195,7 @@ class Fuse():
 				{				
 					"Path": fileName, 
 					"Text": text, 
-					"Type": syntaxName, 
+					"SyntaxType": syntaxName, 
 					"CaretPosition": GetRowCol(view, caret)
 				}
 			}))
@@ -312,7 +302,7 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 			{
 				"Path": view.file_name(),
 				"Text": text,
-				"Type": syntaxName,
+				"SyntaxType": syntaxName,
 				"CaretPosition": GetRowCol(view, caret),					
 			}
 		}))
