@@ -133,7 +133,10 @@ def HandleCodeSuggestion(cmd):
 
 
 			outText += "\t" + hintText
-			if(wordAtCaret == "." or outText.casefold().find(wordAtCaret.casefold()) > -1):
+			if completionSyntax == "Uno":				
+				if(wordAtCaret == "." or outText.casefold().find(wordAtCaret.casefold()) > -1):
+					items.append((outText, suggestionText))
+			else:
 				items.append((outText, suggestionText))
 
 	except:
