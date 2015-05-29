@@ -1,2 +1,7 @@
 [
+	{
+		"id": "preview-ux",
+	    "caption": "Preview UX",
+	    "command": "fuse_preview_current"
+	}
 ]

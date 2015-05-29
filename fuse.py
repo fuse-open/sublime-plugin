@@ -1,5 +1,5 @@
 import sublime, sublime_plugin, traceback
-import json, threading, time, sys, os, time
+import json, threading, time, sys, os, time, subprocess
 from types import *
 from Fuse.interop import *
 from Fuse.msg_parser import *
@@ -314,3 +314,22 @@ class FuseBuildRunCommand(sublime_plugin.ApplicationCommand):
 class FuseRecompileCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
 		gFuse.interop.Send(json.dumps({"Command": "Recompile"}))
+
+class FusePreview(sublime_plugin.ApplicationCommand):
+	def run(self, paths = []):
+		print(list(paths))
+		for path in paths:			
+			subprocess.Popen(["Fuse.exe", "preview", path])
+			
+	def is_visible(self, paths = []):
+		for path in paths:
+			fileName, fileExtension = os.path.splitext(path)
+			fileExtensionUpper = fileExtension.upper()
+			if fileExtensionUpper != ".UX" and fileExtensionUpper != ".UNOSLN" and fileExtensionUpper != ".UNOPROJ":
+				return False
+
+		return True
+
+class FusePreviewCurrent(sublime_plugin.TextCommand):
+	def run(self, edit):
+		sublime.run_command("fuse_preview", {"paths": [self.view.file_name()]}); 
