@@ -208,7 +208,7 @@ class Fuse():
 				"Id": 0,				
 				"Data":
 				{
-					"Indentifier": "Sublime Text 3",					
+					"Identifier": "Sublime Text 3",					
 					"EventFilter": ""
 				}
 			})
