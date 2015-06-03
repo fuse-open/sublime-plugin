@@ -6,9 +6,8 @@ from Fuse.msg_parser import *
 from Fuse.fuse_parseutils import *
 from Fuse.fuse_util import *
 from Fuse.go_to_definition import *
-from Fuse.build_results import *
 from Fuse.output_view import *
-from Fuse.build_output import *
+from Fuse.build_view import *
 
 gFuse = None
 
@@ -19,16 +18,15 @@ class Fuse():
 	isUpdatingCache = False
 	autoCompleteEvent = None
 	closeEvent = None
-	interop = None
-	buildResults = None
+	interop = None	
 	outputView = OutputView()
-	buildOutput = BuildOutputView()
 	connectThread = None
 	useShortCompletion = False
 	wordAtCaret = ""
 	doCompleteAttribs = False
 	foldUXNameSpaces = False
 	completionSyntax = None
+	buildViews = BuildViewManager()
 
 	def __init__(self):
 		self.interop = Interop(self.Recv, self.SendHello)
@@ -48,28 +46,11 @@ class Fuse():
 
 			if parsedRes.messageType == "Event":
 				if parsedRes.type == "Fuse.DebugLog":
-					self.LogEvent("DebugLog", parsedRes.data)
-				elif parsedRes.type == "Fuse.BuildLog":
-					self.LogEvent("BuildLog", parsedRes.data)
-				elif parsedRes.type == "Fuse.BuildEventRaised":
-					self.BuildEventRaised(parsedRes.data)
-				elif parsedRes.type == "Fuse.NewBuild":
-		 			self.buildResults = BuildResults(sublime.active_window())
+					self.LogEvent(parsedRes.data)
+				
+				self.buildViews.tryHandleBuildEvent(parsedRes)
 		except:
 			traceback.print_exc()
-
-	def HandleAPIVersion(self, args):
-		versionString = args["Version"]
-		tags = versionString.split(".")
-		self.remoteApiVersion = (int(tags[0]), int(tags[1]))
-		print(str.format("Remote Fuse plugin API version {0}.{1}", self.remoteApiVersion[0], self.remoteApiVersion[1]))
-		print(str.format("Local Fuse plugin API version {0}.{1}", self.apiVersion[0], self.apiVersion[1]))
-		if(self.remoteApiVersion[1] > 1):
-			if self.apiVersion[0] > self.remoteApiVersion[0] or self.apiVersion[1] > self.remoteApiVersion[1]:
-				sublime.error_message(
-					str.format("This plugin expects Fuse plugin API {0}.{1}\nAvailable plugin API is {2}.{3}\nMake sure you are running the latest version of Fuse.", 
-						self.apiVersion[0], self.apiVersion[1], 
-						self.remoteApiVersion[0], self.remoteApiVersion[1]))
 
 	def HandleErrors(self, errors):
 		for error in errors:
@@ -78,14 +59,8 @@ class Fuse():
 		self.autoCompleteEvent.set()
 		self.autoCompleteEvent.clear()
 
-	def LogEvent(self, type, data):
-		if type == "DebugLog":
-			self.outputView.Write(data["Text"])
-		elif type == "BuildLog":
-			self.buildOutput.Write(data["Text"])
-
-	def BuildEventRaised(self, cmd):
-		buildResults.Add(cmd)
+	def LogEvent(self, data):
+		self.outputView.Write(data["Text"])
 
 	def HandleCodeSuggestion(self, cmd):
 		suggestions = cmd["CodeSuggestions"]
@@ -267,20 +242,9 @@ class DisconnectCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
 		gFuse.interop.Disconnect()
 
-class ToggleBuildresCommand(sublime_plugin.ApplicationCommand):
-	def run(self):
-		if gFuse.buildResults == None:
-			gFuse.buildResults = BuildResults(sublime.active_window())
-
-		gFuse.buildResults.ToggleShow()
-
 class ToggleOutputviewCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
 		gFuse.outputView.ToggleShow()
-
-class ToggleBuildoutputCommand(sublime_plugin.ApplicationCommand):
-	def run(self):
-		gFuse.buildOutput.ToggleShow()
 
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
@@ -316,8 +280,7 @@ class FuseRecompileCommand(sublime_plugin.ApplicationCommand):
 		gFuse.interop.Send(json.dumps({"Command": "Recompile"}))
 
 class FusePreview(sublime_plugin.ApplicationCommand):
-	def run(self, paths = []):
-		print(list(paths))
+	def run(self, paths = []):		
 		for path in paths:			
 			subprocess.Popen(["Fuse.exe", "preview", path])
 			
@@ -332,4 +295,15 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 
 class FusePreviewCurrent(sublime_plugin.TextCommand):
 	def run(self, edit):
-		sublime.run_command("fuse_preview", {"paths": [self.view.file_name()]}); 
+		sublime.run_command("fuse_preview", {"paths": [self.view.file_name()]});
+
+	def is_visible(self):
+		path = self.view.file_name()
+		if path is None:
+			return False
+
+		fileName, fileExtension = os.path.splitext(path)
+		fileExtensionUpper = fileExtension.upper()
+		if fileExtensionUpper != ".UX" and fileExtensionUpper != ".UNOSLN" and fileExtensionUpper != ".UNOPROJ":
+			return False
+		return True
