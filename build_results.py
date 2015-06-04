@@ -5,7 +5,7 @@ paths = []
 buildResultPanel = None
 
 def NameRegions(view):
-	return view.find_by_selector("entity.name.filename.find-in-files") + view.find_by_selector("entity.name.tag.xml")
+	return view.find_by_selector("entity.name.filename.find-in-files.warning") + view.find_by_selector("entity.name.tag.error")
 
 class BuildResults:
 	def __init__(self, window):
@@ -14,14 +14,20 @@ class BuildResults:
 
 		global buildResultPanel
 		buildResultPanel = window.create_output_panel("FuseBuildResults")
-		buildResultPanel.set_name("Fuse - Build Results")
-		buildResultPanel.set_syntax_file("Packages/Fuse/Build Results.hidden-tmLanguage")
+		buildResultPanel.set_name("Fuse - Auto Reload Result")
+		buildResultPanel.set_syntax_file("Packages/Fuse/BuildResults.hidden-tmLanguage")
 
 		self.__CreateViewModel()
 		self.Show()
 
 	def __CreateViewModel(self):
-		self.Append("- Build Result -\n")
+		self.Append("- Auto Reload Result -\n")
+
+	def tryHandleBuildEvent(self, event):
+		if event.type == "Fuse.BuildIssueDetected":
+			self.Add(event.data)
+			return True
+		return False
 
 	def Add(self, cmd):
 		filePath = cmd["Path"]
@@ -33,7 +39,7 @@ class BuildResults:
 		startLine = startPos["Line"]
 		startCol = startPos["Character"]
 		message = cmd["Message"]
-		eventType = cmd["Type"]				
+		eventType = cmd["IssueType"]		
 
 		output = ""
 
@@ -107,7 +113,7 @@ class GotoLocationCommand(sublime_plugin.TextCommand):
 						break
 
 	def FindSelectionLocation(self, view, sel):
-		allLocations = view.find_by_selector("constant.numeric.line-number.match.find-in-files")
+		allLocations = view.find_by_selector("constant.numeric.line-number")
 		for location in allLocations:
 			if view.line(location).contains(sel):
 				return location

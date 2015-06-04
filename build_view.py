@@ -1,6 +1,7 @@
 import sublime, sublime_plugin
 import queue, threading, time, os
 from Fuse.msg_parser import *
+from Fuse.build_results import BuildResults
 
 def AppendStrToView(view, strData):
 	view.run_command("append", {"characters": strData})
@@ -21,13 +22,28 @@ class BuildViewManager:
 
 		if event.type == "Fuse.BuildStarted":
 			fileName, fileExtension = os.path.splitext(os.path.basename(event.data["ProjectPath"]))
-			self.buildViews[event.data["BuildId"]] = BuildView(fileName)
+
+			buildView = None
+			if event.data["BuildType"] == "FullCompile":
+				buildView = self.createFullCompileView(fileName)
+			elif event.data["BuildType"] == "LoadMarkup":
+				buildView = self.createLoadMarkupView(fileName)
+			else:
+				print("Invalid buildtype: " + event.data["BuildType"])
+
+			self.buildViews[event.data["BuildId"]] = buildView
 		elif event.type == "Fuse.BuildEnded":
 			self.buildViews.pop(event.data["BuildId"])
 		else:
 			return self.buildViews[event.data["BuildId"]].tryHandleBuildEvent(event)
 
 		return True
+	
+	def createLoadMarkupView(self, name):		
+		return BuildResults(sublime.active_window())
+
+	def createFullCompileView(self, name):
+		return BuildView(name)
 
 class BuildView:
 	def __init__(self, name):
@@ -41,7 +57,7 @@ class BuildView:
 		self.view = window.new_file()			
 		self.view.set_scratch(True)		
 		self.view.set_name("Build Result - " + name)
-		self.view.set_syntax_file("Packages/Fuse/Build Results.hidden-tmLanguage")
+		self.view.set_syntax_file("Packages/Fuse/BuildView.hidden-tmLanguage")
 
 	def tryHandleBuildEvent(self, event):		
 		if event.type == "Fuse.BuildLogged":
