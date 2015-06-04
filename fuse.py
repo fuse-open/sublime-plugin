@@ -287,7 +287,7 @@ class FuseRecompileCommand(sublime_plugin.ApplicationCommand):
 class FusePreview(sublime_plugin.ApplicationCommand):
 	def run(self, paths = []):		
 		for path in paths:			
-			subprocess.Popen(["Fuse.exe", "preview", path])
+			subprocess.Popen(["fuse", "preview", path])
 			
 	def is_visible(self, paths = []):
 		for path in paths:
