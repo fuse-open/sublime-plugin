@@ -216,8 +216,8 @@ def TryConnect():
 	try:		
 		while not gFuse.closeEvent.is_set():			
 			if GetSetting("fuse_enabled") == True and not gFuse.interop.IsConnected():
-				try:
-					subprocess.call(["fuse", "daemon"])					
+				try:					
+					subprocess.call(["fuse", "daemon", "-b"])					
 				except:
 					pass
 
