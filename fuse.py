@@ -214,9 +214,11 @@ def plugin_unloaded():
 
 def TryConnect():	
 	try:		
-		while not gFuse.closeEvent.is_set():
+		while not gFuse.closeEvent.is_set():			
 			if GetSetting("fuse_enabled") == True and not gFuse.interop.IsConnected():
-				gFuse.interop.Connect()			
+				daemonResult = subprocess.call(["fuse", "daemon"])
+				if daemonResult == 0:
+					gFuse.interop.Connect()			
 
 			time.sleep(1)
 	finally:
