@@ -69,20 +69,6 @@
                 []
             },  
             {
-                "caption": "Build and Run",
-                "mnemonic": "R",
-                "command":"fuse_build_run",
-                "children":
-                []
-            },
-            {
-                "caption": "Recompile",
-                "mnemonic": "C",
-                "command":"fuse_recompile",
-                "children":
-                []
-            },
-            {
                 "caption": "Goto Definition",
                 "mnemonic": "D",
                 "command":"goto_definition",
