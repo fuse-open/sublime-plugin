@@ -1,4 +1,4 @@
-import socket
+import socket, traceback
 import threading
 
 class Interop:
@@ -27,12 +27,12 @@ class Interop:
 		self.on_connect()
 		print("Connected to Fuse")		
 
-	def Send(self, msg):
+	def Send(self, type, msg):
 		if not self.IsConnected():
 			return;
 
 		try:
-			msgInBytes = bytes(str(len(msg)) + "\n" + msg, "UTF-8")
+			msgInBytes = bytes(type + "\n" + str(len(msg)) + "\n" + msg, "UTF-8")
 			self.socket.sendall(msgInBytes)
 		except:
 			self.Disconnect()
@@ -58,28 +58,35 @@ class Interop:
 				self.readBuffer = self.readBuffer + tmpData
 				self.parseReadData()
 		except:
+			traceback.print_exc()
 			self.Disconnect()
 			return
 
 	def parseReadData(self):
 		strData = self.readBuffer.decode("utf-8")
+		
 		firstNewLine = strData.find("\n")
-		if firstNewLine <= 0:
+		secondNewLine = strData.find("\n", firstNewLine+1)
+		if firstNewLine <= 0 or secondNewLine <= 0:
 			return
 
-		lengthStr = strData[:firstNewLine]
+		typeStr = strData[:firstNewLine]
+		lengthStr = strData[firstNewLine+1:secondNewLine]
+
 		length = self.parseLength(lengthStr)
 		if length == -1:
 			self.readBuffer = b"";
 			return
 
+		sizeOfTypeStr = len(bytes(typeStr, "utf-8")) + 1
 		sizeOfLengthStr = len(bytes(lengthStr, "utf-8")) + 1
-		if len(self.readBuffer) - sizeOfLengthStr < length:
-			return 		
+		
+		if len(self.readBuffer) - sizeOfLengthStr - sizeOfTypeStr < length:
+			return 				
 
-		tmpStr = self.readBuffer[sizeOfLengthStr:length + sizeOfLengthStr]
-		message = tmpStr.decode("utf-8")
-		self.readBuffer = self.readBuffer[sizeOfLengthStr + length:]
+		tmpStr = self.readBuffer[sizeOfLengthStr + sizeOfTypeStr:length + sizeOfLengthStr + sizeOfTypeStr]
+		message = (typeStr, tmpStr.decode("utf-8"))
+		self.readBuffer = self.readBuffer[sizeOfLengthStr + length + sizeOfTypeStr:]
 		self.on_recv(message)
 		self.parseReadData()
 

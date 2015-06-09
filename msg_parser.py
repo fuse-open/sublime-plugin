@@ -1,4 +1,4 @@
-import json
+import json, threading
 
 class Message:
 	def __init__(self, messageType):
@@ -19,17 +19,39 @@ class Event(Message):
 		self.type = type
 		self.data = data
 
-class MsgParser:
-	def Parse(message):
-		messageParsed = json.loads(message)		
-		messageType = messageParsed["MessageType"]
-		dataType = messageParsed["Type"]
-		data = messageParsed["Data"]
+class MsgManager:
+	curId = 0
+	requestsPending = {}
+
+	def __init__(self):
+		self.id_lock = threading.RLock()		
+
+	def sendRequest(self, interop, requestName, arguments):
+		with self.id_lock:
+			curId = ++self.curId
+
+		interop.Send("Request", 
+		json.dumps(
+		{
+			"Id": curId,
+			"Name": requestName,
+			"Arguments": arguments
+		}))
+
+		self.requestsPending[curId] = requestName
+
+	def parse(self, message):
+		messageParsed = json.loads(message[1])		
+		messageType = message[0];		
 
 		if messageType == "Response":
-			return Response(dataType, messageParsed["Id"], messageParsed["Status"], messageParsed["Errors"], data)
+			resId = messageParsed["Id"]
+			name = self.requestsPending[resId]
+			self.requestsPending.pop(resId)
+			
+			return Response(name, messageParsed["Id"], messageParsed["Status"], messageParsed["Errors"], messageParsed["Result"])
 		elif messageType == "Event":
-			return Event(dataType, data)
+			return Event(messageParsed["Name"], messageParsed["Data"])
 		else:
 			print("Fuse: Message type unknown.")
 

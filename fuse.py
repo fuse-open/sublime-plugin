@@ -27,6 +27,7 @@ class Fuse():
 	foldUXNameSpaces = False
 	completionSyntax = None
 	buildViews = BuildViewManager()
+	msgManager = MsgManager()
 
 	def __init__(self):
 		self.interop = Interop(self.Recv, self.SendHello)
@@ -34,7 +35,7 @@ class Fuse():
 
 	def Recv(self, msg):
 		try:
-			parsedRes = MsgParser.Parse(msg)
+			parsedRes = self.msgManager.parse(msg)
 
 			if parsedRes.messageType == "Response":
 				if parsedRes.status == "Error":
@@ -160,34 +161,23 @@ class Fuse():
 		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
 
-		gFuse.interop.Send(
-			json.dumps(
+		self.msgManager.sendRequest(
+			self.interop,
+			"Fuse.GetCodeSuggestions",
 			{
-				"MessageType":"Request",
-				"Id": 0,
-				"Type": "Fuse.GetCodeSuggestions",
-				"Data":
-				{				
-					"Path": fileName, 
-					"Text": text, 
-					"SyntaxType": syntaxName, 
-					"CaretPosition": GetRowCol(view, caret)
-				}
-			}))
+				"Path": fileName, 
+				"Text": text, 
+				"SyntaxType": syntaxName, 
+				"CaretPosition": GetRowCol(view, caret)
+			})
 
 	def SendHello(self):
-		msg = json.dumps(
-			{
-				"MessageType": "Request",
-				"Type": "Hello",
-				"Id": 0,				
-				"Data":
-				{
-					"Identifier": "Sublime Text 3",					
-					"EventFilter": ""
-				}
-			})
-		self.interop.Send(msg)
+		self.msgManager.sendRequest(self.interop, 
+		"Hello",
+		{
+			"Identifier": "Sublime Text 3",					
+			"EventFilter": ""
+		})
 
 def plugin_loaded():
 	global gFuse
@@ -216,8 +206,9 @@ def TryConnect():
 	try:		
 		while not gFuse.closeEvent.is_set():			
 			if GetSetting("fuse_enabled") == True and not gFuse.interop.IsConnected():
-				try:					
-					subprocess.call(["fuse", "daemon", "-b"])					
+				try:
+					pass					
+					#subprocess.call(["fuse", "daemon", "-b"])					
 				except:
 					pass
 
@@ -262,27 +253,24 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
 
-		gFuse.interop.Send(json.dumps(
-		{
-			"MessageType": "Request",
-			"Id": 0,
-			"Type": "Fuse.GotoDefinition", 
-			"Data":
+		gFuse.msgManager.sendRequest(
+			gFuse.interop,
+			"Fuse.GotoDefinition",
 			{
 				"Path": view.file_name(),
 				"Text": text,
 				"SyntaxType": syntaxName,
 				"CaretPosition": GetRowCol(view, caret),					
 			}
-		}))
+		)
 
 class FuseBuildRunCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
-		gFuse.interop.Send(json.dumps({"Command": "BuildAndRun"}))
+		gFuse.interop.Send("Event", json.dumps({"Command": "BuildAndRun"}))
 
 class FuseRecompileCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
-		gFuse.interop.Send(json.dumps({"Command": "Recompile"}))
+		gFuse.interop.Send("Event", json.dumps({"Command": "Recompile"}))
 
 class FusePreview(sublime_plugin.ApplicationCommand):
 	def run(self, paths = []):		
