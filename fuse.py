@@ -17,10 +17,8 @@ class Fuse():
 	items = []
 	isUpdatingCache = False
 	autoCompleteEvent = None
-	closeEvent = None
 	interop = None	
 	outputView = OutputView()
-	connectThread = None
 	useShortCompletion = False
 	wordAtCaret = ""
 	doCompleteAttribs = False
@@ -30,7 +28,7 @@ class Fuse():
 	msgManager = MsgManager()
 
 	def __init__(self):
-		self.interop = Interop(self.Recv, self.SendHello)
+		self.interop = Interop(self.Recv, self.SendHello, self.tryConnect)
 		self.autoCompleteEvent = threading.Event()
 
 	def Recv(self, msg):
@@ -128,7 +126,11 @@ class Fuse():
 		self.autoCompleteEvent.clear()
 
 	def OnQueryCompletion(self, view):
-		if GetSetting("fuse_completion") == False or not self.interop.IsConnected():
+		if GetSetting("fuse_completion") == False:
+			return
+
+		if not self.interop.isConnected():
+			self.tryConnect()
 			return
 
 		syntaxName = GetExtension(view.settings().get("syntax"))
@@ -179,14 +181,22 @@ class Fuse():
 			"EventFilter": ""
 		})
 
+	def tryConnect(self):
+		try:				
+			if GetSetting("fuse_enabled") == True and not self.interop.isConnected():
+				try:		
+					CREATE_NO_WINDOW = 0x08000000			
+					subprocess.call(["fuse", "daemon", "-b"], creationflags=CREATE_NO_WINDOW)					
+				except:
+					pass
+
+				self.interop.connect()
+		except:
+			traceback.print_exc()
+
 def plugin_loaded():
 	global gFuse
 	gFuse = Fuse()
-	gFuse.closeEvent = threading.Event()
-
-	gFuse.connectThread = threading.Thread(target = TryConnect)
-	gFuse.connectThread.daemon = True
-	gFuse.connectThread.start()
 
 	s = sublime.load_settings("Preferences.sublime-settings")
 	if GetSetting("fuse_open_files_in_same_window"):
@@ -196,27 +206,7 @@ def plugin_loaded():
 
 def plugin_unloaded():
 	global gFuse
-	if gFuse.closeEvent != None:
-		gFuse.closeEvent.set()
-		gFuse.connectThread.join(1)
-		
 	gFuse = None
-
-def TryConnect():	
-	try:		
-		while not gFuse.closeEvent.is_set():			
-			if GetSetting("fuse_enabled") == True and not gFuse.interop.IsConnected():
-				try:
-					pass					
-					#subprocess.call(["fuse", "daemon", "-b"])					
-				except:
-					pass
-
-				gFuse.interop.Connect()
-
-			time.sleep(1)
-	finally:
-		gFuse.interop.Disconnect()
 
 class FuseEventListener(sublime_plugin.EventListener):
 	def on_modified(self, view):
@@ -273,7 +263,10 @@ class FuseRecompileCommand(sublime_plugin.ApplicationCommand):
 		gFuse.interop.Send("Event", json.dumps({"Command": "Recompile"}))
 
 class FusePreview(sublime_plugin.ApplicationCommand):
-	def run(self, paths = []):		
+	def run(self, paths = []):	
+		if not gFuse.interop.isConnected():
+			gFuse.tryConnect()
+
 		for path in paths:			
 			subprocess.Popen(["fuse", "preview", path])
 			

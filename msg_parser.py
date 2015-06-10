@@ -27,8 +27,12 @@ class MsgManager:
 		self.id_lock = threading.RLock()		
 
 	def sendRequest(self, interop, requestName, arguments):
+		curId = 0
 		with self.id_lock:
-			curId = ++self.curId
+			self.curId += 1
+			curId = self.curId
+
+		self.requestsPending[curId] = requestName
 
 		interop.Send("Request", 
 		json.dumps(
@@ -36,9 +40,7 @@ class MsgManager:
 			"Id": curId,
 			"Name": requestName,
 			"Arguments": arguments
-		}))
-
-		self.requestsPending[curId] = requestName
+		}))		
 
 	def parse(self, message):
 		messageParsed = json.loads(message[1])		

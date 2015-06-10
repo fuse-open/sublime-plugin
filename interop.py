@@ -2,19 +2,20 @@ import socket, traceback
 import threading
 
 class Interop:
-	def __init__(self, on_recv, on_connect):
+	def __init__(self, on_recv, on_connect, on_not_connected):
 		self.readWorker = None
 		self.readWorkerStopEvent = None
 		self.readBuffer = bytes()
 		self.socket = None
 		self.on_connect = on_connect
 		self.on_recv = on_recv
+		self.on_not_connected = on_not_connected
 
-	def IsConnected(self):	
+	def isConnected(self):	
 		isConnected = self.socket != None
 		return isConnected
 
-	def Connect(self):		
+	def connect(self):		
 		try:			
 			tmpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			tmpSocket.connect(("localhost", 12122))
@@ -28,8 +29,9 @@ class Interop:
 		print("Connected to Fuse")		
 
 	def Send(self, type, msg):
-		if not self.IsConnected():
-			return;
+		if not self.isConnected():
+			self.on_not_connected()
+			return
 
 		try:
 			msgInBytes = bytes(type + "\n" + str(len(msg)) + "\n" + msg, "UTF-8")
@@ -58,7 +60,6 @@ class Interop:
 				self.readBuffer = self.readBuffer + tmpData
 				self.parseReadData()
 		except:
-			traceback.print_exc()
 			self.Disconnect()
 			return
 
