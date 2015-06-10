@@ -16,7 +16,6 @@ class Fuse():
 	remoteApiVersion = None
 	items = []
 	isUpdatingCache = False
-	autoCompleteEvent = None
 	interop = None	
 	outputView = OutputView()
 	useShortCompletion = False
@@ -28,40 +27,31 @@ class Fuse():
 	msgManager = MsgManager()
 
 	def __init__(self):
-		self.interop = Interop(self.Recv, self.SendHello, self.tryConnect)
-		self.autoCompleteEvent = threading.Event()
+		self.interop = Interop(self.recv, self.sendHello, self.tryConnect)
 
-	def Recv(self, msg):
+	def recv(self, msg):
 		try:
 			parsedRes = self.msgManager.parse(msg)
 
-			if parsedRes.messageType == "Response":
-				if parsedRes.status == "Error":
-					self.HandleErrors(parsedRes.errors)				
-				elif parsedRes.type == "Fuse.GetCodeSuggestions":
-					self.HandleCodeSuggestion(parsedRes.data)
-				elif parsedRes.type == "Fuse.GotoDefinition":
-					GotoDefinition(parsedRes.data)
+			if parsedRes == None:
+				return
 
 			if parsedRes.messageType == "Event":
 				if parsedRes.type == "Fuse.DebugLog":
-					self.LogEvent(parsedRes.data)
+					self.logEvent(parsedRes.data)
 				
 				self.buildViews.tryHandleBuildEvent(parsedRes)
 		except:
 			traceback.print_exc()
 
-	def HandleErrors(self, errors):
+	def handleErrors(self, errors):
 		for error in errors:
 			print("Fuse - Error({Code}): {Message}".format(Code = error["Code"], Message = error["Message"]))
 
-		self.autoCompleteEvent.set()
-		self.autoCompleteEvent.clear()
-
-	def LogEvent(self, data):
+	def logEvent(self, data):
 		self.outputView.Write(data["Text"])
 
-	def HandleCodeSuggestion(self, cmd):
+	def handleCodeSuggestion(self, cmd):
 		suggestions = cmd["CodeSuggestions"]
 
 		self.isUpdatingCache = cmd["IsUpdatingCache"]
@@ -122,16 +112,12 @@ class Fuse():
 		except:
 			traceback.print_exc()
 
-		self.autoCompleteEvent.set()
-		self.autoCompleteEvent.clear()
-
-	def OnQueryCompletion(self, view):
+	def onQueryCompletion(self, view):
 		if GetSetting("fuse_completion") == False:
 			return
 
 		if not self.interop.isConnected():
 			self.tryConnect()
-			return
 
 		syntaxName = GetExtension(view.settings().get("syntax"))
 		if not IsSupportedSyntax(syntaxName):
@@ -141,9 +127,15 @@ class Fuse():
 		self.foldUXNameSpaces = GetSetting("fuse_ux_attrib_folding")
 		self.completionSyntax = syntaxName
 
-		self.RequestAutoComplete(view, syntaxName)
+		response = self.requestAutoComplete(view, syntaxName)
+		if response == None:
+			return
 
-		self.autoCompleteEvent.wait(0.2)
+		if response.status != "Success":
+			self.handleErrors(response.errors)
+			return
+
+		self.handleCodeSuggestion(response.data)
 		
 		data = (self.items, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
 		if len(self.items) == 0:
@@ -158,12 +150,12 @@ class Fuse():
 		self.items = []
 		return data
 
-	def RequestAutoComplete(self, view, syntaxName):
+	def requestAutoComplete(self, view, syntaxName):
 		fileName = view.file_name()
 		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
 
-		self.msgManager.sendRequest(
+		return self.msgManager.sendRequest(
 			self.interop,
 			"Fuse.GetCodeSuggestions",
 			{
@@ -173,7 +165,7 @@ class Fuse():
 				"CaretPosition": GetRowCol(view, caret)
 			})
 
-	def SendHello(self):
+	def sendHello(self):
 		self.msgManager.sendRequest(self.interop, 
 		"Hello",
 		{
@@ -185,8 +177,11 @@ class Fuse():
 		try:				
 			if GetSetting("fuse_enabled") == True and not self.interop.isConnected():
 				try:		
-					CREATE_NO_WINDOW = 0x08000000			
-					subprocess.call(["fuse", "daemon", "-b"], creationflags=CREATE_NO_WINDOW)					
+					if os.name == "nt":
+						CREATE_NO_WINDOW = 0x08000000			
+						subprocess.call(["fuse", "daemon", "-b"], creationflags=CREATE_NO_WINDOW)
+					else:
+						subprocess.call(["fuse", "daemon", "-b"])		
 				except:
 					pass
 
@@ -222,7 +217,7 @@ class FuseEventListener(sublime_plugin.EventListener):
 			useShortCompletion = False
 
 	def on_query_completions(self, view, prefix, locations):
-		return gFuse.OnQueryCompletion(view)
+		return gFuse.onQueryCompletion(view)
 
 class DisconnectCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
@@ -243,7 +238,7 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
 
-		gFuse.msgManager.sendRequest(
+		response = gFuse.msgManager.sendRequest(
 			gFuse.interop,
 			"Fuse.GotoDefinition",
 			{
@@ -253,6 +248,15 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 				"CaretPosition": GetRowCol(view, caret),					
 			}
 		)
+
+		if response == None:
+			return
+
+		if response.status != "Success":
+			gFuse.handleErrors(response.errors)
+			return
+
+		GotoDefinition(response.data)
 
 class FuseBuildRunCommand(sublime_plugin.ApplicationCommand):
 	def run(self):

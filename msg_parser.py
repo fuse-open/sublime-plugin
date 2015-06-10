@@ -32,7 +32,8 @@ class MsgManager:
 			self.curId += 1
 			curId = self.curId
 
-		self.requestsPending[curId] = requestName
+		waitForResponse = threading.Event()
+		self.requestsPending[curId] = {"name": requestName, "event": waitForResponse} 
 
 		interop.Send("Request", 
 		json.dumps(
@@ -40,7 +41,15 @@ class MsgManager:
 			"Id": curId,
 			"Name": requestName,
 			"Arguments": arguments
-		}))		
+		}))
+
+		waitResult = waitForResponse.wait(1)
+		res = self.requestsPending[curId]
+		self.requestsPending.pop(curId)
+		if not waitResult:
+			return None
+
+		return res["response"]
 
 	def parse(self, message):
 		messageParsed = json.loads(message[1])		
@@ -48,10 +57,9 @@ class MsgManager:
 
 		if messageType == "Response":
 			resId = messageParsed["Id"]
-			name = self.requestsPending[resId]
-			self.requestsPending.pop(resId)
-			
-			return Response(name, messageParsed["Id"], messageParsed["Status"], messageParsed["Errors"], messageParsed["Result"])
+			name = self.requestsPending[resId]["name"]			
+			self.requestsPending[resId]["response"] = Response(name, messageParsed["Id"], messageParsed["Status"], messageParsed["Errors"], messageParsed["Result"])
+			self.requestsPending[resId]["event"].set()
 		elif messageType == "Event":
 			return Event(messageParsed["Name"], messageParsed["Data"])
 		else:
