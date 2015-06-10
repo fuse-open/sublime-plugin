@@ -116,12 +116,12 @@ class Fuse():
 		if GetSetting("fuse_completion") == False:
 			return
 
-		if not self.interop.isConnected():
-			self.tryConnect()
-
 		syntaxName = GetExtension(view.settings().get("syntax"))
 		if not IsSupportedSyntax(syntaxName):
 			return
+
+		if not self.interop.isConnected():
+			self.tryConnect()
 
 		self.doCompleteAttribs = GetSetting("fuse_ux_attrib_completion")
 		self.foldUXNameSpaces = GetSetting("fuse_ux_attrib_folding")
@@ -181,9 +181,9 @@ class Fuse():
 						CREATE_NO_WINDOW = 0x08000000			
 						subprocess.call(["fuse", "daemon", "-b"], creationflags=CREATE_NO_WINDOW)
 					else:
-						subprocess.call(["fuse", "daemon", "-b"])		
+						subprocess.call(["fuse", "daemon", "-b"])
 				except:
-					pass
+					traceback.print_exc()
 
 				self.interop.connect()
 		except:
@@ -201,6 +201,7 @@ def plugin_loaded():
 
 def plugin_unloaded():
 	global gFuse
+	gFuse.interop.disconnect()
 	gFuse = None
 
 class FuseEventListener(sublime_plugin.EventListener):
@@ -221,7 +222,7 @@ class FuseEventListener(sublime_plugin.EventListener):
 
 class DisconnectCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
-		gFuse.interop.Disconnect()
+		gFuse.interop.disconnect()
 
 class ToggleOutputviewCommand(sublime_plugin.ApplicationCommand):
 	def run(self):

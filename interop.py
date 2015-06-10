@@ -37,7 +37,7 @@ class Interop:
 			msgInBytes = bytes(type + "\n" + str(len(msg)) + "\n" + msg, "UTF-8")
 			self.socket.sendall(msgInBytes)
 		except:
-			self.Disconnect()
+			self.disconnect()
 
 	def startPollMessages(self):		
 		self.readWorkerStopEvent = threading.Event()
@@ -54,13 +54,13 @@ class Interop:
 				tmpData = self.socket.recv(4096)
 				if len(tmpData) == 0:
 					print("Lost connection")
-					self.Disconnect()
+					self.disconnect()
 					return
 
 				self.readBuffer = self.readBuffer + tmpData
 				self.parseReadData()
 		except:
-			self.Disconnect()
+			self.disconnect()
 			return
 
 	def parseReadData(self):
@@ -98,7 +98,7 @@ class Interop:
 			print("Couldn't parse packet length, got " + lenStr)
 			return -1
 
-	def Disconnect(self):		
+	def disconnect(self):		
 		if self.readWorkerStopEvent != None:
 			self.stopPollMessages()
 
