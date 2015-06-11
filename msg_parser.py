@@ -26,7 +26,7 @@ class MsgManager:
 	def __init__(self):
 		self.id_lock = threading.RLock()		
 
-	def sendRequest(self, interop, requestName, arguments):
+	def sendRequest(self, interop, requestName, arguments, timeout=2):
 		curId = 0
 		with self.id_lock:
 			self.curId += 1
@@ -43,7 +43,7 @@ class MsgManager:
 			"Arguments": arguments
 		}))
 
-		waitResult = waitForResponse.wait(1)
+		waitResult = waitForResponse.wait(timeout)
 		res = self.requestsPending[curId]
 		self.requestsPending.pop(curId)
 		if not waitResult:

@@ -163,7 +163,8 @@ class Fuse():
 				"Text": text, 
 				"SyntaxType": syntaxName, 
 				"CaretPosition": GetRowCol(view, caret)
-			})
+			},
+			0.2)
 
 	def sendHello(self):
 		self.msgManager.sendRequest(self.interop, 
