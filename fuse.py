@@ -39,7 +39,7 @@ class Fuse():
 			if parsedRes.messageType == "Event":
 				if parsedRes.type == "Fuse.DebugLog":
 					self.logEvent(parsedRes.data)
-				
+
 				self.buildViews.tryHandleBuildEvent(parsedRes)
 		except:
 			traceback.print_exc()
@@ -270,8 +270,7 @@ class FuseRecompileCommand(sublime_plugin.ApplicationCommand):
 
 class FusePreview(sublime_plugin.ApplicationCommand):
 	def run(self, paths = []):	
-		if not gFuse.interop.isConnected():
-			gFuse.tryConnect()
+		gFuse.tryConnect()
 
 		for path in paths:			
 			subprocess.Popen(["fuse", "preview", path])

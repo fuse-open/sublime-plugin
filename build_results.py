@@ -8,7 +8,7 @@ def NameRegions(view):
 	return view.find_by_selector("entity.name.filename.find-in-files.warning") + view.find_by_selector("entity.name.tag.error")
 
 class BuildResults:
-	def __init__(self, window):
+	def __init__(self, window, buildId):
 		global paths	
 		paths = []
 
@@ -16,6 +16,8 @@ class BuildResults:
 		buildResultPanel = window.create_output_panel("FuseBuildResults")
 		buildResultPanel.set_name("Fuse - Auto Reload Result")
 		buildResultPanel.set_syntax_file("Packages/Fuse/BuildResults.hidden-tmLanguage")
+
+		self.buildId = buildId
 
 		self.__CreateViewModel()
 		self.Show()
@@ -72,6 +74,9 @@ class BuildResults:
 
 	def ToggleShow(self):
 		self.Show()
+
+	def close(self):
+		pass
 
 class BuildResultsCommand(sublime_plugin.WindowCommand):
 	def run(self):
