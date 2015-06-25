@@ -8,7 +8,7 @@ def NameRegions(view):
 	return view.find_by_selector("entity.name.filename.find-in-files.warning") + view.find_by_selector("entity.name.tag.error")
 
 class BuildResults:
-	def __init__(self, window, buildId):
+	def __init__(self, window, buildId, previewId):
 		global paths	
 		paths = []
 

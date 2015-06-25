@@ -37,9 +37,6 @@ class Fuse():
 				return
 
 			if parsedRes.messageType == "Event":
-				if parsedRes.type == "Fuse.DebugLog":
-					self.logEvent(parsedRes.data)
-
 				self.buildViews.tryHandleBuildEvent(parsedRes)
 		except:
 			traceback.print_exc()
@@ -47,9 +44,6 @@ class Fuse():
 	def handleErrors(self, errors):
 		for error in errors:
 			print("Fuse - Error({Code}): {Message}".format(Code = error["Code"], Message = error["Message"]))
-
-	def logEvent(self, data):
-		self.outputView.Write(data["Text"])
 
 	def handleCodeSuggestion(self, cmd):
 		suggestions = cmd["CodeSuggestions"]

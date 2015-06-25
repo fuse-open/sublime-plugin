@@ -13,19 +13,18 @@ def AppendStrToView(view, strData):
 
 class BuildViewManager:
 	buildViews = {}
+	buildIds = {}
+	previewIds = {}
 
-	def closeView(previewId):
+	def closeView(self, previewId):
 		self.buildViews[previewId].close()
 		self.buildViews.pop(previewId)
-
-	def pruneDisposedViews():
-		for previewId, view in self.buildViews.items():
-			if view.disposed:
-				closeView(previewId)
-
+		self.previewIds.pop(self.buildIds[previewId])
+		self.buildIds.pop(previewId)
 
 	def tryHandleBuildEvent(self, event):
 		validTypes = [
+			"Fuse.LogEvent",
 			"Fuse.BuildStarted", 
 			"Fuse.BuildEnded", 
 			"Fuse.BuildStageChanged", 
@@ -37,24 +36,30 @@ class BuildViewManager:
 			return False
 
 		if event.type == "Fuse.BuildStarted":
-			pruneDisposedViews()
 
 			fileName, fileExtension = os.path.splitext(os.path.basename(event.data["ProjectPath"]))
 
 			buildId = event.data["BuildId"]
+			previewId = event.data["PreviewId"]
+			self.buildIds[previewId] = buildId
+			self.previewIds[buildId] = previewId
+
 			buildView = None
 			if event.data["BuildType"] == "FullCompile":
-				buildView = self.createFullCompileView(fileName, buildId)
+				buildView = self.createFullCompileView(fileName, buildId, previewId)
 			elif event.data["BuildType"] == "LoadMarkup":
-				buildView = self.createLoadMarkupView(fileName, buildId)
+				buildView = self.createLoadMarkupView(fileName, buildId, previewId)
 			else:
 				print("Invalid buildtype: " + event.data["BuildType"])
 
 			self.buildViews[event.data["PreviewId"]] = buildView
-		elif event.type == "Fuse.PreviewClosed":			
+		elif event.type == "Fuse.PreviewClosed":
 			previewId = event.data["PreviewId"]
-			if self.buildViews[previewId].BuildStatus is 1:
-				closeView(previewId)
+			self.closeView(previewId)
+		elif event.type == "Fuse.LogEvent":
+			for previewId, view in self.buildViews.items():
+				if view.previewId == event.data["PreviewId"]:
+					view.tryHandleBuildEvent(event)
 		else:
 			for previewId, view in self.buildViews.items():
 				if view.buildId == event.data["BuildId"]:
@@ -62,15 +67,15 @@ class BuildViewManager:
 
 		return True
 	
-	def createLoadMarkupView(self, name, buildId):		
-		return BuildResults(sublime.active_window(), buildId)
+	def createLoadMarkupView(self, name, buildId, previewId):		
+		return BuildResults(sublime.active_window(), buildId, previewId)
 
-	def createFullCompileView(self, name, buildId):
-		return BuildView(name, buildId)
+	def createFullCompileView(self, name, buildId, previewId):
+		return BuildView(name, buildId, previewId)
 
 class BuildView:
-	def __init__(self, name, buildId):
-		self.disposed = False
+	def __init__(self, name, buildId, previewId):
+		self.previewId = previewId
 		self.buildId = buildId
 		self.status = BuildStatus()
 		self.queue = queue.Queue()
@@ -85,18 +90,23 @@ class BuildView:
 		self.view.set_name("Build Result - " + name)
 		self.view.set_syntax_file("Packages/Fuse/BuildView.hidden-tmLanguage")
 
-	def tryHandleBuildEvent(self, event):		
+	def tryHandleBuildEvent(self, event):
 		if event.type == "Fuse.BuildLogged":
 			self.__write(event.data["Message"])
 			return True
+		elif event.type == "Fuse.LogEvent":
+			self.__write("Output:\t" + event.data["Message"] + "\n")
+			return True
 		elif event.type == "Fuse.BuildEnded":
-			status = event.data["Status"] 
+			status = event.data["Status"]
 			if status == "Success":
 				self.status = BuildStatus.success
 			elif status == "Error":
 				self.status = BuildStatus.error
 			elif status == "InternalError":
 				self.status = BuildStatus.internalError
+
+			self.__write("\n# Build complete.\n\n")
 
 		return False
 
