@@ -62,14 +62,7 @@
         "children":
         [
             {
-                "caption": "Debug Log",
-                "mnemonic": "O",
-                "command":"toggle_outputview",
-                "children":
-                []
-            },  
-            {
-                "caption": "Goto Definition",
+                "caption": "Go to Definition",
                 "mnemonic": "D",
                 "command":"goto_definition",
                 "children":
