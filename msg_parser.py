@@ -57,9 +57,10 @@ class MsgManager:
 
 		if messageType == "Response":
 			resId = messageParsed["Id"]
-			name = self.requestsPending[resId]["name"]			
-			self.requestsPending[resId]["response"] = Response(name, messageParsed["Id"], messageParsed["Status"], messageParsed["Errors"], messageParsed["Result"])
-			self.requestsPending[resId]["event"].set()
+			if resId in self.requestsPending:
+				name = self.requestsPending[resId]["name"]			
+				self.requestsPending[resId]["response"] = Response(name, messageParsed["Id"], messageParsed["Status"], messageParsed["Errors"], messageParsed["Result"])
+				self.requestsPending[resId]["event"].set()
 		elif messageType == "Event":
 			return Event(messageParsed["Name"], messageParsed["Data"])
 		else:

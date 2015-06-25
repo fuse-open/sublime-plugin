@@ -111,7 +111,7 @@ class BuildView:
 		return False
 
 	def close(self):
-		if self.status != BuildStatus.success:
+		if self.status != BuildStatus.success or self.view.window() == None:
 			return
 
 		window = self.view.window()
