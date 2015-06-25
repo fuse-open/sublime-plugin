@@ -14,6 +14,16 @@ def AppendStrToView(view, strData):
 class BuildViewManager:
 	buildViews = {}
 
+	def closeView(previewId):
+		self.buildViews[previewId].close()
+		self.buildViews.pop(previewId)
+
+	def pruneDisposedViews():
+		for previewId, view in self.buildViews.items():
+			if view.disposed:
+				closeView(previewId)
+
+
 	def tryHandleBuildEvent(self, event):
 		validTypes = [
 			"Fuse.BuildStarted", 
@@ -27,6 +37,8 @@ class BuildViewManager:
 			return False
 
 		if event.type == "Fuse.BuildStarted":
+			pruneDisposedViews()
+
 			fileName, fileExtension = os.path.splitext(os.path.basename(event.data["ProjectPath"]))
 
 			buildId = event.data["BuildId"]
@@ -41,8 +53,8 @@ class BuildViewManager:
 			self.buildViews[event.data["PreviewId"]] = buildView
 		elif event.type == "Fuse.PreviewClosed":			
 			previewId = event.data["PreviewId"]
-			self.buildViews[previewId].close()
-			self.buildViews.pop(previewId)
+			if self.buildViews[previewId].BuildStatus is 1:
+				closeView(previewId)
 		else:
 			for previewId, view in self.buildViews.items():
 				if view.buildId == event.data["BuildId"]:
@@ -58,6 +70,7 @@ class BuildViewManager:
 
 class BuildView:
 	def __init__(self, name, buildId):
+		self.disposed = False
 		self.buildId = buildId
 		self.status = BuildStatus()
 		self.queue = queue.Queue()
