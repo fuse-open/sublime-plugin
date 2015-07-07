@@ -1,7 +1,33 @@
 [
 	{
 		"id": "preview-ux",
-	    "caption": "Preview UX",
-	    "command": "fuse_preview_current"
+		"caption": "Preview UX",
+		"children":
+		[
+			{
+				"command": "fuse_preview_current",
+				"caption": "Local",
+				"args": 
+				{
+					"type": "Local"
+				},
+			},
+			{
+				"command": "fuse_preview_current",
+				"caption": "Android",
+				"args": 
+				{
+					"type": "Android"
+				}
+			},
+			{
+				"command": "fuse_preview_current",
+				"caption": "iOS",
+				"args": 
+				{
+					"type": "iOS"
+				}
+			}
+		]
 	}
 ]

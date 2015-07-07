@@ -263,13 +263,16 @@ class FuseRecompileCommand(sublime_plugin.ApplicationCommand):
 		gFuse.interop.Send("Event", json.dumps({"Command": "Recompile"}))
 
 class FusePreview(sublime_plugin.ApplicationCommand):
-	def run(self, paths = []):	
+	def run(self, type, paths = []):	
 		gFuse.tryConnect()
 
 		for path in paths:			
-			subprocess.Popen(["fuse", "preview", path])
+			subprocess.Popen(["fuse", "preview", "--target=" + type, path])
 			
-	def is_visible(self, paths = []):
+	def is_visible(self, type, paths = []):
+		if os.name == "nt" and type == "iOS":
+			return False
+
 		for path in paths:
 			fileName, fileExtension = os.path.splitext(path)
 			fileExtensionUpper = fileExtension.upper()
@@ -279,16 +282,8 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 		return True
 
 class FusePreviewCurrent(sublime_plugin.TextCommand):
-	def run(self, edit):
-		sublime.run_command("fuse_preview", {"paths": [self.view.file_name()]});
+	def run(self, edit, type):
+		sublime.run_command("fuse_preview", {"type": type, "paths": [self.view.file_name()]});
 
-	def is_visible(self):
-		path = self.view.file_name()
-		if path is None:
-			return False
-
-		fileName, fileExtension = os.path.splitext(path)
-		fileExtensionUpper = fileExtension.upper()
-		if fileExtensionUpper != ".UX" and fileExtensionUpper != ".UNOSLN" and fileExtensionUpper != ".UNOPROJ":
-			return False
-		return True
+	def is_visible(self, type):
+		return FusePreview.is_visible(None, type, [self.view.file_name()])
