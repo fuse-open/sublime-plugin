@@ -11,8 +11,7 @@ Current Features
 =================
 * Code completion
 * Goto definition
-* Build and run from sublime
+* Preview your app from sublime
 * Build result
-* Build log and Debug lo
 
 See [changelog](CHANGELOG.md) for recent feature details.
