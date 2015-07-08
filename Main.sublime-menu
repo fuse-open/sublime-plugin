@@ -62,42 +62,7 @@
         "children":
         [
             {
-                "caption": "Build Result",
-                "mnemonic": "B",
-                "command":"toggle_buildres",
-                "children":
-                []
-            },
-            {
-                "caption": "Build Log",
-                "mnemonic": "U",
-                "command":"toggle_buildoutput",
-                "children":
-                []
-            }, 
-            {
-                "caption": "Debug Log",
-                "mnemonic": "O",
-                "command":"toggle_outputview",
-                "children":
-                []
-            },  
-            {
-                "caption": "Build and Run",
-                "mnemonic": "R",
-                "command":"fuse_build_run",
-                "children":
-                []
-            },
-            {
-                "caption": "Recompile",
-                "mnemonic": "C",
-                "command":"fuse_recompile",
-                "children":
-                []
-            },
-            {
-                "caption": "Goto Definition",
+                "caption": "Go to Definition",
                 "mnemonic": "D",
                 "command":"goto_definition",
                 "children":

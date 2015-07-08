@@ -1,39 +1,17 @@
 Sublime Plugin
 ==================
-Sublime plugin for Fuse Editor. 
+Sublime Text 3 plugin for Fuse. 
 
-How to install on Windows
+How to install
 =================
-Fuse will install the plugin on demand, so the steps below are not neccessary in normal circumstances.
-
-NOTE: The automatically installer does not work if you have installed the plugin manually
-
-Go to AppData/Roaming (Type %appdata% in file explorer). Find the "Sublime Text 3" folder, and go into "Packages".
-Clone repo into this folder, and RENAME the folder to "Fuse", and restart sublime if it's already open.
-
-Also if you have set the default syntax language for .uno and .ux files before, you must set these again. Set .uno to Fuse/Uno and .ux to Fuse/UX.
-
-This is a temporary install solution. There will be an eaiser way of doing this in the future.
-
-How to install on Mac OS X
-=================
-Fuse will install the plugin on demand, so the steps below are not neccessary in normal circumstances. 
-
-NOTE: The automatically installer does not work if you have installed the plugin manually
-
-Go to ~/Library/Application Support. Find the "Sublime Text 3" folder, and go into "Packages".
-Clone repo into this folder, and RENAME the folder to "Fuse", and restart sublime if it's already open.
-
-Also if you have set the default syntax language for .uno and .ux files before, you must set these again. Set .uno to Fuse/Uno and .ux to Fuse/UX.
-
-This is a temporary install solution. There will be an eaiser way of doing this in the future.
+Install Fuse. 
+Run `fuse install sublime-plugin` from the command line.
 
 Current Features
 =================
 * Code completion
 * Goto definition
-* Build and run from sublime
+* Preview your app from sublime
 * Build result
-* Build log and Debug log found in the Fuse menu
 
 See [changelog](CHANGELOG.md) for recent feature details.

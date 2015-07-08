@@ -1,169 +1,192 @@
 import sublime, sublime_plugin, traceback
-import json, threading, time, sys, os, time
+import json, threading, time, sys, os, time, subprocess
 from types import *
 from Fuse.interop import *
-from Fuse.cmd_parser import *
+from Fuse.msg_parser import *
 from Fuse.fuse_parseutils import *
 from Fuse.fuse_util import *
 from Fuse.go_to_definition import *
-from Fuse.build_results import *
 from Fuse.output_view import *
-from Fuse.build_output import *
+from Fuse.build_view import *
 
-apiVersion = (1,2)
-remoteApiVersion = None
-items = None
-isUpdatingCache = False
-autoCompleteEvent = None
-closeEvent = None
-interop = None
-buildResults = None
-outputView = OutputView()
-buildOutput = BuildOutputView()
-connectThread = None
-useShortCompletion = False
-wordAtCaret = ""
+gFuse = None
 
-def Recv(msg):
-	try:
-		parsedRes = CmdParser.ParseCommand(msg)
-		name = parsedRes[0]
-		args = parsedRes[1]
-
-		if name == "SetAPIVersion":
-			HandleAPIVersion(args)
-		if name == "SetCodeSuggestions":
-			HandleCodeSuggestion(args)
-		if name == "WriteToConsole":
-			WriteToConsole(args)
-		if name == "Error":
-			Error(args)
-		if name == "GoToDefinitionResponse":
-			GoToDefinition(args)		
-		if name == "BuildEventRaised":
-			BuildEventRaised(args)
-		if name == "NewBuild":
-			global buildResults
-			buildResults = BuildResults(sublime.active_window())		
-	except:
-		print(sys.exc_info()[0])
-
-def HandleAPIVersion(args):
-	versionString = args["Version"]
-	tags = versionString.split(".")
-	remoteApiVersion = (int(tags[0]), int(tags[1]))
-	print(str.format("Remote Fuse plugin API version {0}.{1}",remoteApiVersion[0], remoteApiVersion[1]))
-	print(str.format("Local Fuse plugin API version {0}.{1}",apiVersion[0], apiVersion[1]))
-	if(remoteApiVersion[1]>1):
-		if apiVersion[0] > remoteApiVersion[0] or apiVersion[1] > remoteApiVersion[1]:
-			sublime.error_message(str.format("This plugin expects Fuse plugin API {0}.{1}\nAvailable plugin API is {2}.{3}\nMake sure you are running the latest version of Fuse.", apiVersion[0],apiVersion[1], remoteApiVersion[0], remoteApiVersion[1]))
-
-def Error(cmd):
-	print("Fuse - Error: " + cmd["ErrorString"])
-	autoCompleteEvent.set()
-	autoCompleteEvent.clear()
-
-def WriteToConsole(args):
-	typeOfConsole = args["Type"]
-	if typeOfConsole == "DebugLog":
-		outputView.Write(args["Text"])
-	elif typeOfConsole == "BuildLog":
-		buildOutput.Write(args["Text"])
-
-def BuildEventRaised(cmd):
-	buildResults.Add(cmd)
-
-def HandleCodeSuggestion(cmd):
-	suggestions = cmd["CodeSuggestions"]
-
-	global items
-	global isUpdatingCache
-	global useShortCompletion
-	global completionSyntax
-	global doCompleteAttribs
-	global foldUXNameSpaces
-	global wordAtCaret
-
-	isUpdatingCache = cmd["IsUpdatingCache"]
+class Fuse():
+	apiVersion = (1,2)
+	remoteApiVersion = None
 	items = []
+	isUpdatingCache = False
+	interop = None	
+	outputView = OutputView()
+	useShortCompletion = False
+	wordAtCaret = ""
+	doCompleteAttribs = False
+	foldUXNameSpaces = False
+	completionSyntax = None
+	buildViews = BuildViewManager()
+	msgManager = MsgManager()
 
-	try:
-		# Determine which fields are enabled for completions
-		# If remoteApiVersion hasn't been defined, base fields on that
-		# Version no used to pick fields is determined from lowest minor version of local and remote
+	def __init__(self):
+		self.interop = Interop(self.recv, self.sendHello, self.tryConnect)
 
-		minor = apiVersion[1]
-		if remoteApiVersion != None:
-			minor = min(apiVersion[1], remoteApiVersion[1])
+	def recv(self, msg):
+		try:
+			parsedRes = self.msgManager.parse(msg)
 
-		suggestedUXNameSpaces = []
+			if parsedRes == None:
+				return
 
-		for suggestion in suggestions:
+			if parsedRes.messageType == "Event":
+				self.buildViews.tryHandleBuildEvent(parsedRes)
+		except:
+			traceback.print_exc()
 
-			outText = suggestionText = suggestion["Suggestion"]
-			suggestionType = suggestion["Type"]
-			hintText = "" # The right-column hint text
+	def handleErrors(self, errors):
+		for error in errors:
+			print("Fuse - Error({Code}): {Message}".format(Code = error["Code"], Message = error["Message"]))
 
-			if minor >= 1:
-				if completionSyntax == "UX" and doCompleteAttribs and suggestionType == "Property":
-					s = ParseUXSuggestion(wordAtCaret, suggestion, suggestedUXNameSpaces, useShortCompletion, foldUXNameSpaces)
-					if(s == None):
-						continue
+	def handleCodeSuggestion(self, cmd):
+		suggestions = cmd["CodeSuggestions"]
+
+		self.isUpdatingCache = cmd["IsUpdatingCache"]
+		self.items = []
+
+		try:
+			# Determine which fields are enabled for completions
+			# If remoteApiVersion hasn't been defined, base fields on that
+			# Version no used to pick fields is determined from lowest minor version of local and remote
+
+			minor = self.apiVersion[1]
+			if self.remoteApiVersion != None:
+				minor = min(self.apiVersion[1], self.remoteApiVersion[1])
+
+			suggestedUXNameSpaces = []
+
+			for suggestion in suggestions:
+
+				outText = suggestionText = suggestion["Suggestion"]
+				suggestionType = suggestion["Type"]
+				hintText = "" # The right-column hint text
+
+				if minor >= 1:
+					if self.completionSyntax == "UX" and self.doCompleteAttribs and suggestionType == "Property":
+						s = ParseUXSuggestion(wordAtCaret, suggestion, suggestedUXNameSpaces, useShortCompletion, self.foldUXNameSpaces)
+						if(s == None):
+							continue
+						else:
+							outText = s[0]
+							suggestionText = s[0]+s[1]
+						
 					else:
-						outText = s[0]
-						suggestionText = s[0]+s[1]
-					
+						hintText = suggestion["ReturnType"]
+
+						if suggestionType == "Method" or suggestionType == "Constructor":
+							# Build sublime tab completion, type hint and verbose type hint
+							parsedMethod = ParseMethod(suggestion["AccessModifiers"], suggestionText, suggestion["MethodArguments"], hintText, suggestionType == "Constructor")
+
+							if not useShortCompletion:
+								suggestionText = parsedMethod[0]
+							hintText = parsedMethod[1]
+
+						if suggestionType == "Field" or suggestionType == "Property":
+							hintText = TrimType(hintText)
+
+
+				if suggestion["PreText"] != "":
+					suggestionText = suggestion["PreText"] + suggestion["PostText"]
+
+
+				outText += "\t" + hintText
+				if self.completionSyntax == "Uno":
+					if wordAtCaret == "." or outText.casefold().find(wordAtCaret.casefold()) > -1:
+						self.items.append((outText, suggestionText))
 				else:
-					hintText = suggestion["ReturnType"]
+					self.items.append((outText, suggestionText))
 
-					if suggestionType == "Method" or suggestionType == "Constructor":
-						# Build sublime tab completion, type hint and verbose type hint
-						parsedMethod = ParseMethod(suggestion["AccessModifiers"], suggestionText, suggestion["MethodArguments"], hintText, suggestionType == "Constructor")
+		except:
+			traceback.print_exc()
 
-						if not useShortCompletion:
-							suggestionText = parsedMethod[0]
-						hintText = parsedMethod[1]
+	def onQueryCompletion(self, view):
+		if GetSetting("fuse_completion") == False:
+			return
 
-					if suggestionType == "Field" or suggestionType == "Property":
-						hintText = TrimType(hintText)
+		syntaxName = GetExtension(view.settings().get("syntax"))
+		if not IsSupportedSyntax(syntaxName):
+			return
 
+		if not self.interop.isConnected():
+			self.tryConnect()
 
-			if suggestion["PreText"] != "":
-				suggestionText = suggestion["PreText"] + suggestion["PostText"]
+		self.doCompleteAttribs = GetSetting("fuse_ux_attrib_completion")
+		self.foldUXNameSpaces = GetSetting("fuse_ux_attrib_folding")
+		self.completionSyntax = syntaxName
 
+		response = self.requestAutoComplete(view, syntaxName)
+		if response == None:
+			return
 
-			outText += "\t" + hintText
-			if completionSyntax == "Uno":				
-				if(wordAtCaret == "." or outText.casefold().find(wordAtCaret.casefold()) > -1):
-					items.append((outText, suggestionText))
+		if response.status != "Success":
+			self.handleErrors(response.errors)
+			return
+
+		self.handleCodeSuggestion(response.data)
+		
+		data = (self.items, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+		if len(self.items) == 0:
+			if self.isUpdatingCache == True:
+				return ([("Updating suggestion cache...", "_"), ("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
+
+			if GetSetting("fuse_if_no_completion_use_sublime") == False:				
+				return ([("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
 			else:
-				items.append((outText, suggestionText))
+				return
 
-	except:
-		traceback.print_exc()
+		self.items = []
+		return data
 
-	autoCompleteEvent.set()
-	autoCompleteEvent.clear()
+	def requestAutoComplete(self, view, syntaxName):
+		fileName = view.file_name()
+		text = view.substr(sublime.Region(0,view.size()))
+		caret = view.sel()[0].a
+
+		return self.msgManager.sendRequest(
+			self.interop,
+			"Fuse.GetCodeSuggestions",
+			{
+				"Path": fileName, 
+				"Text": text, 
+				"SyntaxType": syntaxName, 
+				"CaretPosition": GetRowCol(view, caret)
+			},
+			0.2)
+
+	def sendHello(self):
+		self.msgManager.sendRequest(self.interop, 
+		"Hello",
+		{
+			"Identifier": "Sublime Text 3",					
+			"EventFilter": ""
+		})
+
+	def tryConnect(self):
+		try:				
+			if GetSetting("fuse_enabled") == True and not self.interop.isConnected():
+				try:		
+					if os.name == "nt":
+						CREATE_NO_WINDOW = 0x08000000			
+						subprocess.call(["fuse", "daemon", "-b"], creationflags=CREATE_NO_WINDOW)
+					else:
+						subprocess.call(["fuse", "daemon", "-b"])
+				except:
+					traceback.print_exc()
+
+				self.interop.connect()
+		except:
+			traceback.print_exc()
 
 def plugin_loaded():
-	global items
-	global autoCompleteEvent
-	global closeEvent
-	global interop
-	global buildResults
-	global completionSyntax
-
-	completionSyntax = ""
-	items = []
-	autoCompleteEvent = threading.Event()
-	closeEvent = threading.Event()
-	interop = Interop(Recv, SendHandshake)
-	buildResults = BuildResults(sublime.active_window())
-
-	global connectThread
-	connectThread = threading.Thread(target = TryConnect)
-	connectThread.daemon = True
-	connectThread.start()
+	global gFuse
+	gFuse = Fuse()
 
 	s = sublime.load_settings("Preferences.sublime-settings")
 	if GetSetting("fuse_open_files_in_same_window"):
@@ -171,35 +194,12 @@ def plugin_loaded():
 	else:
 		s.set("open_files_in_new_window", True)
 
-
 def plugin_unloaded():
-	closeEvent.set()
-	connectThread.join(1)
-
-	global interop
-	interop = None	
-
-def TryConnect():	
-	try:		
-		while not closeEvent.is_set():
-			if GetSetting("fuse_enabled") == True and not interop.IsConnected():
-				interop.Connect()
-				if interop.IsConnected():
-					SendHandshake()				
-
-			time.sleep(1)
-	finally:
-		interop.Disconnect()
-
-def SendHandshake():
-	interop.Send(json.dumps({"Command":"SetFeatures", "Arguments":
-		{"Features":[{"Name":"CodeCompletion"}, 
-		{"Name": "Console"}, 
-		{"Name": "BuildEvent"},
-		{"Name": "ShortcutFeature"}]}}))
+	global gFuse
+	gFuse.interop.disconnect()
+	gFuse = None
 
 class FuseEventListener(sublime_plugin.EventListener):
-
 	def on_modified(self, view):
 		global useShortCompletion
 		global wordAtCaret
@@ -212,67 +212,16 @@ class FuseEventListener(sublime_plugin.EventListener):
 		else:
 			useShortCompletion = False
 
-	def RequestAutoComplete(self, view, syntaxName):
-
-		fileName = view.file_name()
-		text = view.substr(sublime.Region(0,view.size()))
-		caret = view.sel()[0].a
-
-		interop.Send(json.dumps({"Command":"RequestCodeCompletion", "Arguments":{
-			"QueryId": 0,
-			"Path": fileName, "Text": text, 
-			"Type": syntaxName, "CaretPosition": GetRowCol(view, caret)}}))
-
 	def on_query_completions(self, view, prefix, locations):
-		global items
-		global completionSyntax
-		global doCompleteAttribs
-		global foldUXNameSpaces
-
-		if GetSetting("fuse_completion") == False or not interop.IsConnected():
-			return
-
-		syntaxName = GetExtension(view.settings().get("syntax"))
-		if not IsSupportedSyntax(syntaxName):
-			return
-
-		doCompleteAttribs = GetSetting("fuse_ux_attrib_completion")
-		foldUXNameSpaces = GetSetting("fuse_ux_attrib_folding")
-
-		completionSyntax = syntaxName
-
-		self.RequestAutoComplete(view, syntaxName)
-
-		autoCompleteEvent.wait(0.2)
-		
-		data = (items, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
-		if len(items) == 0:
-			if isUpdatingCache == True:
-				return ([("Updating suggestion cache...", "_"), ("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
-
-			if GetSetting("fuse_if_no_completion_use_sublime") == False:				
-				return ([("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
-			else:
-				return
-
-		items = []
-		return data
+		return gFuse.onQueryCompletion(view)
 
 class DisconnectCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
-		interop.Disconnect()	
-
-class ToggleBuildresCommand(sublime_plugin.ApplicationCommand):
-	def run(self):	
-		buildResults.ToggleShow()
+		gFuse.interop.disconnect()
 
 class ToggleOutputviewCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
-		outputView.ToggleShow()
-
-class ToggleBuildoutputCommand(sublime_plugin.ApplicationCommand):
-	def run(self):
-		buildOutput.ToggleShow()
+		gFuse.outputView.ToggleShow()
 
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
@@ -285,17 +234,56 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
 
-		interop.Send(json.dumps({"Command": "GotoDefinition", "Arguments":{
-			"Path": view.file_name(),
-			"Text": text,
-			"Type": syntaxName,
-			"CaretPosition": GetRowCol(view, caret),
-			"QueryId": 0}}))
+		response = gFuse.msgManager.sendRequest(
+			gFuse.interop,
+			"Fuse.GotoDefinition",
+			{
+				"Path": view.file_name(),
+				"Text": text,
+				"SyntaxType": syntaxName,
+				"CaretPosition": GetRowCol(view, caret),					
+			}
+		)
+
+		if response == None:
+			return
+
+		if response.status != "Success":
+			gFuse.handleErrors(response.errors)
+			return
+
+		GotoDefinition(response.data)
 
 class FuseBuildRunCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
-		interop.Send(json.dumps({"Command": "BuildAndRun"}))
+		gFuse.interop.Send("Event", json.dumps({"Command": "BuildAndRun"}))
 
 class FuseRecompileCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
-		interop.Send(json.dumps({"Command": "Recompile"}))
+		gFuse.interop.Send("Event", json.dumps({"Command": "Recompile"}))
+
+class FusePreview(sublime_plugin.ApplicationCommand):
+	def run(self, type, paths = []):	
+		gFuse.tryConnect()
+
+		for path in paths:			
+			subprocess.Popen(["fuse", "preview", "--target=" + type, path])
+			
+	def is_visible(self, type, paths = []):
+		if os.name == "nt" and type == "iOS":
+			return False
+
+		for path in paths:
+			fileName, fileExtension = os.path.splitext(path)
+			fileExtensionUpper = fileExtension.upper()
+			if fileExtensionUpper != ".UX" and fileExtensionUpper != ".UNOSLN" and fileExtensionUpper != ".UNOPROJ":
+				return False
+
+		return True
+
+class FusePreviewCurrent(sublime_plugin.TextCommand):
+	def run(self, edit, type):
+		sublime.run_command("fuse_preview", {"type": type, "paths": [self.view.file_name()]});
+
+	def is_visible(self, type):
+		return FusePreview.is_visible(None, type, [self.view.file_name()])

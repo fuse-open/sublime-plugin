@@ -15,7 +15,7 @@
 				<key>1</key>
 				<dict>
 					<key>name</key>
-					<string>entity.name.filename.find-in-files</string>
+					<string>entity.name.filename.find-in-files.warning</string>
 				</dict>
 			</dict>
 		</dict>
@@ -27,7 +27,7 @@
 				<key>1</key>
 				<dict>
 					<key>name</key>
-					<string>entity.name.tag.xml</string>
+					<string>entity.name.tag.error</string>
 				</dict>
 			</dict>
 		</dict>
@@ -39,19 +39,7 @@
 				<key>1</key>
 				<dict>
 					<key>name</key>
-					<string>constant.numeric.line-number.find-in-files</string>
-				</dict>
-			</dict>
-		</dict>
-		<dict>
-			<key>match</key>
-			<string>^ +([0-9]+):</string>
-			<key>captures</key>
-			<dict>
-				<key>1</key>
-				<dict>
-					<key>name</key>
-					<string>constant.numeric.line-number.match.find-in-files</string>
+					<string>constant.numeric.line-number</string>
 				</dict>
 			</dict>
 		</dict>
