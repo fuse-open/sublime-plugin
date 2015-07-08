@@ -48,13 +48,6 @@ class Fuse():
 		self.items = []
 
 		try:
-			# Determine which fields are enabled for completions
-			# If remoteApiVersion hasn't been defined, base fields on that
-			# Version no used to pick fields is determined from lowest minor version of local and remote
-
-			minor = self.apiVersion[1]
-			if self.remoteApiVersion != None:
-				minor = min(self.apiVersion[1], self.remoteApiVersion[1])
 			suggestedUXNameSpaces = []
 
 			for suggestion in suggestions:
