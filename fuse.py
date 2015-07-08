@@ -201,10 +201,6 @@ class FuseEventListener(sublime_plugin.EventListener):
 	def on_query_completions(self, view, prefix, locations):
 		return gFuse.onQueryCompletion(view)
 
-class DisconnectCommand(sublime_plugin.ApplicationCommand):
-	def run(self):
-		gFuse.interop.disconnect()
-
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
 		view = self.view
