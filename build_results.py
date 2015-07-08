@@ -121,6 +121,6 @@ class FuseGotoLocationCommand(sublime_plugin.TextCommand):
 				return location
 
 class BuildResultListener(sublime_plugin.EventListener):
-	def on_text_command(self, view, command_name, args):
-		if command_name == "drag_select" and "by" in args.keys() and args["by"] == "words" and view.name() == "Fuse - Build Results":
+	def on_text_command(self, view, command_name, args):		
+		if command_name == "drag_select" and "by" in args.keys() and args["by"] == "words" and view.name() == "Fuse - Auto Reload Result":
 			view.run_command("fuse_goto_location")				
