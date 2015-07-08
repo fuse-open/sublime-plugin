@@ -12,8 +12,6 @@ from Fuse.build_view import *
 gFuse = None
 
 class Fuse():
-	apiVersion = (1,2)
-	remoteApiVersion = None
 	items = []
 	isUpdatingCache = False
 	interop = None	
@@ -59,7 +57,6 @@ class Fuse():
 			minor = self.apiVersion[1]
 			if self.remoteApiVersion != None:
 				minor = min(self.apiVersion[1], self.remoteApiVersion[1])
-
 			suggestedUXNameSpaces = []
 
 			for suggestion in suggestions:
@@ -68,28 +65,26 @@ class Fuse():
 				suggestionType = suggestion["Type"]
 				hintText = "" # The right-column hint text
 
-				if minor >= 1:
-					if self.completionSyntax == "UX" and self.doCompleteAttribs and suggestionType == "Property":
-						s = ParseUXSuggestion(wordAtCaret, suggestion, suggestedUXNameSpaces, useShortCompletion, self.foldUXNameSpaces)
-						if(s == None):
-							continue
-						else:
-							outText = s[0]
-							suggestionText = s[0]+s[1]
-						
+				if self.completionSyntax == "UX" and self.doCompleteAttribs and suggestionType == "Property":
+					s = ParseUXSuggestion(wordAtCaret, suggestion, suggestedUXNameSpaces, useShortCompletion, self.foldUXNameSpaces)
+					if(s == None):
+						continue
 					else:
-						hintText = suggestion["ReturnType"]
+						outText = s[0]
+						suggestionText = s[0]+s[1]					
+				else:
+					hintText = suggestion["ReturnType"]
 
-						if suggestionType == "Method" or suggestionType == "Constructor":
-							# Build sublime tab completion, type hint and verbose type hint
-							parsedMethod = ParseMethod(suggestion["AccessModifiers"], suggestionText, suggestion["MethodArguments"], hintText, suggestionType == "Constructor")
+					if suggestionType == "Method" or suggestionType == "Constructor":
+						# Build sublime tab completion, type hint and verbose type hint
+						parsedMethod = ParseMethod(suggestion["AccessModifiers"], suggestionText, suggestion["MethodArguments"], hintText, suggestionType == "Constructor")
 
-							if not useShortCompletion:
-								suggestionText = parsedMethod[0]
-							hintText = parsedMethod[1]
+						if not useShortCompletion:
+							suggestionText = parsedMethod[0]
+						hintText = parsedMethod[1]
 
-						if suggestionType == "Field" or suggestionType == "Property":
-							hintText = TrimType(hintText)
+					if suggestionType == "Field" or suggestionType == "Property":
+						hintText = TrimType(hintText)
 
 
 				if suggestion["PreText"] != "":
