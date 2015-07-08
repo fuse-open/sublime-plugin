@@ -6,7 +6,6 @@ from Fuse.msg_parser import *
 from Fuse.fuse_parseutils import *
 from Fuse.fuse_util import *
 from Fuse.go_to_definition import *
-from Fuse.output_view import *
 from Fuse.build_view import *
 
 gFuse = None
@@ -14,8 +13,7 @@ gFuse = None
 class Fuse():
 	items = []
 	isUpdatingCache = False
-	interop = None	
-	outputView = OutputView()
+	interop = None
 	useShortCompletion = False
 	wordAtCaret = ""
 	doCompleteAttribs = False
@@ -213,10 +211,6 @@ class FuseEventListener(sublime_plugin.EventListener):
 class DisconnectCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
 		gFuse.interop.disconnect()
-
-class ToggleOutputviewCommand(sublime_plugin.ApplicationCommand):
-	def run(self):
-		gFuse.outputView.ToggleShow()
 
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
