@@ -70,17 +70,17 @@ class BuildResults:
 
 	def show(self):
 		window = sublime.active_window()
-		window.run_command("build_results")
+		window.run_command("fuse_build_results")
 
 	def close(self):
 		pass
 
-class BuildResultsCommand(sublime_plugin.WindowCommand):
+class FuseBuildResultsCommand(sublime_plugin.WindowCommand):
 	def run(self):
 		window = self.window
 		window.run_command("show_panel", {"panel": "output.FuseBuildResults" })
 
-class GotoLocationCommand(sublime_plugin.TextCommand):
+class FuseGotoLocationCommand(sublime_plugin.TextCommand):
 	def getPath(self, region):
 		for path in paths:
 			if region.contains(path[0]):
@@ -123,4 +123,4 @@ class GotoLocationCommand(sublime_plugin.TextCommand):
 class BuildResultListener(sublime_plugin.EventListener):
 	def on_text_command(self, view, command_name, args):
 		if command_name == "drag_select" and "by" in args.keys() and args["by"] == "words" and view.name() == "Fuse - Build Results":
-			view.run_command("goto_location")				
+			view.run_command("fuse_goto_location")				
