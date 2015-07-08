@@ -1,12 +1,8 @@
-# Rebuild a sequence as a list of n-tuples
-def Group(lst, n):
-    return zip(*[lst[i::n] for i in range(n)]) 
-
-def TrimType(typeDesc):
+def trimType(typeDesc):
 	return typeDesc.rpartition(".")[2]
 
 # Parse a method or constructor into tab completion text, type hint and verbose hint
-def ParseMethod(access, methodName, args, returntype, asCtor):
+def parseMethod(access, methodName, args, returntype, asCtor):
 	verboseHintText = " ".join(access)
 	methodText = methodName+"("
 
@@ -32,19 +28,19 @@ def ParseMethod(access, methodName, args, returntype, asCtor):
 		else:
 			methodText += "${" + str(count) + ":" + argName + "}"
 
-		typeHint += TrimType(arg["ArgType"]) + " " + argName
+		typeHint += trimType(arg["ArgType"]) + " " + argName
 
 		count += 1
 
 	if asCtor:
 		typeHint += ")"
 	else:
-		typeHint += "):" + TrimType(returntype)
+		typeHint += "):" + trimType(returntype)
 	methodText += ")"
 
 	return (methodText, typeHint, verboseHintText)
 
-def ParseUXSuggestion(wordAtCaret, suggestion, suggestedUXNameSpaces, useShortCompletion, foldUXNameSpaces):
+def parseUXSuggestion(wordAtCaret, suggestion, suggestedUXNameSpaces, useShortCompletion, foldUXNameSpaces):
 	isNs = False
 	outText = suggestion["Suggestion"]
 	hintText = suggestion["ReturnType"]

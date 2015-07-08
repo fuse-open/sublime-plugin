@@ -1,7 +1,7 @@
 import sublime, sublime_plugin 
 import Fuse.fuse_util
 
-def GotoDefinition(data):
+def gotoDefinition(data):
 	window = sublime.active_window()
 	path = data["Path"]
 	

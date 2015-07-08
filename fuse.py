@@ -64,7 +64,7 @@ class Fuse():
 				hintText = "" # The right-column hint text
 
 				if self.completionSyntax == "UX" and self.doCompleteAttribs and suggestionType == "Property":
-					s = ParseUXSuggestion(wordAtCaret, suggestion, suggestedUXNameSpaces, useShortCompletion, self.foldUXNameSpaces)
+					s = parseUXSuggestion(wordAtCaret, suggestion, suggestedUXNameSpaces, useShortCompletion, self.foldUXNameSpaces)
 					if(s == None):
 						continue
 					else:
@@ -75,14 +75,14 @@ class Fuse():
 
 					if suggestionType == "Method" or suggestionType == "Constructor":
 						# Build sublime tab completion, type hint and verbose type hint
-						parsedMethod = ParseMethod(suggestion["AccessModifiers"], suggestionText, suggestion["MethodArguments"], hintText, suggestionType == "Constructor")
+						parsedMethod = parseMethod(suggestion["AccessModifiers"], suggestionText, suggestion["MethodArguments"], hintText, suggestionType == "Constructor")
 
 						if not useShortCompletion:
 							suggestionText = parsedMethod[0]
 						hintText = parsedMethod[1]
 
 					if suggestionType == "Field" or suggestionType == "Property":
-						hintText = TrimType(hintText)
+						hintText = trimType(hintText)
 
 
 				if suggestion["PreText"] != "":
@@ -100,18 +100,18 @@ class Fuse():
 			traceback.print_exc()
 
 	def onQueryCompletion(self, view):
-		if GetSetting("fuse_completion") == False:
+		if getSetting("fuse_completion") == False:
 			return
 
-		syntaxName = GetExtension(view.settings().get("syntax"))
-		if not IsSupportedSyntax(syntaxName):
+		syntaxName = getExtension(view.settings().get("syntax"))
+		if not isSupportedSyntax(syntaxName):
 			return
 
 		if not self.interop.isConnected():
 			self.tryConnect()
 
-		self.doCompleteAttribs = GetSetting("fuse_ux_attrib_completion")
-		self.foldUXNameSpaces = GetSetting("fuse_ux_attrib_folding")
+		self.doCompleteAttribs = getSetting("fuse_ux_attrib_completion")
+		self.foldUXNameSpaces = getSetting("fuse_ux_attrib_folding")
 		self.completionSyntax = syntaxName
 
 		response = self.requestAutoComplete(view, syntaxName)
@@ -129,7 +129,7 @@ class Fuse():
 			if self.isUpdatingCache == True:
 				return ([("Updating suggestion cache...", "_"), ("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
 
-			if GetSetting("fuse_if_no_completion_use_sublime") == False:				
+			if getSetting("fuse_if_no_completion_use_sublime") == False:				
 				return ([("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
 			else:
 				return
@@ -149,7 +149,7 @@ class Fuse():
 				"Path": fileName, 
 				"Text": text, 
 				"SyntaxType": syntaxName, 
-				"CaretPosition": GetRowCol(view, caret)
+				"CaretPosition": getRowCol(view, caret)
 			},
 			0.2)
 
@@ -163,7 +163,7 @@ class Fuse():
 
 	def tryConnect(self):
 		try:				
-			if GetSetting("fuse_enabled") == True and not self.interop.isConnected():
+			if getSetting("fuse_enabled") == True and not self.interop.isConnected():
 				try:		
 					if os.name == "nt":
 						CREATE_NO_WINDOW = 0x08000000			
@@ -182,7 +182,7 @@ def plugin_loaded():
 	gFuse = Fuse()
 
 	s = sublime.load_settings("Preferences.sublime-settings")
-	if GetSetting("fuse_open_files_in_same_window"):
+	if getSetting("fuse_open_files_in_same_window"):
 		s.set("open_files_in_new_window", False)
 	else:
 		s.set("open_files_in_new_window", True)
@@ -216,8 +216,8 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
 		view = self.view
 
-		syntaxName = GetExtension(view.settings().get("syntax"))		
-		if not IsSupportedSyntax(syntaxName) or len(view.sel()) == 0:
+		syntaxName = getExtension(view.settings().get("syntax"))		
+		if not isSupportedSyntax(syntaxName) or len(view.sel()) == 0:
 			return
 
 		text = view.substr(sublime.Region(0,view.size()))
@@ -230,7 +230,7 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 				"Path": view.file_name(),
 				"Text": text,
 				"SyntaxType": syntaxName,
-				"CaretPosition": GetRowCol(view, caret),					
+				"CaretPosition": getRowCol(view, caret),					
 			}
 		)
 
@@ -241,15 +241,15 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 			gFuse.handleErrors(response.errors)
 			return
 
-		GotoDefinition(response.data)
+		gotoDefinition(response.data)
 
 class FuseBuildRunCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
-		gFuse.interop.Send("Event", json.dumps({"Command": "BuildAndRun"}))
+		gFuse.interop.send("Event", json.dumps({"Command": "BuildAndRun"}))
 
 class FuseRecompileCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
-		gFuse.interop.Send("Event", json.dumps({"Command": "Recompile"}))
+		gFuse.interop.send("Event", json.dumps({"Command": "Recompile"}))
 
 class FusePreview(sublime_plugin.ApplicationCommand):
 	def run(self, type, paths = []):	

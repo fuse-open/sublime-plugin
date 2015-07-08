@@ -8,7 +8,7 @@ class BuildStatus:
 	error = 2,
 	internalError = 3
 
-def AppendStrToView(view, strData):
+def appendStrToView(view, strData):
 	view.run_command("append", {"characters": strData})
 
 class BuildViewManager:
@@ -130,7 +130,7 @@ class BuildView:
 			while not self.queue.empty():
 				res += self.queue.get_nowait()
 			
-			AppendStrToView(self.view, res)
+			appendStrToView(self.view, res)
 			
 			time.sleep(0.05)	
 

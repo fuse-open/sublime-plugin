@@ -28,7 +28,7 @@ class Interop:
 		self.on_connect()
 		print("Connected to Fuse")		
 
-	def Send(self, type, msg):
+	def send(self, type, msg):
 		if not self.isConnected():
 			self.on_not_connected()
 			return
