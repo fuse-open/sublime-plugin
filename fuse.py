@@ -1,12 +1,12 @@
 import sublime, sublime_plugin, traceback
 import json, threading, time, sys, os, time, subprocess
 from types import *
-from Fuse.interop import *
-from Fuse.msg_parser import *
-from Fuse.fuse_parseutils import *
-from Fuse.fuse_util import *
-from Fuse.go_to_definition import *
-from Fuse.build_view import *
+from .interop import *
+from .msg_parser import *
+from .fuse_parseutils import *
+from .fuse_util import *
+from .go_to_definition import *
+from .build_view import *
 
 gFuse = None
 
