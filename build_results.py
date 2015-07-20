@@ -1,5 +1,5 @@
 import sublime, sublime_plugin
-from Fuse.fuse_util import *
+from .fuse_util import *
 
 paths = []
 buildResultPanel = None
@@ -18,20 +18,21 @@ class BuildResults:
 		buildResultPanel.set_syntax_file("Packages/Fuse/BuildResults.hidden-tmLanguage")
 
 		self.buildId = buildId
+		self.previewId = previewId
 
-		self.__CreateViewModel()
-		self.Show()
+		self.__createViewModel()
+		self.show()
 
-	def __CreateViewModel(self):
-		self.Append("- Auto Reload Result -\n")
+	def __createViewModel(self):
+		self.append("- Auto Reload Result -\n")
 
 	def tryHandleBuildEvent(self, event):
 		if event.type == "Fuse.BuildIssueDetected":
-			self.Add(event.data)
+			self.add(event.data)
 			return True
 		return False
 
-	def Add(self, cmd):
+	def add(self, cmd):
 		filePath = cmd["Path"]
 		startPos = cmd["StartPosition"]
 
@@ -54,9 +55,9 @@ class BuildResults:
 			output += "\n{Message} - {Path}({Line}:{Col}):\n".format(Path = filePath, Message = message, 
 				Line = startLine, Col = startCol)
 
-		self.Append(output)
+		self.append(output)
 
-	def Append(self, data):
+	def append(self, data):
 		view = buildResultPanel
 		view.run_command("append", {"characters": data})
 
@@ -68,23 +69,20 @@ class BuildResults:
 		view.add_regions("errors", lines, "keyword", "bookmark", 
 			sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE | sublime.PERSISTENT | sublime.DRAW_SQUIGGLY_UNDERLINE)
 
-	def Show(self):
+	def show(self):
 		window = sublime.active_window()
-		window.run_command("build_results")
-
-	def ToggleShow(self):
-		self.Show()
+		window.run_command("fuse_build_results")
 
 	def close(self):
 		pass
 
-class BuildResultsCommand(sublime_plugin.WindowCommand):
+class FuseBuildResultsCommand(sublime_plugin.WindowCommand):
 	def run(self):
 		window = self.window
 		window.run_command("show_panel", {"panel": "output.FuseBuildResults" })
 
-class GotoLocationCommand(sublime_plugin.TextCommand):
-	def GetPath(self, region):
+class FuseGotoLocationCommand(sublime_plugin.TextCommand):
+	def getPath(self, region):
 		for path in paths:
 			if region.contains(path[0]):
 				return (path[1], path[2])
@@ -97,13 +95,16 @@ class GotoLocationCommand(sublime_plugin.TextCommand):
 
 		if scope.find(".name.") > -1:
 			scope = view.extract_scope(sel.a)
-			filePath = self.GetPath(scope)
+			filePath = self.getPath(scope)
+			if filePath[0] == '':
+				return
+				
 			window.open_file(filePath[0]+":"+str(filePath[1]), sublime.ENCODED_POSITION)
 		else:
-			self.OpenBasedOnNumericLine(window, view, sel)
+			self.openBasedOnNumericLine(window, view, sel)
 
-	def OpenBasedOnNumericLine(self, window, view, sel):
-			foundSelLoc = self.FindSelectionLocation(view, sel)
+	def openBasedOnNumericLine(self, window, view, sel):
+			foundSelLoc = self.findSelectionLocation(view, sel)
 			if foundSelLoc == None:
 				return
 
@@ -112,12 +113,12 @@ class GotoLocationCommand(sublime_plugin.TextCommand):
 				for region in nameRegions:
 					if region.intersects(foundRegion):
 						scope = view.extract_scope(region.a+1)			
-						filePath = self.GetPath(scope)[0]
+						filePath = self.getPath(scope)[0]
 						line = view.substr(foundSelLoc)						
 						window.open_file(filePath+":" + line, sublime.ENCODED_POSITION)
 						break
 
-	def FindSelectionLocation(self, view, sel):
+	def findSelectionLocation(self, view, sel):
 		allLocations = view.find_by_selector("constant.numeric.line-number")
 		for location in allLocations:
 			if view.line(location).contains(sel):
@@ -125,5 +126,10 @@ class GotoLocationCommand(sublime_plugin.TextCommand):
 
 class BuildResultListener(sublime_plugin.EventListener):
 	def on_text_command(self, view, command_name, args):
-		if command_name == "drag_select" and "by" in args.keys() and args["by"] == "words" and view.name() == "Fuse - Build Results":
-			view.run_command("goto_location")				
+		isDragSelect = command_name == "drag_select"
+		if args == None:
+			return
+
+		isSelectingWord = "by" in args.keys() and args["by"] == "words"
+		if isDragSelect and isSelectingWord and view.name() == "Fuse - Auto Reload Result":
+			view.run_command("fuse_goto_location")

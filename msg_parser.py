@@ -35,7 +35,7 @@ class MsgManager:
 		waitForResponse = threading.Event()
 		self.requestsPending[curId] = {"name": requestName, "event": waitForResponse} 
 
-		interop.Send("Request", 
+		interop.send("Request", 
 		json.dumps(
 		{
 			"Id": curId,
