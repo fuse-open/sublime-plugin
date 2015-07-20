@@ -1,7 +1,7 @@
 import sublime, sublime_plugin
 import queue, threading, time, os
-from Fuse.msg_parser import *
-from Fuse.build_results import BuildResults
+from .msg_parser import *
+from .build_results import BuildResults
 
 class BuildStatus:
 	success = 1,

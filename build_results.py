@@ -1,5 +1,5 @@
 import sublime, sublime_plugin
-from Fuse.fuse_util import *
+from .fuse_util import *
 
 paths = []
 buildResultPanel = None
