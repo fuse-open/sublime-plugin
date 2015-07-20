@@ -95,6 +95,9 @@ class FuseGotoLocationCommand(sublime_plugin.TextCommand):
 		if scope.find(".name.") > -1:
 			scope = view.extract_scope(sel.a)
 			filePath = self.getPath(scope)
+			if filePath[0] == '':
+				return
+				
 			window.open_file(filePath[0]+":"+str(filePath[1]), sublime.ENCODED_POSITION)
 		else:
 			self.openBasedOnNumericLine(window, view, sel)
