@@ -18,6 +18,7 @@ class BuildResults:
 		buildResultPanel.set_syntax_file("Packages/Fuse/BuildResults.hidden-tmLanguage")
 
 		self.buildId = buildId
+		self.previewId = previewId
 
 		self.__createViewModel()
 		self.show()
