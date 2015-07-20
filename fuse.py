@@ -57,7 +57,7 @@ class Fuse():
 				hintText = "" # The right-column hint text
 
 				if self.completionSyntax == "UX" and self.doCompleteAttribs and suggestionType == "Property":
-					s = parseUXSuggestion(wordAtCaret, suggestion, suggestedUXNameSpaces, useShortCompletion, self.foldUXNameSpaces)
+					s = parseUXSuggestion(self.wordAtCaret, suggestion, suggestedUXNameSpaces, self.useShortCompletion, self.foldUXNameSpaces)
 					if(s == None):
 						continue
 					else:
@@ -70,7 +70,7 @@ class Fuse():
 						# Build sublime tab completion, type hint and verbose type hint
 						parsedMethod = parseMethod(suggestion["AccessModifiers"], suggestionText, suggestion["MethodArguments"], hintText, suggestionType == "Constructor")
 
-						if not useShortCompletion:
+						if not self.useShortCompletion:
 							suggestionText = parsedMethod[0]
 						hintText = parsedMethod[1]
 
@@ -84,7 +84,7 @@ class Fuse():
 
 				outText += "\t" + hintText
 				if self.completionSyntax == "Uno":
-					if wordAtCaret == "." or outText.casefold().find(wordAtCaret.casefold()) > -1:
+					if self.wordAtCaret == "." or outText.casefold().find(self.wordAtCaret.casefold()) > -1:
 						self.items.append((outText, suggestionText))
 				else:
 					self.items.append((outText, suggestionText))
@@ -187,16 +187,14 @@ def plugin_unloaded():
 
 class FuseEventListener(sublime_plugin.EventListener):
 	def on_modified(self, view):
-		global useShortCompletion
-		global wordAtCaret
 		caret = view.sel()[0].a
 		vstr = view.substr(caret)
-		wordAtCaret = view.substr(view.word(caret)).strip()
+		gFuse.wordAtCaret = view.substr(view.word(caret)).strip()
 
 		if vstr == "(" or vstr == "=": 
-			useShortCompletion = True
+			gFuse.useShortCompletion = True
 		else:
-			useShortCompletion = False
+			gFuse.useShortCompletion = False
 
 	def on_query_completions(self, view, prefix, locations):
 		return gFuse.onQueryCompletion(view)
