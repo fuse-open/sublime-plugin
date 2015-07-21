@@ -238,23 +238,40 @@ class FuseRecompileCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
 		gFuse.interop.send("Event", json.dumps({"Command": "Recompile"}))
 
-class FuseCreate(sublime_plugin.ApplicationCommand):
+class FuseCreate(sublime_plugin.WindowCommand):
+	targetFolder = ""
+	targetTemplate = ""
+
 	def run(self, type, paths = []):
+		self.targetTemplate = type
+
 		for path in paths:
-			folderName = ""
+			self.targetFolder = ""
 			# File or folder?
 			fileName, fileExtension = os.path.splitext(path)
 			if fileExtension == "":
-				folderName = fileName
+				self.targetFolder = fileName
 			else:
 				head, tail = os.path.split(path)
 				# Use the head to get the folder
-				folderName = head
+				self.targetFolder = head
 
-		subprocess.Popen(["fuse", "create", type, "Untitled", folderName])
-		self.view.window().open_file(folderName+"/"+Untitled + "." + type);
+		header = "";
+		if type=="ux":
+			header = "Choose a file name:"
+		elif type=="uno":
+			header = "Choose a class name:"
+		else:
+			header = "Choose a project name:"
 
+		self.window.show_input_panel(header, "", self.on_done, None, None)
 
+	def on_done(self, text):
+		try:
+			subprocess.Popen(["fuse", "create", self.targetTemplate, text, self.targetFolder])
+			self.window.open_file(self.targetFolder + "/" + text + "." + self.targetTemplate);
+		except ValueError:
+			pass
 
 	def is_enabled(self, type, paths = []):
 		return True

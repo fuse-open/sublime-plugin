@@ -40,7 +40,7 @@
 		[
 			{
 				"command": "fuse_create",
-				"caption": "UX",
+				"caption": "UX markup",
 				"args": 
 				{
 					"type": "ux",
@@ -49,10 +49,19 @@
 			},
 			{
 				"command": "fuse_create",
-				"caption": "Uno",
+				"caption": "Uno source",
 				"args": 
 				{
 					"type": "uno",
+					"paths": []
+				}
+			},
+			{
+				"command": "fuse_create",
+				"caption": "Project",
+				"args": 
+				{
+					"type": "app",
 					"paths": []
 				}
 			}
