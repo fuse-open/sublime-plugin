@@ -238,17 +238,41 @@ class FuseRecompileCommand(sublime_plugin.ApplicationCommand):
 	def run(self):
 		gFuse.interop.send("Event", json.dumps({"Command": "Recompile"}))
 
+class FuseCreate(sublime_plugin.ApplicationCommand):
+	def run(self, type, paths = []):
+		for path in paths:
+			folderName = ""
+			# File or folder?
+			fileName, fileExtension = os.path.splitext(path)
+			if fileExtension == "":
+				folderName = fileName
+			else:
+				head, tail = os.path.split(path)
+				# Use the head to get the folder
+				folderName = head
+
+		subprocess.Popen(["fuse", "create", type, "Untitled", folderName])
+		self.view.window().open_file(folderName+"/"+Untitled + "." + type);
+
+
+
+	def is_enabled(self, type, paths = []):
+		return True
+
 class FusePreview(sublime_plugin.ApplicationCommand):
 	def run(self, type, paths = []):	
 		gFuse.tryConnect()
 
 		for path in paths:			
 			subprocess.Popen(["fuse", "preview", "--target=" + type, path])
-			
+	
 	def is_visible(self, type, paths = []):
 		if os.name == "nt" and type == "iOS":
 			return False
 
+		return True
+
+	def is_enabled(self, type, paths = []):
 		for path in paths:
 			fileName, fileExtension = os.path.splitext(path)
 			fileExtensionUpper = fileExtension.upper()

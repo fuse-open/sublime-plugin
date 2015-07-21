@@ -1,7 +1,7 @@
 [
 	{
 		"id": "preview",
-		"caption": "Preview",
+		"caption": "Fuse preview",
 		"children":
 		[
 			{
@@ -28,6 +28,31 @@
 				"args": 
 				{
 					"type": "iOS",
+					"paths": []
+				}
+			}
+		]
+	},
+	{
+		"id": "create",
+		"caption": "New Fuse file",
+		"children":
+		[
+			{
+				"command": "fuse_create",
+				"caption": "UX",
+				"args": 
+				{
+					"type": "ux",
+					"paths": []
+				}
+			},
+			{
+				"command": "fuse_create",
+				"caption": "Uno",
+				"args": 
+				{
+					"type": "uno",
 					"paths": []
 				}
 			}
