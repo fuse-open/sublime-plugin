@@ -2,6 +2,7 @@ import sublime, sublime_plugin
 import queue, threading, time, os
 from .msg_parser import *
 from .build_results import BuildResults
+from .fuse_util import *
 
 class BuildStatus:
 	success = 1,
@@ -23,6 +24,9 @@ class BuildViewManager:
 		self.buildIds.pop(previewId)
 
 	def tryHandleBuildEvent(self, event):
+		if not getSetting("fuse_show_build_results"):
+			return False
+
 		validTypes = [
 			"Fuse.LogEvent",
 			"Fuse.BuildStarted", 
