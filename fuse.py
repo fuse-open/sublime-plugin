@@ -302,5 +302,8 @@ class FusePreviewCurrent(sublime_plugin.TextCommand):
 	def run(self, edit, type):
 		sublime.run_command("fuse_preview", {"type": type, "paths": [self.view.file_name()]});
 
+	def is_enabled(self, type):
+		return FusePreview.is_enabled(None, type, [self.view.file_name()])
+
 	def is_visible(self, type):
 		return FusePreview.is_visible(None, type, [self.view.file_name()])
