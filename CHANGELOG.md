@@ -1,3 +1,8 @@
+# Fuse Sublime package 1.3.3
+
+## Bug fix
+* A fix for code completion problems introduced in last release.
+
 # Fuse Sublime package 1.3.2
 
 ## New features
