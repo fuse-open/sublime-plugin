@@ -24,9 +24,6 @@ class BuildViewManager:
 		self.buildIds.pop(previewId)
 
 	def tryHandleBuildEvent(self, event):
-		if not getSetting("fuse_show_build_results"):
-			return False
-
 		validTypes = [
 			"Fuse.LogEvent",
 			"Fuse.BuildStarted", 
@@ -88,6 +85,9 @@ class BuildView:
 		self.pollThread.daemon = True
 		self.pollThread.start()
 		
+		if not getSetting("fuse_show_build_results"):
+			return
+		
 		window = sublime.active_window()
 		self.view = window.new_file()			
 		self.view.set_scratch(True)		
@@ -95,6 +95,9 @@ class BuildView:
 		self.view.set_syntax_file("Packages/Fuse/BuildView.hidden-tmLanguage")
 
 	def tryHandleBuildEvent(self, event):
+		if not getSetting("fuse_show_build_results"):
+			return False
+
 		if event.type == "Fuse.BuildLogged":
 			self.__write(event.data["Message"])
 			return True
@@ -115,6 +118,9 @@ class BuildView:
 		return False
 
 	def close(self):
+		if not getSetting("fuse_show_build_results"):
+			return
+
 		if self.status != BuildStatus.success or self.view.window() == None:
 			return
 
@@ -123,10 +129,16 @@ class BuildView:
 		window.run_command("close_by_index", { "group": groupIndex, "index": viewIndex })
 
 	def __write(self, strData):
+		if not getSetting("fuse_show_build_results"):
+			return
+		
 		self.queue.put(strData, True)
 		self.gotDataEvent.set()		
 
 	def __poll(self):
+		if not getSetting("fuse_show_build_results"):
+			return
+
 		while(True):
 			self.gotDataEvent.wait()
 			self.gotDataEvent.clear()
