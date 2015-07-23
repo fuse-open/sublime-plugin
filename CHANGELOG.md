@@ -1,3 +1,11 @@
+# Fuse Sublime package 1.3.4
+
+## New features
+* Added context menus to sidebar for creating ux, uno and project templates
+
+## Bug fix
+* Minor text changes for clarity
+
 # Fuse Sublime package 1.3.3
 
 ## Bug fix

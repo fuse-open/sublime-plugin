@@ -1,39 +1,5 @@
 [
 	{
-		"id": "preview",
-		"caption": "Fuse preview",
-		"children":
-		[
-			{
-				"command": "fuse_preview",
-				"caption": "Local",
-				"args": 
-				{
-					"type": "Local",
-					"paths": []
-				},
-			},
-			{
-				"command": "fuse_preview",
-				"caption": "Android",
-				"args": 
-				{
-					"type": "Android",
-					"paths": []
-				}
-			},
-			{
-				"command": "fuse_preview",
-				"caption": "iOS",
-				"args": 
-				{
-					"type": "iOS",
-					"paths": []
-				}
-			}
-		]
-	},
-	{
 		"id": "create",
 		"caption": "New Fuse file",
 		"children":
@@ -62,6 +28,40 @@
 				"args": 
 				{
 					"type": "app",
+					"paths": []
+				}
+			}
+		]
+	},
+	{
+		"id": "preview",
+		"caption": "Fuse preview",
+		"children":
+		[
+			{
+				"command": "fuse_preview",
+				"caption": "Local",
+				"args": 
+				{
+					"type": "Local",
+					"paths": []
+				},
+			},
+			{
+				"command": "fuse_preview",
+				"caption": "Android",
+				"args": 
+				{
+					"type": "Android",
+					"paths": []
+				}
+			},
+			{
+				"command": "fuse_preview",
+				"caption": "iOS",
+				"args": 
+				{
+					"type": "iOS",
 					"paths": []
 				}
 			}
