@@ -102,9 +102,6 @@ class Fuse():
 		if not isSupportedSyntax(syntaxName):
 		 	return
 
-		if not self.interop.isConnected():
-		 	self.tryConnect()
-
 		self.doCompleteAttribs = getSetting("fuse_ux_attrib_completion")
 		self.foldUXNameSpaces = getSetting("fuse_ux_attrib_folding")
 		self.completionSyntax = syntaxName
