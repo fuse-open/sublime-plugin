@@ -1,3 +1,10 @@
+# Fuse Sublime package 1.3.5
+
+## New features
+* Build systems for android, ios, cmake and dotnet
+* Command palette implementations of most fuse commands
+* Better error checking and handling for fuse commands
+
 # Fuse Sublime package 1.3.4
 
 ## New features
