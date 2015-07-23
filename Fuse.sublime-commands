@@ -39,5 +39,12 @@
     	"args": {
     		"type" : "iOS"
     	}
+    },
+    { 
+        "caption": "Fuse: Documentation",
+        "command": "fuse_open_url",
+        "args": {
+            "url" : "https://www.fusetools.com/developers/guides"
+        }
     }
 ]

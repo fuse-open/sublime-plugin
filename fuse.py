@@ -308,6 +308,13 @@ class FuseCreate(sublime_plugin.WindowCommand):
 	def is_enabled(self, type, paths = []):
 		return True
 
+class FuseOpenUrl(sublime_plugin.ApplicationCommand):
+	def run(self, url):
+		if sys.platform=='win32':
+			os.startfile(url)
+		elif sys.platform=='darwin':
+			subprocess.Popen(['open', url])
+
 class FusePreview(sublime_plugin.ApplicationCommand):
 	def run(self, type, paths = []):	
 		gFuse.tryConnect()
