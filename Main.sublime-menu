@@ -62,12 +62,18 @@
         "children":
         [
             {
+                "caption": "Create new project",
+                "command":"create_project",
+                "children":
+                []
+            },
+            {
                 "caption": "Go to Definition",
                 "mnemonic": "D",
                 "command":"goto_definition",
                 "children":
                 []
-            }             
+            }
         ]
     }
 ]

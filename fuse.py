@@ -199,6 +199,37 @@ class FuseEventListener(sublime_plugin.EventListener):
 	def on_query_completions(self, view, prefix, locations):
 		return gFuse.onQueryCompletion(view)
 
+class CreateProjectCommand(sublime_plugin.WindowCommand):
+	projectName = ""
+
+	def run(self):
+		header = "Choose a project name:"
+		self.window.show_input_panel(header, "", self.on_name_done, None, None)
+
+	def on_name_done(self, text):
+		try:
+			self.projectName = text;
+			header = "Choose project destination:"
+			self.window.show_input_panel(header, "", self.on_destination_done, None, None)
+
+		except ValueError:
+			pass
+
+	def on_destination_done(self, text):
+		try:
+			subprocess.Popen(["fuse", "create", "app", self.projectName, text]).wait()
+			data = {
+				"folders" : [
+					{ "path" : text + "/" + self.projectName }
+				]
+			}
+			self.window.set_project_data(data)
+		except ValueError:
+			pass
+
+	def is_enabled(self):
+		return True
+
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
 		view = self.view
