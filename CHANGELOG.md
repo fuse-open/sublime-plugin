@@ -1,3 +1,14 @@
+# Fuse Sublime package 1.3.6
+
+## New features
+* Template instancing for json and javascript
+
+## Changes
+* Relabeled and moved some menu items around for clarity
+
+## Bug fixes
+* Fixed issue where creating files under a path that included periods would fail
+
 # Fuse Sublime package 1.3.5
 
 ## New features
