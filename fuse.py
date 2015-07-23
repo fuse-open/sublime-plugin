@@ -92,50 +92,59 @@ class Fuse():
 		except:
 			traceback.print_exc()
 
+	lastResponse = None
+
 	def onQueryCompletion(self, view):
 		if getSetting("fuse_completion") == False:
-			return
+		 	return
 
 		syntaxName = getExtension(view.settings().get("syntax"))
 		if not isSupportedSyntax(syntaxName):
-			return
+		 	return
 
 		if not self.interop.isConnected():
-			self.tryConnect()
+		 	self.tryConnect()
 
 		self.doCompleteAttribs = getSetting("fuse_ux_attrib_completion")
 		self.foldUXNameSpaces = getSetting("fuse_ux_attrib_folding")
 		self.completionSyntax = syntaxName
 
-		response = self.requestAutoComplete(view, syntaxName)
-		if response == None:
-			return
+		if self.lastResponse is None:
+			self.requestAutoComplete(view, syntaxName, lambda res: self.responseAutoComplete(view, res))
+			return ([("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
+
+		response = self.lastResponse
+		self.lastResponse = None
 
 		if response.status != "Success":
-			self.handleErrors(response.errors)
-			return
+		 	self.handleErrors(response.errors)
+		 	return
 
 		self.handleCodeSuggestion(response.data)
 		
 		data = (self.items, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
 		if len(self.items) == 0:
-			if self.isUpdatingCache == True:
-				return ([("Updating suggestion cache...", "_"), ("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
+		 	if self.isUpdatingCache == True:
+		 		return ([("Updating suggestion cache...", "_"), ("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
 
-			if getSetting("fuse_if_no_completion_use_sublime") == False:				
-				return ([("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
-			else:
-				return
+		 	if getSetting("fuse_if_no_completion_use_sublime") == False:				
+		 		return ([("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
+		 	else:
+		 		return
 
 		self.items = []
 		return data
 
-	def requestAutoComplete(self, view, syntaxName):
+	def responseAutoComplete(self, view, res):
+		self.lastResponse = res
+		view.run_command("auto_complete")
+
+	def requestAutoComplete(self, view, syntaxName, callback):
 		fileName = view.file_name()
 		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
 
-		return self.msgManager.sendRequest(
+		self.msgManager.sendRequestAsync(
 			self.interop,
 			"Fuse.GetCodeSuggestions",
 			{
@@ -144,7 +153,7 @@ class Fuse():
 				"SyntaxType": syntaxName, 
 				"CaretPosition": getRowCol(view, caret)
 			},
-			0.2)
+			callback)
 
 	def sendHello(self):
 		self.msgManager.sendRequest(self.interop, 
