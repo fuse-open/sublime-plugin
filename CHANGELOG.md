@@ -1,3 +1,13 @@
+# Fuse Sublime package 1.3.7
+
+## New features
+
+## Changes
+* Improved AutoComplete speed and hickups by not blocking the editor thread while doing a Fuse CodeCompletion request.
+
+## Bug fixes
+* Fixed issue where creating files under a path that included periods would fail
+
 # Fuse Sublime package 1.3.6
 
 ## New features
