@@ -2,6 +2,9 @@
 
 ## New features
 
+## Regression
+* Removed json/js creation options temporarily to expedite plugin release
+
 ## Changes
 * Improved AutoComplete speed and hickups by not blocking the editor thread while doing a Fuse CodeCompletion request.
 

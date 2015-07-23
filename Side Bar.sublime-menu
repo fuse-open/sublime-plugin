@@ -25,28 +25,10 @@
 			},
 			{
 				"command": "fuse_create",
-				"caption": "JavaScript source",
-				"args": 
-				{
-					"type": "js",
-					"paths": []
-				}
-			},
-			{
-				"command": "fuse_create",
 				"caption": "Uno source",
 				"args": 
 				{
 					"type": "uno",
-					"paths": []
-				}
-			},
-			{
-				"command": "fuse_create",
-				"caption": "JSON data",
-				"args": 
-				{
-					"type": "json",
 					"paths": []
 				}
 			}
