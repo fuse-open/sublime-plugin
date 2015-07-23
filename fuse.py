@@ -217,13 +217,21 @@ class CreateProjectCommand(sublime_plugin.WindowCommand):
 
 	def on_destination_done(self, text):
 		try:
-			subprocess.Popen(["fuse", "create", "app", self.projectName, text]).wait()
-			data = {
-				"folders" : [
-					{ "path" : text + "/" + self.projectName }
-				]
-			}
-			self.window.set_project_data(data)
+			proc = subprocess.Popen(["fuse", "create", "app", self.projectName, text], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+			code = proc.wait()
+			if code==0:
+				data = {
+					"folders" : [
+						{ "path" : text + "/" + self.projectName }
+					]
+				}
+				self.window.set_project_data(data)
+			else:
+				out = ""
+				for line in proc.stdout.readlines():
+					out += line.decode()
+				sublime.message_dialog("Could not create project:\n"+out)
+
 		except ValueError:
 			pass
 
@@ -275,17 +283,23 @@ class FuseCreate(sublime_plugin.WindowCommand):
 
 	def run(self, type, paths = []):
 		self.targetTemplate = type
-
-		for path in paths:
-			self.targetFolder = ""
-			# File or folder?
-			fileName, fileExtension = os.path.splitext(path)
-			if fileExtension == "":
-				self.targetFolder = fileName
+		folders = self.window.folders()
+		if len(paths) == 0:
+			if len(folders) == 0:
+				return
 			else:
-				head, tail = os.path.split(path)
-				# Use the head to get the folder
-				self.targetFolder = head
+				self.targetFolder = folders[0]
+		else:
+			for path in paths:
+				self.targetFolder = ""
+				# File or folder?
+				fileName, fileExtension = os.path.splitext(path)
+				if fileExtension == "":
+					self.targetFolder = fileName
+				else:
+					head, tail = os.path.split(path)
+					# Use the head to get the folder
+					self.targetFolder = head
 
 		header = "";
 		if type=="ux":
@@ -299,9 +313,16 @@ class FuseCreate(sublime_plugin.WindowCommand):
 
 	def on_done(self, text):
 		try:
-			code = subprocess.Popen(["fuse", "create", self.targetTemplate, text, self.targetFolder]).wait()
-			if code==0 and self.targetTemplate != "app":
-				self.window.open_file(self.targetFolder + "/" + text + "." + self.targetTemplate);
+			proc = subprocess.Popen(["fuse", "create", self.targetTemplate, text, self.targetFolder], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+			code = proc.wait()
+			if code == 0:
+				if self.targetTemplate != "app":
+					self.window.open_file(self.targetFolder + "/" + text + "." + self.targetTemplate);
+			else:
+				out = ""
+				for line in cmd.stdout.readlines():
+					out += line.decode()
+				sublime.message_dialog("Could not create file:\n"+out)
 		except ValueError:
 			pass
 
