@@ -1,0 +1,53 @@
+{
+	"selector" : "source.ux, source.uno", 
+    "cmd": ["fuse", "preview"],
+	"working_dir": "${project_path:${folder}}",
+
+    "variants": [
+        { 
+        	"name": "Android",
+        	"cmd": ["fuse", "build", "-t=Android"]
+        },
+        { 
+        	"name": "Android build & run",
+        	"cmd": ["fuse", "build", "-t=Android", "-r"]
+        },
+        { 
+        	"name": ".net",
+        	"cmd": ["fuse", "build", "-t=DotNetExe"]
+        },
+        { 
+        	"name": ".net build & run",
+        	"cmd": ["fuse", "build", "-t=DotNetExe", "-r"]
+        }
+    ],
+
+    "osx": {
+    	"variants":[
+	    	{ 
+	        	"name": "Android",
+	        	"cmd": ["fuse", "build", "-t=Android"]
+	        },
+	        { 
+	        	"name": "Android build & run",
+	        	"cmd": ["fuse", "build", "-t=Android", "-r"]
+	        },
+	        { 
+	        	"name": "CMake",
+	        	"cmd": ["fuse", "build", "-t=CMake"]
+	        },
+	        { 
+	        	"name": "CMake build & run",
+	        	"cmd": ["fuse", "build", "-t=CMake", "-r"]
+	        },
+    		{ 
+	        	"name": "iOS",
+	        	"cmd": ["fuse", "build", "-t=iOS"]
+	        },
+	        { 
+	        	"name": "iOS build & run",
+	        	"cmd": ["fuse", "build", "-t=iOS", "-r"]
+	        }
+	    ]
+    }
+}

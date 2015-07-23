@@ -299,8 +299,8 @@ class FuseCreate(sublime_plugin.WindowCommand):
 
 	def on_done(self, text):
 		try:
-			subprocess.Popen(["fuse", "create", self.targetTemplate, text, self.targetFolder])
-			if self.targetTemplate != "app":
+			code = subprocess.Popen(["fuse", "create", self.targetTemplate, text, self.targetFolder]).wait()
+			if code==0 and self.targetTemplate != "app":
 				self.window.open_file(self.targetFolder + "/" + text + "." + self.targetTemplate);
 		except ValueError:
 			pass
@@ -331,7 +331,7 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 		return True
 
 class FusePreviewCurrent(sublime_plugin.TextCommand):
-	def run(self, edit, type):
+	def run(self, edit, type = "Local"):
 		sublime.run_command("fuse_preview", {"type": type, "paths": [self.view.file_name()]});
 
 	def is_enabled(self, type):

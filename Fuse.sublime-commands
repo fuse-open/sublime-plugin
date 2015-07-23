@@ -1,0 +1,43 @@
+[
+    { 
+    	"caption": "Fuse: Create project", 
+    	"command": "create_project" 
+    },
+    { 
+    	"caption": "Fuse: Create UX file", 
+    	"command":"fuse_create", 
+    	"args": {
+    		"type" : "ux", 
+    		"paths" : [] 
+    	}
+    },
+    { 
+    	"caption": "Fuse: Create Uno file", 
+    	"command":"fuse_create", 
+    	"args": {
+    		"type" : "uno", 
+    		"paths" : [] 
+    	}
+    },
+    { 
+    	"caption": "Fuse: Local preview",
+    	"command": "fuse_preview_current",
+    	"args": {
+    		"type" : "Local"
+    	}
+    },
+    { 
+    	"caption": "Fuse: Android preview",
+    	"command": "fuse_preview_current",
+    	"args": {
+    		"type" : "Android"
+    	}
+    },
+    { 
+    	"caption": "Fuse: iOS preview",
+    	"command": "fuse_preview_current",
+    	"args": {
+    		"type" : "iOS"
+    	}
+    }
+]
