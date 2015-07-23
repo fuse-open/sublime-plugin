@@ -293,13 +293,14 @@ class FuseCreate(sublime_plugin.WindowCommand):
 			for path in paths:
 				self.targetFolder = ""
 				# File or folder?
-				fileName, fileExtension = os.path.splitext(path)
-				if fileExtension == "":
+				if os.path.isfile(path):
+					print("Is file")
+					fileName, fileExtension = os.path.splitext(path)
 					self.targetFolder = fileName
 				else:
-					head, tail = os.path.split(path)
-					# Use the head to get the folder
-					self.targetFolder = head
+					print("Is not file")
+					self.targetFolder = path
+
 
 		header = "";
 		if type=="ux":
