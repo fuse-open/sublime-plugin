@@ -117,6 +117,15 @@ class Fuse():
 		 	self.handleErrors(response.errors)
 		 	return
 
+		caret = view.sel()[0].a
+		vstr = view.substr(caret)
+		self.wordAtCaret = view.substr(view.word(caret)).strip()
+
+		if vstr == "(" or vstr == "=": 
+			self.useShortCompletion = True
+		else:
+			self.useShortCompletion = False
+
 		self.handleCodeSuggestion(response.data)
 		
 		data = (self.items, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
@@ -199,14 +208,7 @@ def plugin_unloaded():
 
 class FuseEventListener(sublime_plugin.EventListener):
 	def on_modified(self, view):
-		caret = view.sel()[0].a
-		vstr = view.substr(caret)
-		gFuse.wordAtCaret = view.substr(view.word(caret)).strip()
-
-		if vstr == "(" or vstr == "=": 
-			gFuse.useShortCompletion = True
-		else:
-			gFuse.useShortCompletion = False
+		pass
 
 	def on_query_completions(self, view, prefix, locations):
 		return gFuse.onQueryCompletion(view)
