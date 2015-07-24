@@ -6,7 +6,9 @@
 * Removed json/js creation options temporarily to expedite plugin release
 
 ## Changes
-* Improved AutoComplete speed and hickups by not blocking the editor thread while doing a Fuse CodeCompletion request.
+* Improved AutoComplete speed and hickups by not blocking the editor thread while doing a Fuse CodeCompletion request
+* Improved UX syntax highlightning to include support for periods in tag names
+* UX attribute name folding is now set to be default on
 
 ## Bug fixes
 * Fixed issue where creating files under a path that included periods would fail
