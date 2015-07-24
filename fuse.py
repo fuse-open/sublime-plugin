@@ -134,7 +134,13 @@ class Fuse():
 
 	def responseAutoComplete(self, view, res):
 		self.lastResponse = res
-		view.run_command("auto_complete")
+		view.run_command("auto_complete",
+		{
+            "disable_auto_insert": True,
+            "api_completions_only": False,
+            "next_completion_if_showing": False,
+            "auto_complete_commit_on_tab": True,
+        })
 
 	def requestAutoComplete(self, view, syntaxName, callback):
 		fileName = view.file_name()
