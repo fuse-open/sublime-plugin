@@ -121,7 +121,7 @@ class Fuse():
 		vstr = view.substr(caret)
 		self.wordAtCaret = view.substr(view.word(caret)).strip()
 
-		if vstr == "(" or vstr == "=": 
+		if vstr == "(" or vstr == "=" or vstr == "\"": 
 			self.useShortCompletion = True
 		else:
 			self.useShortCompletion = False
