@@ -12,6 +12,7 @@
 
 ## Bug fixes
 * Fixed issue where creating files under a path that included periods would fail
+* Fixed auto complete inside ux:Binding attribute value
 
 # Fuse Sublime package 1.3.6
 
