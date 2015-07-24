@@ -21,9 +21,15 @@ class Fuse():
 	completionSyntax = None
 	buildViews = BuildViewManager()
 	msgManager = MsgManager()
+	startFuseThread = None
+	startFuseThreadExit = False
+	startFuseEvent = threading.Event()
 
 	def __init__(self):
 		self.interop = Interop(self.recv, self.sendHello, self.tryConnect)
+		self.startFuseThread = threading.Thread(target = self.tryConnectThread)
+		self.startFuseThread.daemon = True
+		self.startFuseThread.start()
 
 	def recv(self, msg):
 		try:
@@ -175,21 +181,38 @@ class Fuse():
 			"EventFilter": ""
 		})
 
-	def tryConnect(self):
-		try:				
-			if getSetting("fuse_enabled") == True and not self.interop.isConnected():
-				try:		
-					if os.name == "nt":
-						CREATE_NO_WINDOW = 0x08000000			
-						subprocess.call(["fuse", "daemon", "-b"], creationflags=CREATE_NO_WINDOW)
-					else:
-						subprocess.call(["fuse", "daemon", "-b"])
-				except:
-					traceback.print_exc()
+	fuseStartedCallback = None
 
-				self.interop.connect()
-		except:
-			traceback.print_exc()
+	def tryConnect(self, callback = None):
+		self.fuseStartedCallback = callback
+		self.startFuseEvent.set()
+
+	def tryConnectThread(self):
+		while not self.startFuseThreadExit:
+			try:				
+				if getSetting("fuse_enabled") == True and not self.interop.isConnected():
+					try:		
+						if os.name == "nt":
+							CREATE_NO_WINDOW = 0x08000000			
+							subprocess.call(["fuse", "daemon", "-b"], creationflags=CREATE_NO_WINDOW)
+						else:
+							subprocess.call(["fuse", "daemon", "-b"])
+					except:
+						traceback.print_exc()
+
+					self.interop.connect()
+					if self.fuseStartedCallback is not None:
+						self.fuseStartedCallback()
+
+				self.startFuseEvent.wait()
+				self.startFuseEvent.clear()
+			except:
+				traceback.print_exc()
+
+	def cleanup(self):
+		self.interop.disconnect()
+		self.startFuseThreadExit = True
+		self.startFuseEvent.set()
 
 def plugin_loaded():
 	global gFuse
@@ -203,7 +226,7 @@ def plugin_loaded():
 
 def plugin_unloaded():
 	global gFuse
-	gFuse.interop.disconnect()
+	gFuse.cleanup()
 	gFuse = None
 
 class FuseEventListener(sublime_plugin.EventListener):
