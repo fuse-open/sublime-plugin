@@ -1,7 +1,17 @@
 [
 	{
+		"id": "createproj",
+		"command": "fuse_create",
+		"caption": "Fuse: Create project",
+		"args": 
+		{
+			"type": "app",
+			"paths": []
+		}
+	},
+	{
 		"id": "create",
-		"caption": "New Fuse file",
+		"caption": "Fuse: Create file",
 		"children":
 		[
 			{
@@ -21,21 +31,12 @@
 					"type": "uno",
 					"paths": []
 				}
-			},
-			{
-				"command": "fuse_create",
-				"caption": "Project",
-				"args": 
-				{
-					"type": "app",
-					"paths": []
-				}
 			}
 		]
 	},
 	{
 		"id": "preview",
-		"caption": "Fuse preview",
+		"caption": "Fuse: Preview",
 		"children":
 		[
 			{

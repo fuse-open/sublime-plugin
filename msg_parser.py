@@ -51,6 +51,26 @@ class MsgManager:
 
 		return res["response"]
 
+	def sendRequestAsync(self, interop, requestName, arguments, callback):
+		curId = 0
+		with self.id_lock:
+			self.curId += 1
+			curId = self.curId
+
+		self.requestsPending[curId] = {"name": requestName, "callback": lambda res : self.callCallback(curId, res, callback)} 
+
+		interop.send("Request", 
+		json.dumps(
+		{
+			"Id": curId,
+			"Name": requestName,
+			"Arguments": arguments
+		}))
+
+	def callCallback(self, curId, response, callback):
+		self.requestsPending.pop(curId)
+		callback(response)
+
 	def parse(self, message):
 		messageParsed = json.loads(message[1])		
 		messageType = message[0];		
@@ -58,9 +78,13 @@ class MsgManager:
 		if messageType == "Response":
 			resId = messageParsed["Id"]
 			if resId in self.requestsPending:
-				name = self.requestsPending[resId]["name"]			
-				self.requestsPending[resId]["response"] = Response(name, messageParsed["Id"], messageParsed["Status"], messageParsed["Errors"], messageParsed["Result"])
-				self.requestsPending[resId]["event"].set()
+				name = self.requestsPending[resId]["name"]
+				response = Response(name, messageParsed["Id"], messageParsed["Status"], messageParsed["Errors"], messageParsed["Result"])
+				if "event" in self.requestsPending[resId].keys():
+					self.requestsPending[resId]["response"] = response
+					self.requestsPending[resId]["event"].set()
+				else:
+					self.requestsPending[resId]["callback"](response)
 		elif messageType == "Event":
 			return Event(messageParsed["Name"], messageParsed["Data"])
 		else:

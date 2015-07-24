@@ -1,5 +1,5 @@
 {
-	"selector" : "source.ux, source.uno", 
+	"selector" : "source.uno, text.xml", 
     "cmd": ["fuse", "preview"],
 	"working_dir": "${project_path:${folder}}",
 

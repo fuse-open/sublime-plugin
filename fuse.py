@@ -92,50 +92,71 @@ class Fuse():
 		except:
 			traceback.print_exc()
 
+	lastResponse = None
+
 	def onQueryCompletion(self, view):
 		if getSetting("fuse_completion") == False:
-			return
+		 	return
 
 		syntaxName = getExtension(view.settings().get("syntax"))
 		if not isSupportedSyntax(syntaxName):
-			return
-
-		if not self.interop.isConnected():
-			self.tryConnect()
+		 	return
 
 		self.doCompleteAttribs = getSetting("fuse_ux_attrib_completion")
 		self.foldUXNameSpaces = getSetting("fuse_ux_attrib_folding")
 		self.completionSyntax = syntaxName
 
-		response = self.requestAutoComplete(view, syntaxName)
-		if response == None:
-			return
+		if self.lastResponse is None:
+			self.requestAutoComplete(view, syntaxName, lambda res: self.responseAutoComplete(view, res))
+			return ([("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
+
+		response = self.lastResponse
+		self.lastResponse = None
 
 		if response.status != "Success":
-			self.handleErrors(response.errors)
-			return
+		 	self.handleErrors(response.errors)
+		 	return
+
+		caret = view.sel()[0].a
+		vstr = view.substr(caret)
+		self.wordAtCaret = view.substr(view.word(caret)).strip()
+
+		if vstr == "(" or vstr == "=" or vstr == "\"": 
+			self.useShortCompletion = True
+		else:
+			self.useShortCompletion = False
 
 		self.handleCodeSuggestion(response.data)
 		
 		data = (self.items, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
 		if len(self.items) == 0:
-			if self.isUpdatingCache == True:
-				return ([("Updating suggestion cache...", "_"), ("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
+		 	if self.isUpdatingCache == True:
+		 		return ([("Updating suggestion cache...", "_"), ("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
 
-			if getSetting("fuse_if_no_completion_use_sublime") == False:				
-				return ([("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
-			else:
-				return
+		 	if getSetting("fuse_if_no_completion_use_sublime") == False:				
+		 		return ([("", "")], sublime.INHIBIT_WORD_COMPLETIONS)
+		 	else:
+		 		return
 
 		self.items = []
 		return data
 
-	def requestAutoComplete(self, view, syntaxName):
+	def responseAutoComplete(self, view, res):
+		self.lastResponse = res
+		view.run_command("auto_complete",
+		{
+            "disable_auto_insert": True,
+            "api_completions_only": False,
+            "next_completion_if_showing": False,
+            "auto_complete_commit_on_tab": True,
+        })
+
+	def requestAutoComplete(self, view, syntaxName, callback):
 		fileName = view.file_name()
 		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
 
-		return self.msgManager.sendRequest(
+		self.msgManager.sendRequestAsync(
 			self.interop,
 			"Fuse.GetCodeSuggestions",
 			{
@@ -144,7 +165,7 @@ class Fuse():
 				"SyntaxType": syntaxName, 
 				"CaretPosition": getRowCol(view, caret)
 			},
-			0.2)
+			callback)
 
 	def sendHello(self):
 		self.msgManager.sendRequest(self.interop, 
@@ -187,14 +208,7 @@ def plugin_unloaded():
 
 class FuseEventListener(sublime_plugin.EventListener):
 	def on_modified(self, view):
-		caret = view.sel()[0].a
-		vstr = view.substr(caret)
-		gFuse.wordAtCaret = view.substr(view.word(caret)).strip()
-
-		if vstr == "(" or vstr == "=": 
-			gFuse.useShortCompletion = True
-		else:
-			gFuse.useShortCompletion = False
+		pass
 
 	def on_query_completions(self, view, prefix, locations):
 		return gFuse.onQueryCompletion(view)
@@ -293,13 +307,14 @@ class FuseCreate(sublime_plugin.WindowCommand):
 			for path in paths:
 				self.targetFolder = ""
 				# File or folder?
-				fileName, fileExtension = os.path.splitext(path)
-				if fileExtension == "":
+				if os.path.isfile(path):
+					print("Is file")
+					fileName, fileExtension = os.path.splitext(path)
 					self.targetFolder = fileName
 				else:
-					head, tail = os.path.split(path)
-					# Use the head to get the folder
-					self.targetFolder = head
+					print("Is not file")
+					self.targetFolder = path
+
 
 		header = "";
 		if type=="ux":

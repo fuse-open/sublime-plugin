@@ -1,5 +1,4 @@
-import socket, traceback
-import threading
+import socket, traceback, threading, queue
 
 class Interop:
 	def __init__(self, on_recv, on_connect, on_not_connected):
@@ -10,6 +9,10 @@ class Interop:
 		self.on_connect = on_connect
 		self.on_recv = on_recv
 		self.on_not_connected = on_not_connected
+		self.sendWorker = None
+		self.sendQueue = queue.Queue()		
+		self.sendDataEvent = None
+		self.sendWorkerStopEvent = None
 
 	def isConnected(self):	
 		isConnected = self.socket != None
@@ -24,31 +27,56 @@ class Interop:
 			return
 		
 		self.socket = tmpSocket
-		self.startPollMessages()
+		self.startPullMessages()
+		self.startSendMessages()
 		self.on_connect()
 		print("Connected to Fuse")		
 
 	def send(self, type, msg):
 		if not self.isConnected():
 			self.on_not_connected()
-			return
+			if not self.isConnected():
+				return
 
+		self.sendQueue.put((type, msg), True)
+		self.sendDataEvent.set()
+
+	def startSendMessages(self):
+		self.sendDataEvent = threading.Event()
+		self.sendWorkerStopEvent = threading.Event()
+		self.sendWorker = threading.Thread(target = self.sendMessages)
+		self.sendWorker.daemon = True
+		self.sendWorker.start()
+
+	def sendMessages(self):
 		try:
-			msgInBytes = bytes(type + "\n" + str(len(msg)) + "\n" + msg, "UTF-8")
-			self.socket.sendall(msgInBytes)
+			while not self.sendWorkerStopEvent.is_set():
+				while not self.sendQueue.empty():
+					msgTupple = self.sendQueue.get_nowait()
+					type = msgTupple[0]
+					msg = msgTupple[1]
+					msgInBytes = bytes(type + "\n" + str(len(msg)) + "\n" + msg, "UTF-8")
+					self.socket.sendall(msgInBytes)
+
+				self.sendDataEvent.wait()
+				self.sendDataEvent.clear()
 		except:
 			self.disconnect()
 
-	def startPollMessages(self):		
+	def stopSendMessages(self):
+		self.sendWorkerStopEvent.set()
+		self.sendDataEvent.set()
+
+	def startPullMessages(self):		
 		self.readWorkerStopEvent = threading.Event()
-		self.readWorker = threading.Thread(target = self.pollMessages)
+		self.readWorker = threading.Thread(target = self.pullMessages)
 		self.readWorker.daemon = True
 		self.readWorker.start()
 
-	def stopPollMessages(self):				
+	def stopPullMessages(self):				
 		self.readWorkerStopEvent.set()
 
-	def pollMessages(self):
+	def pullMessages(self):
 		try:
 			while not self.readWorkerStopEvent.is_set():
 				tmpData = self.socket.recv(4096)
@@ -100,7 +128,10 @@ class Interop:
 
 	def disconnect(self):		
 		if self.readWorkerStopEvent != None:
-			self.stopPollMessages()
+			self.stopPullMessages()
+
+		if self.sendWorkerStopEvent != None:
+			self.stopSendMessages()
 
 		try:
 			if self.socket != None:
@@ -111,6 +142,11 @@ class Interop:
 		finally:
 			self.socket = None
 			self.readWorkerStopEvent = None
+			self.readWorker = None
 			self.readBuffer = bytes()		
+
+			self.sendWorkerStopEvent = None
+			self.sendWorker = None
+			self.sendDataEvent = None
 
 			print("Disconnected")
