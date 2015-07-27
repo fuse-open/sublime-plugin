@@ -1,24 +1,40 @@
 {
 	"selector" : "source.uno, text.xml", 
     "cmd": ["fuse", "preview"],
-	"working_dir": "${project_path:${folder}}",
+	"working_dir": "${folder}",
 
     "variants": [
         { 
         	"name": "Android",
         	"cmd": ["fuse", "build", "-t=Android"]
         },
-        { 
+        { 	
         	"name": "Android build & run",
         	"cmd": ["fuse", "build", "-t=Android", "-r"]
         },
         { 
-        	"name": ".net",
+        	"name": ".NET",
         	"cmd": ["fuse", "build", "-t=DotNetExe"]
         },
         { 
-        	"name": ".net build & run",
+        	"name": ".NET build & run",
         	"cmd": ["fuse", "build", "-t=DotNetExe", "-r"]
+        },
+        { 
+        	"name": "C++",
+        	"cmd": ["fuse", "build", "-t=MSVC12"]
+        },
+        { 
+        	"name": "C++ build & run",
+        	"cmd": ["fuse", "build", "-t=MSVC12", "-r"]
+        },
+        { 
+        	"name": "WebGL",
+        	"cmd": ["fuse", "build", "-t=WebGL"]
+        },
+        { 
+        	"name": "WebGL build & run",
+        	"cmd": ["fuse", "build", "-t=WebGL", "-r"]
         }
     ],
 
@@ -32,6 +48,14 @@
 	        	"name": "Android build & run",
 	        	"cmd": ["fuse", "build", "-t=Android", "-r"]
 	        },
+    		{ 
+	        	"name": "iOS",
+	        	"cmd": ["fuse", "build", "-t=iOS"]
+	        },
+	        { 
+	        	"name": "iOS build & run",
+	        	"cmd": ["fuse", "build", "-t=iOS", "-r"]
+	        },
 	        { 
 	        	"name": "CMake",
 	        	"cmd": ["fuse", "build", "-t=CMake"]
@@ -40,13 +64,13 @@
 	        	"name": "CMake build & run",
 	        	"cmd": ["fuse", "build", "-t=CMake", "-r"]
 	        },
-    		{ 
-	        	"name": "iOS",
-	        	"cmd": ["fuse", "build", "-t=iOS"]
+	        { 
+	        	"name": "WebGL",
+	        	"cmd": ["fuse", "build", "-t=WebGL"]
 	        },
 	        { 
-	        	"name": "iOS build & run",
-	        	"cmd": ["fuse", "build", "-t=iOS", "-r"]
+	        	"name": "WebGL build & run",
+	        	"cmd": ["fuse", "build", "-t=WebGL", "-r"]
 	        }
 	    ]
     }
