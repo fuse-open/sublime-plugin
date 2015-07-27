@@ -18,6 +18,8 @@ class BuildViewManager:
 	previewIds = {}
 
 	def closeView(self, previewId):
+		if previewId not in self.buildViews:
+			return
 		self.buildViews[previewId].close()
 		self.buildViews.pop(previewId)
 		self.previewIds.pop(self.buildIds[previewId])
@@ -34,9 +36,11 @@ class BuildViewManager:
 			"Fuse.PreviewClosed"]
 
 		if not event.type in validTypes:
-			return False
+			return False			
 
 		if event.type == "Fuse.BuildStarted":
+			if event.data["BuildTag"] != "Sublime Text 3":
+				return False
 
 			fileName, fileExtension = os.path.splitext(os.path.basename(event.data["ProjectPath"]))
 
