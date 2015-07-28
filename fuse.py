@@ -389,6 +389,8 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 
 	def is_enabled(self, type, paths = []):
 		for path in paths:
+			if path == None:
+				return False
 			fileName, fileExtension = os.path.splitext(path)
 			fileExtensionUpper = fileExtension.upper()
 			if fileExtensionUpper != ".UX" and fileExtensionUpper != ".UNOSLN" and fileExtensionUpper != ".UNOPROJ":
