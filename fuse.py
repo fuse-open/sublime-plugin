@@ -379,7 +379,7 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 		gFuse.tryConnect()
 
 		for path in paths:			
-			subprocess.Popen(["fuse", "preview", "--target=" + type, path])
+			subprocess.Popen(["fuse", "preview", "--target=" + type, "--name=Sublime Text 3", path])
 	
 	def is_visible(self, type, paths = []):
 		if os.name == "nt" and type == "iOS":
@@ -389,6 +389,8 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 
 	def is_enabled(self, type, paths = []):
 		for path in paths:
+			if path == None:
+				return False
 			fileName, fileExtension = os.path.splitext(path)
 			fileExtensionUpper = fileExtension.upper()
 			if fileExtensionUpper != ".UX" and fileExtensionUpper != ".UNOSLN" and fileExtensionUpper != ".UNOPROJ":
