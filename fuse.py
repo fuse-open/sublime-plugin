@@ -254,6 +254,11 @@ class CreateProjectCommand(sublime_plugin.WindowCommand):
 
 	def on_destination_done(self, text):
 		try:
+			text = text;
+
+			if not os.path.exists(text):
+				os.makedirs(text)
+
 			proc = subprocess.Popen(["fuse", "create", "app", self.projectName, text], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 			code = proc.wait()
 			if code==0:
@@ -358,7 +363,7 @@ class FuseCreate(sublime_plugin.WindowCommand):
 					self.window.open_file(self.targetFolder + "/" + text + "." + self.targetTemplate);
 			else:
 				out = ""
-				for line in cmd.stdout.readlines():
+				for line in proc.stdout.readlines():
 					out += line.decode()
 				sublime.message_dialog("Could not create file:\n"+out)
 		except ValueError:
