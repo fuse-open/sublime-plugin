@@ -31,25 +31,28 @@ class BuildViewManager:
 			fileName, fileExtension = os.path.splitext(os.path.basename(event.data["ProjectPath"]))
 			projectPath = event.data["ProjectPath"]
 
-			target = event.data["Target"]
+			target = None
+			if "Target" in event.data: 
+				target = event.data["Target"]
 			buildId = event.data["BuildId"]
 			previewId = event.data["PreviewId"]
 
 			buildView = None						
 			if event.data["BuildType"] == "FullCompile":
-				if event.data["BuildTag"] != "Sublime Text 3":
+				if "BuildTag" in event.data and event.data["BuildTag"] != "Sublime Text 3":
 					return False
 
-				# Try to reuse build view			
-				for previewId, view in self.buildViews.items():				
-					if view.projectPath == projectPath and view.target == target:
-						self.buildViews.pop(previewId)
-						if view.view.window() != None:
-							view.clear()
-							view.show()
-							view.buildId = buildId
-							buildView = view
-						break
+				if target is not None:
+					# Try to reuse build view			
+					for previewId, view in self.buildViews.items():				
+						if view.projectPath == projectPath and view.target == target:
+							self.buildViews.pop(previewId)
+							if view.view.window() != None:
+								view.clear()
+								view.show()
+								view.buildId = buildId
+								buildView = view
+							break
 
 				if buildView is None:
 					buildView = self.createFullCompileView(fileName, projectPath, target, buildId)
@@ -93,8 +96,11 @@ class BuildView:
 		
 		window = sublime.active_window()
 		self.view = window.new_file()			
-		self.view.set_scratch(True)		
-		self.view.set_name("Build Result - " + name + " - " + target)
+		self.view.set_scratch(True)
+		if target is None:
+			self.view.set_name("Build Result - " + name + " - " + target)
+		else:	
+			self.view.set_name("Build Result - " + name + " - " + target)
 		self.view.set_syntax_file("Packages/Fuse/BuildView.hidden-tmLanguage")
 
 	def tryHandleBuildEvent(self, event):
