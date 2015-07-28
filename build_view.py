@@ -118,7 +118,7 @@ class BuildView:
 			if status == "Success":
 				window = self.view.window()
 				if window is not None:
-					window.run_command("prev_view")
+					window.run_command("next_view_in_stack")
 				self.status = BuildStatus.success
 			elif status == "Error":
 				self.status = BuildStatus.error
