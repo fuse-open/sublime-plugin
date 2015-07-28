@@ -62,7 +62,7 @@
         "children":
         [
             {
-                "caption": "Create project",
+                "caption": "New project",
                 "command":"create_project",
                 "children":
                 []

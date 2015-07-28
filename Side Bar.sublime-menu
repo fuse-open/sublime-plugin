@@ -2,7 +2,7 @@
 	{
 		"id": "createproj",
 		"command": "fuse_create",
-		"caption": "Fuse: Create project",
+		"caption": "Fuse: New project",
 		"args": 
 		{
 			"type": "app",
@@ -11,7 +11,7 @@
 	},
 	{
 		"id": "create",
-		"caption": "Fuse: Create file",
+		"caption": "Fuse: Create",
 		"children":
 		[
 			{

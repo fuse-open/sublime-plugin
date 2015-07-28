@@ -21,9 +21,15 @@ class Fuse():
 	completionSyntax = None
 	buildViews = BuildViewManager()
 	msgManager = MsgManager()
+	startFuseThread = None
+	startFuseThreadExit = False
+	startFuseEvent = threading.Event()
 
 	def __init__(self):
 		self.interop = Interop(self.recv, self.sendHello, self.tryConnect)
+		self.startFuseThread = threading.Thread(target = self.tryConnectThread)
+		self.startFuseThread.daemon = True
+		self.startFuseThread.start()
 
 	def recv(self, msg):
 		try:
@@ -175,21 +181,38 @@ class Fuse():
 			"EventFilter": ""
 		})
 
-	def tryConnect(self):
-		try:				
-			if getSetting("fuse_enabled") == True and not self.interop.isConnected():
-				try:		
-					if os.name == "nt":
-						CREATE_NO_WINDOW = 0x08000000			
-						subprocess.call(["fuse", "daemon", "-b"], creationflags=CREATE_NO_WINDOW)
-					else:
-						subprocess.call(["fuse", "daemon", "-b"])
-				except:
-					traceback.print_exc()
+	fuseStartedCallback = None
 
-				self.interop.connect()
-		except:
-			traceback.print_exc()
+	def tryConnect(self, callback = None):
+		self.fuseStartedCallback = callback
+		self.startFuseEvent.set()
+
+	def tryConnectThread(self):
+		while not self.startFuseThreadExit:
+			try:				
+				if getSetting("fuse_enabled") == True and not self.interop.isConnected():
+					try:		
+						if os.name == "nt":
+							CREATE_NO_WINDOW = 0x08000000			
+							subprocess.call(["fuse", "daemon", "-b"], creationflags=CREATE_NO_WINDOW)
+						else:
+							subprocess.call(["fuse", "daemon", "-b"])
+					except:
+						traceback.print_exc()
+
+					self.interop.connect()
+					if self.fuseStartedCallback is not None:
+						self.fuseStartedCallback()
+
+				self.startFuseEvent.wait()
+				self.startFuseEvent.clear()
+			except:
+				traceback.print_exc()
+
+	def cleanup(self):
+		self.interop.disconnect()
+		self.startFuseThreadExit = True
+		self.startFuseEvent.set()
 
 def plugin_loaded():
 	global gFuse
@@ -203,7 +226,7 @@ def plugin_loaded():
 
 def plugin_unloaded():
 	global gFuse
-	gFuse.interop.disconnect()
+	gFuse.cleanup()
 	gFuse = None
 
 class FuseEventListener(sublime_plugin.EventListener):
@@ -231,6 +254,11 @@ class CreateProjectCommand(sublime_plugin.WindowCommand):
 
 	def on_destination_done(self, text):
 		try:
+			text = text;
+
+			if not os.path.exists(text):
+				os.makedirs(text)
+
 			proc = subprocess.Popen(["fuse", "create", "app", self.projectName, text], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 			code = proc.wait()
 			if code==0:
@@ -335,7 +363,7 @@ class FuseCreate(sublime_plugin.WindowCommand):
 					self.window.open_file(self.targetFolder + "/" + text + "." + self.targetTemplate);
 			else:
 				out = ""
-				for line in cmd.stdout.readlines():
+				for line in proc.stdout.readlines():
 					out += line.decode()
 				sublime.message_dialog("Could not create file:\n"+out)
 		except ValueError:
@@ -356,7 +384,7 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 		gFuse.tryConnect()
 
 		for path in paths:			
-			subprocess.Popen(["fuse", "preview", "--target=" + type, path])
+			subprocess.Popen(["fuse", "preview", "--target=" + type, "--name=Sublime Text 3", path])
 	
 	def is_visible(self, type, paths = []):
 		if os.name == "nt" and type == "iOS":
@@ -366,6 +394,8 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 
 	def is_enabled(self, type, paths = []):
 		for path in paths:
+			if path == None:
+				return False
 			fileName, fileExtension = os.path.splitext(path)
 			fileExtensionUpper = fileExtension.upper()
 			if fileExtensionUpper != ".UX" and fileExtensionUpper != ".UNOSLN" and fileExtensionUpper != ".UNOPROJ":
