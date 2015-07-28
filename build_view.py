@@ -14,14 +14,6 @@ def appendStrToView(view, strData):
 
 class BuildViewManager:
 	buildViews = {}
-	buildIds = {}
-	previewIds = {}
-
-	def closeView(self, previewId):
-		self.buildViews[previewId].close()
-		self.buildViews.pop(previewId)
-		self.previewIds.pop(self.buildIds[previewId])
-		self.buildIds.pop(previewId)
 
 	def tryHandleBuildEvent(self, event):
 		validTypes = [
@@ -30,36 +22,49 @@ class BuildViewManager:
 			"Fuse.BuildEnded", 
 			"Fuse.BuildStageChanged", 
 			"Fuse.BuildIssueDetected",
-			"Fuse.BuildLogged",
-			"Fuse.PreviewClosed"]
+			"Fuse.BuildLogged"]
 
 		if not event.type in validTypes:
-			return False
+			return False			
 
 		if event.type == "Fuse.BuildStarted":
-
 			fileName, fileExtension = os.path.splitext(os.path.basename(event.data["ProjectPath"]))
+			projectPath = event.data["ProjectPath"]
 
+			target = None
+			if "Target" in event.data: 
+				target = event.data["Target"]
 			buildId = event.data["BuildId"]
 			previewId = event.data["PreviewId"]
-			self.buildIds[previewId] = buildId
-			self.previewIds[buildId] = previewId
 
-			buildView = None
+			buildView = None						
 			if event.data["BuildType"] == "FullCompile":
-				buildView = self.createFullCompileView(fileName, buildId, previewId)
+				if "BuildTag" in event.data and event.data["BuildTag"] != "Sublime Text 3":
+					return False
+
+				if target is not None:
+					# Try to reuse build view			
+					for previewId, view in self.buildViews.items():				
+						if view.projectPath == projectPath and view.target == target:
+							self.buildViews.pop(previewId)
+							if view.view.window() != None:
+								view.clear()
+								view.show()
+								view.buildId = buildId
+								buildView = view
+							break
+
+				if buildView is None:
+					buildView = self.createFullCompileView(fileName, projectPath, target, buildId)
 			elif event.data["BuildType"] == "LoadMarkup":
-				buildView = self.createLoadMarkupView(fileName, buildId, previewId)
+				buildView = self.createLoadMarkupView(fileName, buildId)
 			else:
-				print("Invalid buildtype: " + event.data["BuildType"])
+				print("Invalid buildtype: " + event.data["BuildType"])			
 
 			self.buildViews[event.data["PreviewId"]] = buildView
-		elif event.type == "Fuse.PreviewClosed":
-			previewId = event.data["PreviewId"]
-			self.closeView(previewId)
 		elif event.type == "Fuse.LogEvent":
 			for previewId, view in self.buildViews.items():
-				if view.previewId == event.data["PreviewId"]:
+				if previewId == event.data["PreviewId"]:
 					view.tryHandleBuildEvent(event)
 		else:
 			for previewId, view in self.buildViews.items():
@@ -68,18 +73,19 @@ class BuildViewManager:
 
 		return True
 	
-	def createLoadMarkupView(self, name, buildId, previewId):		
-		return BuildResults(sublime.active_window(), buildId, previewId)
+	def createLoadMarkupView(self, name, buildId):		
+		return BuildResults(sublime.active_window(), buildId)
 
-	def createFullCompileView(self, name, buildId, previewId):
-		return BuildView(name, buildId, previewId)
+	def createFullCompileView(self, name, projectPath, target, buildId):
+		return BuildView(name, projectPath, target, buildId)
 
 class BuildView:
-	def __init__(self, name, buildId, previewId):
-		self.previewId = previewId
+	def __init__(self, name, projectPath, target, buildId):
 		self.buildId = buildId
+		self.projectPath = projectPath
 		self.status = BuildStatus()
 		self.queue = queue.Queue()
+		self.target = target
 		self.gotDataEvent = threading.Event()
 		self.pollThread = threading.Thread(target = self.__poll)
 		self.pollThread.daemon = True
@@ -90,8 +96,11 @@ class BuildView:
 		
 		window = sublime.active_window()
 		self.view = window.new_file()			
-		self.view.set_scratch(True)		
-		self.view.set_name("Build Result - " + name)
+		self.view.set_scratch(True)
+		if target is None:
+			self.view.set_name("Build Result - " + name + " - " + target)
+		else:	
+			self.view.set_name("Build Result - " + name + " - " + target)
 		self.view.set_syntax_file("Packages/Fuse/BuildView.hidden-tmLanguage")
 
 	def tryHandleBuildEvent(self, event):
@@ -107,6 +116,9 @@ class BuildView:
 		elif event.type == "Fuse.BuildEnded":
 			status = event.data["Status"]
 			if status == "Success":
+				window = self.view.window()
+				if window is not None:
+					window.run_command("next_view_in_stack")
 				self.status = BuildStatus.success
 			elif status == "Error":
 				self.status = BuildStatus.error
@@ -121,12 +133,22 @@ class BuildView:
 		if not getSetting("fuse_show_build_results"):
 			return
 
-		if self.status != BuildStatus.success or self.view.window() == None:
+		if self.view.window() == None:
 			return
 
 		window = self.view.window()
 		groupIndex, viewIndex = window.get_view_index(self.view)
 		window.run_command("close_by_index", { "group": groupIndex, "index": viewIndex })
+
+	def clear(self):
+		self.view.run_command("select_all")
+		self.view.run_command("right_delete")
+
+	def show(self):
+		window = self.view.window()
+		if window is None:
+			return
+		window.focus_view(self.view)
 
 	def __write(self, strData):
 		if not getSetting("fuse_show_build_results"):

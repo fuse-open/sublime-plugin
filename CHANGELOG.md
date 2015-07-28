@@ -1,3 +1,11 @@
+# Fuse Sublime package 1.3.8
+
+## New features
+
+## Changes
+* Build result views will now be reused for each target and project.
+* Build result views are now not spawned for builds initiated outside of Sublime.
+
 # Fuse Sublime package 1.3.7
 
 ## New features
