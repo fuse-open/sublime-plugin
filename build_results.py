@@ -8,7 +8,7 @@ def NameRegions(view):
 	return view.find_by_selector("entity.name.filename.find-in-files.warning") + view.find_by_selector("entity.name.tag.error")
 
 class BuildResults:
-	def __init__(self, window, buildId, previewId):
+	def __init__(self, window, buildId):
 		global paths	
 		paths = []
 
@@ -18,7 +18,6 @@ class BuildResults:
 		buildResultPanel.set_syntax_file("Packages/Fuse/BuildResults.hidden-tmLanguage")
 
 		self.buildId = buildId
-		self.previewId = previewId
 
 		self.__createViewModel()
 		self.show()
