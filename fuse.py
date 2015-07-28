@@ -277,9 +277,6 @@ class CreateProjectCommand(sublime_plugin.WindowCommand):
 		except ValueError:
 			pass
 
-	def is_enabled(self):
-		return True
-
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
 		view = self.view
@@ -362,10 +359,11 @@ class FuseCreate(sublime_plugin.WindowCommand):
 				if self.targetTemplate != "app":
 					self.window.open_file(self.targetFolder + "/" + text + "." + self.targetTemplate);
 			else:
-				out = ""
+				out = "Could not create file:\n";
+				out += self.targetFolder+"\\"+text+"."+self.targetTemplate+"\n";
 				for line in proc.stdout.readlines():
 					out += line.decode()
-				sublime.message_dialog("Could not create file:\n"+out)
+				sublime.message_dialog(out)
 		except ValueError:
 			pass
 
