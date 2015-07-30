@@ -333,10 +333,8 @@ class FuseCreate(sublime_plugin.WindowCommand):
 				self.targetFolder = ""
 				# File or folder?
 				if os.path.isfile(path):
-					print("Is file")
 					self.targetFolder = os.path.dirname(path)
 				else:
-					print("Is not file")
 					self.targetFolder = path
 
 
