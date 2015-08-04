@@ -1,5 +1,5 @@
 {
-	"selector" : "source.uno, text.xml", 
+	"selector" : "source.uno, text.xml, text.unoproj", 
     "cmd": ["fuse", "preview"],
 	"working_dir": "${folder}",
 
