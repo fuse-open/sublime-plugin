@@ -378,9 +378,21 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 	def run(self, type, paths = []):	
 		gFuse.tryConnect()
 
-		for path in paths:			
-			subprocess.Popen(["fuse", "preview", "--target=" + type, "--name=Sublime Text 3", path])
+		for path in paths:
+			thread = threading.Thread(target = self.do_preview, args = (type, path))
+			thread.daemon = True
+			thread.start()				
 	
+	def do_preview(self, type, path):
+		p = subprocess.Popen(["fuse", "preview", "--target=" + type, "--name=Sublime Text 3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		stdout, stderr = p.communicate()
+		if p.returncode != 0 and p.returncode != 10:
+			window = sublime.active_window()
+			error = window.create_output_panel("FuseError")
+			errorMsg = "Oh, unexpected fatal error, please report this to us.\n" + stdout.decode("utf-8") + stderr.decode("utf-8")				
+			error.run_command("append", { "characters": errorMsg.replace("\r", "") })
+			window.run_command("show_panel", {"panel": "output.FuseError" })
+
 	def is_visible(self, type, paths = []):
 		if os.name == "nt" and type == "iOS":
 			return False
