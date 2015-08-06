@@ -24,6 +24,7 @@ class Fuse():
 	startFuseThread = None
 	startFuseThreadExit = False
 	startFuseEvent = threading.Event()
+	previousBuildCommand = None
 
 	def __init__(self):
 		self.interop = Interop(self.recv, self.sendHello, self.tryConnect)
@@ -280,7 +281,7 @@ class CreateProjectCommand(sublime_plugin.WindowCommand):
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
 		view = self.view
-
+		print("Gotodef")
 		syntaxName = getExtension(view.settings().get("syntax"))		
 		if not isSupportedSyntax(syntaxName) or len(view.sel()) == 0:
 			return
@@ -308,13 +309,29 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 
 		gotoDefinition(response.data)
 
-class FuseBuildRunCommand(sublime_plugin.ApplicationCommand):
-	def run(self):
-		gFuse.interop.send("Event", json.dumps({"Command": "BuildAndRun"}))
+class FuseBuild(sublime_plugin.WindowCommand):
+	def run(self, working_dir, build_target, run, paths=[]):
+		
+		if working_dir is "":
+			working_dir = os.path.dirname(paths[0])
 
-class FuseRecompileCommand(sublime_plugin.ApplicationCommand):
-	def run(self):
-		gFuse.interop.send("Event", json.dumps({"Command": "Recompile"}))
+		print("Fuse Build: "+working_dir+", "+build_target+", Run?"+str(run))
+
+		gFuse.tryConnect()
+
+		cmd = gFuse.previousBuildCommand
+
+		if build_target != "Default":
+			cmd = ["fuse", "build", "-t=" + build_target, "--name=Sublime Text 3"]
+			if run:
+				cmd.append("-r")
+		elif cmd is None:
+			sublime.message_dialog("No default Fuse build target set.\nGo to Tools/Build With... to choose one.\nFuture attempts to build will use that.")
+			return
+
+		gFuse.previousBuildCommand = cmd
+
+		subprocess.Popen(gFuse.previousBuildCommand, cwd=working_dir, shell=True)
 
 class FuseCreate(sublime_plugin.WindowCommand):
 	targetFolder = ""
@@ -381,8 +398,8 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 		for path in paths:
 			thread = threading.Thread(target = self.do_preview, args = (type, path))
 			thread.daemon = True
-			thread.start()				
-	
+			thread.start()
+
 	def do_preview(self, type, path):
 		p = subprocess.Popen(["fuse", "preview", "--target=" + type, "--name=Sublime Text 3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		stdout, stderr = p.communicate()
