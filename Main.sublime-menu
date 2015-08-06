@@ -1,5 +1,18 @@
 [
     {
+        "caption": "Project",
+        "id": "project",
+        "children":
+        [
+            { "caption": "-", "id": "fuse-separator"},
+            {
+                "caption": "New Fuse project...",
+                "command":"create_project",
+                "children": []
+            }
+        ]
+    },
+    {
         "caption": "Preferences",
         "mnemonic": "n",
         "id": "preferences",
@@ -51,28 +64,6 @@
                         ]
                     }
                 ]
-            }
-        ]
-    },
-
-    {
-        "caption": "Fuse",
-        "mnemonic": "u",
-        "id": "fuse",
-        "children":
-        [
-            {
-                "caption": "New project",
-                "command":"create_project",
-                "children":
-                []
-            },
-            {
-                "caption": "Go to Definition",
-                "mnemonic": "D",
-                "command":"goto_definition",
-                "children":
-                []
             }
         ]
     }

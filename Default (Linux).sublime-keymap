@@ -1,10 +1,1 @@
-[
-	{ 
-		"keys": ["f7"],
-		"command": "fuse_buildRun"
-	},
-	{ 
-		"keys": ["f6"],
-		"command": "fuse_recompile"
-	}
-]
+[]

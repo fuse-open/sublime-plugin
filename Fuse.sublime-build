@@ -1,77 +1,87 @@
 {
-	"selector" : "source.uno, text.xml", 
-    "cmd": ["fuse", "preview"],
-	"working_dir": "${folder}",
+	"selector" : "source.uno, text.xml, text.unoproj", 
+    "target": "fuse_build",
+    "build_target":"Default",
+    "run":false,
+    "working_dir":"${folder}",
 
     "variants": [
         { 
         	"name": "Android",
-        	"cmd": ["fuse", "build", "-t=Android"]
+            "build_target":"Android"
         },
         { 	
         	"name": "Android build & run",
-        	"cmd": ["fuse", "build", "-t=Android", "-r"]
+            "build_target":"Android",
+            "run":true
         },
         { 
         	"name": ".NET",
-        	"cmd": ["fuse", "build", "-t=DotNetExe"]
+            "build_target":"DotNetExe"
         },
         { 
         	"name": ".NET build & run",
-        	"cmd": ["fuse", "build", "-t=DotNetExe", "-r"]
+            "build_target":"DotNetExe",
+            "run":true
         },
         { 
         	"name": "C++",
-        	"cmd": ["fuse", "build", "-t=MSVC12"]
+            "build_target":"MSVC12"
         },
         { 
         	"name": "C++ build & run",
-        	"cmd": ["fuse", "build", "-t=MSVC12", "-r"]
+            "build_target":"MSVC12",
+            "run":true
         },
         { 
         	"name": "WebGL",
-        	"cmd": ["fuse", "build", "-t=WebGL"]
+            "build_target":"WebGL"
         },
         { 
         	"name": "WebGL build & run",
-        	"cmd": ["fuse", "build", "-t=WebGL", "-r"]
+            "build_target":"WebGL",
+            "run":true
         }
     ],
 
     "osx": {
     	"variants":[
-	    	{ 
-	        	"name": "Android",
-	        	"cmd": ["fuse", "build", "-t=Android"]
-	        },
-	        { 
-	        	"name": "Android build & run",
-	        	"cmd": ["fuse", "build", "-t=Android", "-r"]
-	        },
+            { 
+                "name": "Android",
+                "build_target":"Android"
+            },
+            {   
+                "name": "Android build & run",
+                "build_target":"Android",
+                "run":true
+            },
     		{ 
 	        	"name": "iOS",
-	        	"cmd": ["fuse", "build", "-t=iOS"]
+                "build_target":"iOS"
 	        },
 	        { 
 	        	"name": "iOS build & run",
-	        	"cmd": ["fuse", "build", "-t=iOS", "-r"]
+                "build_target":"iOS",
+                "run":true
 	        },
 	        { 
-	        	"name": "CMake",
-	        	"cmd": ["fuse", "build", "-t=CMake"]
+	        	"name": "C++",
+                "build_target":"CMake"
 	        },
 	        { 
-	        	"name": "CMake build & run",
-	        	"cmd": ["fuse", "build", "-t=CMake", "-r"]
+	        	"name": "C++ build & run",
+                "build_target":"CMake",
+                "run":true
 	        },
-	        { 
-	        	"name": "WebGL",
-	        	"cmd": ["fuse", "build", "-t=WebGL"]
-	        },
-	        { 
-	        	"name": "WebGL build & run",
-	        	"cmd": ["fuse", "build", "-t=WebGL", "-r"]
-	        }
+            { 
+                "name": "WebGL",
+                "build_target":"WebGL"
+            },
+            { 
+                "name": "WebGL build & run",
+                "build_target":"WebGL",
+                "run":true
+            }
 	    ]
     }
 }

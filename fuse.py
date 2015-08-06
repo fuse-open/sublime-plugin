@@ -24,6 +24,7 @@ class Fuse():
 	startFuseThread = None
 	startFuseThreadExit = False
 	startFuseEvent = threading.Event()
+	previousBuildCommand = None
 
 	def __init__(self):
 		self.interop = Interop(self.recv, self.sendHello, self.tryConnect)
@@ -277,13 +278,10 @@ class CreateProjectCommand(sublime_plugin.WindowCommand):
 		except ValueError:
 			pass
 
-	def is_enabled(self):
-		return True
-
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
 		view = self.view
-
+		print("Gotodef")
 		syntaxName = getExtension(view.settings().get("syntax"))		
 		if not isSupportedSyntax(syntaxName) or len(view.sel()) == 0:
 			return
@@ -311,13 +309,29 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 
 		gotoDefinition(response.data)
 
-class FuseBuildRunCommand(sublime_plugin.ApplicationCommand):
-	def run(self):
-		gFuse.interop.send("Event", json.dumps({"Command": "BuildAndRun"}))
+class FuseBuild(sublime_plugin.WindowCommand):
+	def run(self, working_dir, build_target, run, paths=[]):
+		
+		if working_dir is "":
+			working_dir = os.path.dirname(paths[0])
 
-class FuseRecompileCommand(sublime_plugin.ApplicationCommand):
-	def run(self):
-		gFuse.interop.send("Event", json.dumps({"Command": "Recompile"}))
+		print("Fuse Build: "+working_dir+", "+build_target+", Run?"+str(run))
+
+		gFuse.tryConnect()
+
+		cmd = gFuse.previousBuildCommand
+
+		if build_target != "Default":
+			cmd = ["fuse", "build", "-t=" + build_target, "--name=Sublime Text 3"]
+			if run:
+				cmd.append("-r")
+		elif cmd is None:
+			sublime.message_dialog("No Fuse build target set.\n\nGo to Tools/Build With... to choose one.\n\nFuture attempts to build will use that.")
+			return
+
+		gFuse.previousBuildCommand = cmd
+
+		subprocess.Popen(gFuse.previousBuildCommand, cwd=working_dir, shell=True)
 
 class FuseCreate(sublime_plugin.WindowCommand):
 	targetFolder = ""
@@ -336,11 +350,8 @@ class FuseCreate(sublime_plugin.WindowCommand):
 				self.targetFolder = ""
 				# File or folder?
 				if os.path.isfile(path):
-					print("Is file")
-					fileName, fileExtension = os.path.splitext(path)
-					self.targetFolder = fileName
+					self.targetFolder = os.path.dirname(path)
 				else:
-					print("Is not file")
 					self.targetFolder = path
 
 
@@ -362,10 +373,11 @@ class FuseCreate(sublime_plugin.WindowCommand):
 				if self.targetTemplate != "app":
 					self.window.open_file(self.targetFolder + "/" + text + "." + self.targetTemplate);
 			else:
-				out = ""
+				out = "Could not create file:\n";
+				out += self.targetFolder+"\\"+text+"."+self.targetTemplate+"\n";
 				for line in proc.stdout.readlines():
 					out += line.decode()
-				sublime.message_dialog("Could not create file:\n"+out)
+				sublime.message_dialog(out)
 		except ValueError:
 			pass
 
@@ -383,9 +395,21 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 	def run(self, type, paths = []):	
 		gFuse.tryConnect()
 
-		for path in paths:			
-			subprocess.Popen(["fuse", "preview", "--target=" + type, "--name=Sublime Text 3", path])
-	
+		for path in paths:
+			thread = threading.Thread(target = self.do_preview, args = (type, path))
+			thread.daemon = True
+			thread.start()
+
+	def do_preview(self, type, path):
+		p = subprocess.Popen(["fuse", "preview", "--target=" + type, "--name=Sublime Text 3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		stdout, stderr = p.communicate()
+		if p.returncode != 0 and p.returncode != 10:
+			window = sublime.active_window()
+			error = window.create_output_panel("FuseError")
+			errorMsg = "Oh, unexpected fatal error, please report this to us.\n" + stdout.decode("utf-8") + stderr.decode("utf-8")				
+			error.run_command("append", { "characters": errorMsg.replace("\r", "") })
+			window.run_command("show_panel", {"panel": "output.FuseError" })
+
 	def is_visible(self, type, paths = []):
 		if os.name == "nt" and type == "iOS":
 			return False

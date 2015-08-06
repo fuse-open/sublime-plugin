@@ -1,15 +1,5 @@
 [
 	{
-		"id": "createproj",
-		"command": "fuse_create",
-		"caption": "Fuse: New project",
-		"args": 
-		{
-			"type": "app",
-			"paths": []
-		}
-	},
-	{
 		"id": "create",
 		"caption": "Fuse: Create",
 		"children":
@@ -67,5 +57,17 @@
 				}
 			}
 		]
+	},
+	{
+		"id": "build",
+		"caption": "Fuse: Build",
+		"command": "fuse_build",
+		"args": 
+		{
+			"build_target": "Default",
+			"working_dir": "",
+			"run":false,
+			"paths": []
+		}
 	}
 ]
