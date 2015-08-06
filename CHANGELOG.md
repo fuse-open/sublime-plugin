@@ -1,3 +1,15 @@
+# Fuse Sublime package 1.3.9
+
+## Bug fixes
+* Building from Fuse build system should now properly trigger build log output
+
+## Changes
+* Moved menu items to existing relevant menus. "New Fuse project..." is now under the Project menu, for instance.
+* Removed Goto Definition until it can be better implemented
+* Replaced default build system use with a system of defaults. Pick a build target with ctrl+shift+b and future ctrl+b will use that target.
+* Right clicking in sidebar and choosing "Fuse: Build" now uses the same build target as ctrl+b.
+* Added message dialog in case no default build target has been set
+
 # Fuse Sublime package 1.3.8
 
 ## New features

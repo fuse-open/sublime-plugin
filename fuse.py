@@ -326,7 +326,7 @@ class FuseBuild(sublime_plugin.WindowCommand):
 			if run:
 				cmd.append("-r")
 		elif cmd is None:
-			sublime.message_dialog("No default Fuse build target set.\nGo to Tools/Build With... to choose one.\nFuture attempts to build will use that.")
+			sublime.message_dialog("No Fuse build target set.\n\nGo to Tools/Build With... to choose one.\n\nFuture attempts to build will use that.")
 			return
 
 		gFuse.previousBuildCommand = cmd
