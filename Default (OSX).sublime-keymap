@@ -1,10 +1,1 @@
-[
-	{ 
-		"keys": ["super+e"],
-		"command": "fuse_build_run"
-	},
-	{ 
-		"keys": ["shift+super+r"],
-		"command": "fuse_recompile"
-	}
-]
+[]
