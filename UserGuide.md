@@ -1,0 +1,125 @@
+	#####################################
+	# Fuse workflow with Sublime Text 3 #
+	#####################################
+
+Welcome to the Fuse sublime package! The following document is a broad overview
+of the functionality available to you.
+
+Interactions with Fuse from Sublime take the following forms:
+
+Create 
+	Use Fuse to instantiate source files and other templates, including new
+	projects.
+
+Edit
+	Use Fuse’s code completion service to aid in writing your UX markup and
+	Uno source.
+
+Preview  
+	Build and deploy a live-updating preview either to your desktop or to one 
+	or more connected mobile devices.
+
+Build
+	Perform a full high-performance compile of your project and optionally 
+	deploy it directly to a connected device. 
+
+We’ll run through each category.
+
+	###############
+	# Fuse Create #
+	###############
+
+From the command-line, “fuse create” is the basic command used tovcreate Fuse
+project files. For instance a typical workflow would be to use “fuse create app
+MyProject” to create an entirely new project from the default “app” template.
+Using Sublime Text, all fuse create options are available through either the
+sidebar context menu or through the Sublime command palette
+(ctrl/command+shift+p).
+
+Create a new Fuse project from Sublime by picking “New Fuse project…” from the
+Project menu. A text prompt will pop up asking for a project name. Hit enter,
+and another prompt will request a destination  directory. Hit enter again, and
+fuse will create your project for you and open it in the Sublime side-bar.
+
+To create generic files and folders for your Fuse project, simply create them
+directly via the side-bar; Fuse searches the file system for files to include
+based on the location of the .unoproj file.
+
+**To create a file from the side-bar**, right click on a file or directory in
+the tree and pick options from the Fuse: Create submenu. The resulting file will
+be created relative to the file or directory you clicked.
+
+**To create a file with keyboard only**, use the command palette. Hit
+ctrl/cmd+shift+p and type “fuse ux” and the “Fuse: Create UX file”  option will
+be selected for you. Hit enter to run it. The file will  be created relative to
+the file currently open in the active window  if it is a part of the project
+structure, or at the project root  directory.
+
+	#############
+	# Fuse Edit #
+	#############
+
+When Sublime needs help from Fuse to offer code completion suggestions,  it will
+connect to Fuse  and start making requests. Open any UX or Uno  file and start
+typing; The connection will be made in the background  and you will receive
+suggestions shortly thereafter.
+
+	################
+	# Fuse Preview #
+	################
+
+Fuse offers two kinds of build. A full build or a preview build. Preview builds
+are different in that they are simulated applications built for the benefit of
+live reload. Preview builds let you quickly edit UX and view your changes happen
+in real time as you save the changes to your source files.
+
+Fuse previews can be run locally or on-device, with the biggest benefit being
+the latter. On a mac, for instance, you can run iOS and Android device previews
+side by side and view how your application looks on each  platform
+simultaneously.
+
+	To run previews from Sublime you have three interfaces:
+
+1. Right click the background of a window with an open UX file and choose
+from the Fuse Preview submenu.
+
+2. Right click a ux or unoproj file in the sidebar and choose from the
+Fuse: Preview submenu.
+
+3. Open the command palette with ctrl/cmd+shift+p and type “Fuse preview”
+and choose from one of the options.
+
+	##############
+	# Fuse Build #
+	##############
+
+A full build runs better than a preview build and is how you create the final
+application for deployment. Building is a process with many options, and for
+detailed control we recommend you familiarise yourself with the command-line
+tools using the “fuse build” command.
+
+Building and deployment in Sublime is handled primarily through the Fuse Sublime
+build system, which should automatically be selected for you if your current
+document is UX, Uno or Unoproj. To pick a target and start a build, open the
+Tools menu and choose “Build with…” and choose from the menu that appears. This
+menu can also be called up with ctrl/cmd+shift+b. If you want to repeat this
+build quickly in the future, you can repeat the previous build by going to
+Tools->Build or pressing ctrl+b on your keyboard.
+
+You can also trigger builds by right clicking in the side-bar and choosing
+“Fuse: Build”, though this counts for the same as hitting ctrl+b and will prompt
+you for a build target if you haven’t already set one with ctrl/cmd+shift+b.
+
+	################################
+	# Important keyboard shortcuts #
+	################################
+
+ctrl/cmd + shift + b
+	Bring up a list and choose a target to build for.
+
+ctrl/cmd + b
+	Repeat the last build made this session.
+
+ctrl/cmd + shift + p
+	Bring up the Sublime command palette. Type "fuse" here to find 
+	Fuse-related commands.
