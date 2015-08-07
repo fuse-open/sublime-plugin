@@ -1,3 +1,9 @@
+# Fuse Sublime package 1.4
+
+## Changes
+* Added fuse create options for json and js files
+* Added user guide document and display option
+
 # Fuse Sublime package 1.3.9
 
 ## Bug fixes

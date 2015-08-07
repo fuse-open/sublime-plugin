@@ -20,6 +20,22 @@
     	}
     },
     { 
+        "caption": "Fuse: Create JS file", 
+        "command":"fuse_create", 
+        "args": {
+            "type" : "js", 
+            "paths" : [] 
+        }
+    },
+    { 
+        "caption": "Fuse: Create Json file", 
+        "command":"fuse_create", 
+        "args": {
+            "type" : "json", 
+            "paths" : [] 
+        }
+    },
+    { 
     	"caption": "Fuse: Local preview",
     	"command": "fuse_preview_current",
     	"args": {
@@ -39,6 +55,11 @@
     	"args": {
     		"type" : "iOS"
     	}
+    },
+    { 
+        "caption": "Fuse: Sublime user guide",
+        "command": "open_file",
+        "args": {"file": "${packages}/Fuse/UserGuide.txt"}
     },
     { 
         "caption": "Fuse: Documentation",
