@@ -333,6 +333,7 @@ class FuseBuild(sublime_plugin.WindowCommand):
 
 		subprocess.Popen(gFuse.previousBuildCommand, cwd=working_dir, shell=True)
 
+
 class FuseCreate(sublime_plugin.WindowCommand):
 	targetFolder = ""
 	targetTemplate = ""
@@ -356,12 +357,12 @@ class FuseCreate(sublime_plugin.WindowCommand):
 
 
 		header = "";
-		if type=="ux":
-			header = "Choose a file name:"
+		if type=="app":
+			header = "Choose a project name:"
 		elif type=="uno":
 			header = "Choose a class name:"
 		else:
-			header = "Choose a project name:"
+			header = "Choose a file name:"
 
 		self.window.show_input_panel(header, "", self.on_done, None, None)
 

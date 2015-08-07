@@ -66,5 +66,18 @@
                 ]
             }
         ]
+    },
+    {
+        "caption": "Help",
+        "id": "help",
+        "children":
+        [
+            { "caption": "-" },
+            {
+                "caption": "Fuse: Sublime user guide",
+                "command": "open_file",
+                "args": {"file": "${packages}/Fuse/UserGuide.txt"}
+            }
+        ]
     }
 ]

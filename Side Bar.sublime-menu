@@ -21,6 +21,24 @@
 					"type": "uno",
 					"paths": []
 				}
+			},
+			{
+				"command": "fuse_create",
+				"caption": "Js source",
+				"args": 
+				{
+					"type": "js",
+					"paths": []
+				}
+			},
+			{
+				"command": "fuse_create",
+				"caption": "Json data",
+				"args": 
+				{
+					"type": "json",
+					"paths": []
+				}
 			}
 		]
 	},
