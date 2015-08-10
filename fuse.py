@@ -191,6 +191,8 @@ class Fuse():
 	def tryConnectThread(self):
 		while not self.startFuseThreadExit:
 			try:				
+				self.startFuseEvent.wait()
+				self.startFuseEvent.clear()
 				if getSetting("fuse_enabled") == True and not self.interop.isConnected():
 					try:		
 						if os.name == "nt":
@@ -203,10 +205,7 @@ class Fuse():
 
 					self.interop.connect()
 					if self.fuseStartedCallback is not None:
-						self.fuseStartedCallback()
-
-				self.startFuseEvent.wait()
-				self.startFuseEvent.clear()
+						self.fuseStartedCallback()				
 			except:
 				traceback.print_exc()
 
@@ -231,8 +230,11 @@ def plugin_unloaded():
 	gFuse = None
 
 class FuseEventListener(sublime_plugin.EventListener):
-	def on_modified(self, view):
-		pass
+	def on_activated_async(self, view):
+		syntaxName = getExtension(view.settings().get("syntax"))
+		if not isSupportedSyntax(syntaxName):
+			return
+		gFuse.tryConnect();
 
 	def on_query_completions(self, view, prefix, locations):
 		return gFuse.onQueryCompletion(view)
