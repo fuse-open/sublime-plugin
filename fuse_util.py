@@ -5,6 +5,11 @@ def getSetting(key,default=None):
 	s = sublime.load_settings("Fuse.sublime-settings")
 	return s.get(key, default)
 
+def setSetting(key,value):
+	s = sublime.load_settings("Fuse.sublime-settings")
+	s.set(key, value)
+	sublime.save_settings("Fuse.sublime-settings")
+
 def isSupportedSyntax(syntaxName):	
 	return syntaxName == "Uno" or syntaxName == "UX"
 
