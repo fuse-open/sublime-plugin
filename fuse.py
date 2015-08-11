@@ -224,9 +224,9 @@ def plugin_loaded():
 	else:
 		s.set("open_files_in_new_window", True)
 
-	if s.get("fuse_show_guide_on_start", True):
-		sublime.active_window().open_file("UserGuide.txt")
-		s.set("fuse_show_guide_on_start", False)
+	if s.get("fuse_show_user_guide_on_start", True):
+		sublime.active_window().run_command("open_file", {"file":"${packages}/Fuse/UserGuide.txt"})
+		s.set("fuse_show_user_guide_on_start", False)
 
 def plugin_unloaded():
 	global gFuse
