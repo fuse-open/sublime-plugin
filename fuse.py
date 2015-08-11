@@ -191,6 +191,8 @@ class Fuse():
 	def tryConnectThread(self):
 		while not self.startFuseThreadExit:
 			try:				
+				self.startFuseEvent.wait()
+				self.startFuseEvent.clear()
 				if getSetting("fuse_enabled") == True and not self.interop.isConnected():
 					try:		
 						if os.name == "nt":
@@ -203,10 +205,7 @@ class Fuse():
 
 					self.interop.connect()
 					if self.fuseStartedCallback is not None:
-						self.fuseStartedCallback()
-
-				self.startFuseEvent.wait()
-				self.startFuseEvent.clear()
+						self.fuseStartedCallback()				
 			except:
 				traceback.print_exc()
 
@@ -225,14 +224,21 @@ def plugin_loaded():
 	else:
 		s.set("open_files_in_new_window", True)
 
+	if s.get("fuse_show_guide_on_start", True):
+		sublime.active_window().open_file("UserGuide.txt")
+		s.set("fuse_show_guide_on_start", False)
+
 def plugin_unloaded():
 	global gFuse
 	gFuse.cleanup()
 	gFuse = None
 
 class FuseEventListener(sublime_plugin.EventListener):
-	def on_modified(self, view):
-		pass
+	def on_activated_async(self, view):
+		syntaxName = getExtension(view.settings().get("syntax"))
+		if not isSupportedSyntax(syntaxName):
+			return
+		gFuse.tryConnect();
 
 	def on_query_completions(self, view, prefix, locations):
 		return gFuse.onQueryCompletion(view)
@@ -402,7 +408,12 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 			thread.start()
 
 	def do_preview(self, type, path):
-		p = subprocess.Popen(["fuse", "preview", "--target=" + type, "--name=Sublime Text 3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		if os.name == "nt":
+			CREATE_NO_WINDOW = 0x08000000
+			p = subprocess.Popen(["fuse", "preview", "--target=" + type, "--name=Sublime Text 3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=CREATE_NO_WINDOW)
+		else:			
+			p = subprocess.Popen(["fuse", "preview", "--target=" + type, "--name=Sublime Text 3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
 		stdout, stderr = p.communicate()
 		if p.returncode != 0 and p.returncode != 10:
 			window = sublime.active_window()

@@ -76,7 +76,7 @@
             {
                 "caption": "Fuse: Sublime user guide",
                 "command": "open_file",
-                "args": {"file": "${packages}/Fuse/UserGuide.txt"}
+                "args": {"file": "UserGuide.txt"}
             }
         ]
     }
