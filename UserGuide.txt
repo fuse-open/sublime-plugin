@@ -1,3 +1,6 @@
+
+This document can be opened at any time from the Help menu
+
 	#####################################
 	# Fuse workflow with Sublime Text 3 #
 	#####################################
