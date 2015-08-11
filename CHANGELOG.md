@@ -1,3 +1,8 @@
+# Fuse Sublime package 1.4.2
+
+## Bug fixes
+* Fixed user guide showing up on EVERY first run
+
 # Fuse Sublime package 1.4.1
 
 ## Changes
