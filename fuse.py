@@ -234,6 +234,29 @@ def plugin_unloaded():
 	gFuse = None
 
 class FuseEventListener(sublime_plugin.EventListener):
+	lastCaret = -1
+
+	def on_selection_modified_async(self, view):
+		syntaxName = getExtension(view.settings().get("syntax"))
+		if not syntaxName == "UX":
+		 	return
+
+		# This is a race condition but it does not matter
+		caret = view.sel()[0].a
+		if caret == self.lastCaret:
+			return
+		self.lastCaret = caret
+
+		fileName = view.file_name()
+		text = view.substr(sublime.Region(0,view.size()))		
+
+		gFuse.msgManager.sendEvent(gFuse.interop, "Fuse.Preview.SelectionChanged", 
+		{
+			"Path": fileName,
+			"Text": text,
+			"CaretPosition": getRowCol(view, caret)
+		})
+
 	def on_activated_async(self, view):
 		syntaxName = getExtension(view.settings().get("syntax"))
 		if not isSupportedSyntax(syntaxName):
