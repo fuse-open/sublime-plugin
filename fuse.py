@@ -238,7 +238,7 @@ class FuseEventListener(sublime_plugin.EventListener):
 
 	def on_selection_modified_async(self, view):
 		syntaxName = getExtension(view.settings().get("syntax"))
-		if not syntaxName == "UX":
+		if not syntaxName == "UX" or not getSetting("fuse_selection_enabled"):
 		 	return
 
 		# This is a race condition but it does not matter
@@ -471,3 +471,10 @@ class FusePreviewCurrent(sublime_plugin.TextCommand):
 
 	def is_visible(self, type):
 		return FusePreview.is_visible(None, type, [self.view.file_name()])
+
+class FuseToggleSelection(sublime_plugin.WindowCommand):
+	def run(self):
+		setSetting("fuse_selection_enabled", not getSetting("fuse_selection_enabled"))
+
+	def is_checked(self):
+		return getSetting("fuse_selection_enabled")
