@@ -1,3 +1,14 @@
+# Fuse Sublime package 1.4.3
+## Bug fixes
+* Fixed build systems mismatch  on OSX
+
+## Changes
+* Added selection ability for preview.
+	The carret position is used to select elements. 
+	A cue of current selected element should be shown inside preview.
+	Toggle this feature on and off from the Fuse menu item inside sublime.
+
+
 # Fuse Sublime package 1.4.2
 
 ## Bug fixes
