@@ -7,6 +7,7 @@
 	The carret position is used to select elements. 
 	A cue of current selected element should be shown inside preview.
 	Toggle this feature on and off from the Fuse menu item inside sublime.
+	NOTE: This feature is only available in Fuse 0.5.3524 and upwards.
 
 
 # Fuse Sublime package 1.4.2
