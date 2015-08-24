@@ -60,12 +60,20 @@ class MsgManager:
 		self.requestsPending[curId] = {"name": requestName, "callback": lambda res : self.callCallback(curId, res, callback)} 
 
 		interop.send("Request", 
-		json.dumps(
-		{
-			"Id": curId,
-			"Name": requestName,
-			"Arguments": arguments
-		}))
+			json.dumps(
+			{
+				"Id": curId,
+				"Name": requestName,
+				"Arguments": arguments
+			}))
+
+	def sendEvent(self, interop, eventName, data):
+		interop.send("Event", 
+			json.dumps(
+			{
+				"Name": eventName,
+				"Data": data
+			}))
 
 	def callCallback(self, curId, response, callback):
 		self.requestsPending.pop(curId)

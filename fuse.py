@@ -234,6 +234,29 @@ def plugin_unloaded():
 	gFuse = None
 
 class FuseEventListener(sublime_plugin.EventListener):
+	lastCaret = -1
+
+	def on_selection_modified_async(self, view):
+		syntaxName = getExtension(view.settings().get("syntax"))
+		if not syntaxName == "UX" or not getSetting("fuse_selection_enabled"):
+		 	return
+
+		# This is a race condition but it does not matter
+		caret = view.sel()[0].a
+		if caret == self.lastCaret:
+			return
+		self.lastCaret = caret
+
+		fileName = view.file_name()
+		text = view.substr(sublime.Region(0,view.size()))		
+
+		gFuse.msgManager.sendEvent(gFuse.interop, "Fuse.Preview.SelectionChanged", 
+		{
+			"Path": fileName,
+			"Text": text,
+			"CaretPosition": getRowCol(view, caret)
+		})
+
 	def on_activated_async(self, view):
 		syntaxName = getExtension(view.settings().get("syntax"))
 		if not isSupportedSyntax(syntaxName):
@@ -318,10 +341,26 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 class FuseBuild(sublime_plugin.WindowCommand):
 	def run(self, working_dir, build_target, run, paths=[]):
 		
+		platform = str(sublime.platform())
+
+		if platform == "windows":
+			if build_target == "iOS":
+				sublime.error_message("iOS builds are only available on OS X.")
+				return
+			elif build_target == "CMake":
+				sublime.error_message("CMake builds are only available on OS X.")
+				return
+		elif platform == "osx":
+			if build_target == "DotNetExe":
+				sublime.message_dialog(".Net builds are only available on Windows.")
+				return
+			elif build_target == "MSVC12":
+				sublime.message_dialog("MSVC12 builds are only available on Windows.")
+				return
+
 		if working_dir is "":
 			working_dir = os.path.dirname(paths[0])
 
-		print("Fuse Build: "+working_dir+", "+build_target+", Run?"+str(run))
 
 		gFuse.tryConnect()
 
@@ -448,3 +487,10 @@ class FusePreviewCurrent(sublime_plugin.TextCommand):
 
 	def is_visible(self, type):
 		return FusePreview.is_visible(None, type, [self.view.file_name()])
+
+class FuseToggleSelection(sublime_plugin.WindowCommand):
+	def run(self):
+		setSetting("fuse_selection_enabled", not getSetting("fuse_selection_enabled"))
+
+	def is_checked(self):
+		return getSetting("fuse_selection_enabled")

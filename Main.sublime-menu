@@ -79,5 +79,19 @@
                 "args": {"file": "${packages}/Fuse/UserGuide.txt"}
             }
         ]
-    }
+    },
+    {
+        "caption": "Fuse",
+        "mnemonic": "u",
+        "id": "fuse",
+        "children": 
+        [
+            {
+                "command": "fuse_toggle_selection", 
+                "mnemonic": "s",
+                "checkbox": true,
+                "caption": "Enable selection"
+            },
+        ]
+    },
 ]
