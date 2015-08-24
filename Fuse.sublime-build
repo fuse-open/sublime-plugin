@@ -15,6 +15,15 @@
             "build_target":"Android",
             "run":true
         },
+		{ 
+        	"name": "iOS",
+            "build_target":"iOS"
+        },
+        { 
+        	"name": "iOS build & run",
+            "build_target":"iOS",
+            "run":true
+        },
         { 
         	"name": ".NET",
             "build_target":"DotNetExe"
@@ -25,15 +34,6 @@
             "run":true
         },
         { 
-        	"name": "C++",
-            "build_target":"MSVC12"
-        },
-        { 
-        	"name": "C++ build & run",
-            "build_target":"MSVC12",
-            "run":true
-        },
-        { 
         	"name": "WebGL",
             "build_target":"WebGL"
         },
@@ -41,47 +41,24 @@
         	"name": "WebGL build & run",
             "build_target":"WebGL",
             "run":true
+        },
+        { 
+        	"name": "C++ (MSVC12)",
+            "build_target":"MSVC12"
+        },
+        { 
+        	"name": "C++ (MSVC12) build & run",
+            "build_target":"MSVC12",
+            "run":true
+        },
+        { 
+        	"name": "C++ (CMake)",
+            "build_target":"CMake"
+        },
+        { 
+        	"name": "C++ (CMake) build & run",
+            "build_target":"CMake",
+            "run":true
         }
-    ],
-
-    "osx": {
-    	"variants":[
-            { 
-                "name": "Android",
-                "build_target":"Android"
-            },
-            {   
-                "name": "Android build & run",
-                "build_target":"Android",
-                "run":true
-            },
-    		{ 
-	        	"name": "iOS",
-                "build_target":"iOS"
-	        },
-	        { 
-	        	"name": "iOS build & run",
-                "build_target":"iOS",
-                "run":true
-	        },
-	        { 
-	        	"name": "C++",
-                "build_target":"CMake"
-	        },
-	        { 
-	        	"name": "C++ build & run",
-                "build_target":"CMake",
-                "run":true
-	        },
-            { 
-                "name": "WebGL",
-                "build_target":"WebGL"
-            },
-            { 
-                "name": "WebGL build & run",
-                "build_target":"WebGL",
-                "run":true
-            }
-	    ]
-    }
+    ]
 }

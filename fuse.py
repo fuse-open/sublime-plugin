@@ -341,10 +341,26 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 class FuseBuild(sublime_plugin.WindowCommand):
 	def run(self, working_dir, build_target, run, paths=[]):
 		
+		platform = str(sublime.platform())
+
+		if platform == "windows":
+			if build_target == "iOS":
+				sublime.error_message("iOS builds are only available on OS X.")
+				return
+			elif build_target == "CMake":
+				sublime.error_message("CMake builds are only available on OS X.")
+				return
+		elif platform == "osx":
+			if build_target == "DotNetExe":
+				sublime.message_dialog(".Net builds are only available on Windows.")
+				return
+			elif build_target == "MSVC12":
+				sublime.message_dialog("MSVC12 builds are only available on Windows.")
+				return
+
 		if working_dir is "":
 			working_dir = os.path.dirname(paths[0])
 
-		print("Fuse Build: "+working_dir+", "+build_target+", Run?"+str(run))
 
 		gFuse.tryConnect()
 
