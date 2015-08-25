@@ -15,3 +15,5 @@ Current Features
 * Build result
 
 See [changelog](CHANGELOG.md) for recent feature details.
+
+License: [MIT License](LICENSE.txt)
