@@ -1,6 +1,6 @@
 Fuse
 ==================
-Sublime Text 3 plugin for Fuse. 
+Sublime Text 3 plugin for [Fuse](https://www.fusetools.com/). 
 
 How to install
 =================
