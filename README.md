@@ -1,4 +1,4 @@
-Sublime Plugin
+Fuse
 ==================
 Sublime Text 3 plugin for Fuse. 
 
