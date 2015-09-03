@@ -1,3 +1,7 @@
+# Fuse Sublime package 1.4.4
+## Bug fixes
+* Fixed build tagging breaking build outputs
+
 # Fuse Sublime package 1.4.3
 ## Bug fixes
 * Fixed build systems mismatch  on OSX

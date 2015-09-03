@@ -376,7 +376,7 @@ class FuseBuild(sublime_plugin.WindowCommand):
 
 		gFuse.previousBuildCommand = cmd
 
-		subprocess.Popen(gFuse.previousBuildCommand, cwd=working_dir, shell=True)
+		subprocess.Popen(gFuse.previousBuildCommand, cwd=working_dir)
 
 
 class FuseCreate(sublime_plugin.WindowCommand):
