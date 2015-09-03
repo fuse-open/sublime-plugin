@@ -367,7 +367,7 @@ class FuseBuild(sublime_plugin.WindowCommand):
 		cmd = gFuse.previousBuildCommand
 
 		if build_target != "Default":
-			cmd = ["fuse", "build", "-t=" + build_target, "--name=Sublime Text 3", "-c=Release"]
+			cmd = ["fuse", "build", "-t=" + build_target, "--name=Sublime_Text_3", "-c=Release"]
 			if run:
 				cmd.append("-r")
 		elif cmd is None:

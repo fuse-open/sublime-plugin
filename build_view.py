@@ -39,7 +39,7 @@ class BuildViewManager:
 
 			buildView = None						
 			if event.data["BuildType"] == "FullCompile":
-				if "BuildTag" in event.data and event.data["BuildTag"] != "Sublime Text 3":
+				if "BuildTag" in event.data and event.data["BuildTag"] != "Sublime_Text_3":
 					return False
 
 				if target is not None:
