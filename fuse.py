@@ -193,13 +193,17 @@ class Fuse():
 			try:				
 				self.startFuseEvent.wait()
 				self.startFuseEvent.clear()
+					
 				if getSetting("fuse_enabled") == True and not self.interop.isConnected():
+
+					path = getFusePathFromSettings()
+
 					try:		
 						if os.name == "nt":
 							CREATE_NO_WINDOW = 0x08000000			
-							subprocess.call(["fuse", "daemon", "-b"], creationflags=CREATE_NO_WINDOW)
+							subprocess.call([path, "daemon", "-b"], creationflags=CREATE_NO_WINDOW)
 						else:
-							subprocess.call(["fuse", "daemon", "-b"])
+							subprocess.call([path, "daemon", "-b"])
 					except:
 						traceback.print_exc()
 
@@ -289,7 +293,7 @@ class CreateProjectCommand(sublime_plugin.WindowCommand):
 			if not os.path.exists(text):
 				os.makedirs(text)
 
-			proc = subprocess.Popen(["fuse", "create", "app", self.projectName, text], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+			proc = subprocess.Popen([getFusePathFromSettings(), "create", "app", self.projectName, text], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 			code = proc.wait()
 			if code==0:
 				data = {
@@ -367,7 +371,7 @@ class FuseBuild(sublime_plugin.WindowCommand):
 		cmd = gFuse.previousBuildCommand
 
 		if build_target != "Default":
-			cmd = ["fuse", "build", "-t=" + build_target, "--name=Sublime_Text_3", "-c=Release"]
+			cmd = [getFusePathFromSettings(), "build", "-t=" + build_target, "--name=Sublime_Text_3", "-c=Release"]
 			if run:
 				cmd.append("-r")
 		elif cmd is None:
@@ -413,7 +417,7 @@ class FuseCreate(sublime_plugin.WindowCommand):
 
 	def on_done(self, text):
 		try:
-			proc = subprocess.Popen(["fuse", "create", self.targetTemplate, text, self.targetFolder], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+			proc = subprocess.Popen([getFusePathFromSettings(), "create", self.targetTemplate, text, self.targetFolder], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 			code = proc.wait()
 			if code == 0:
 				if self.targetTemplate != "app":
@@ -447,17 +451,18 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 			thread.start()
 
 	def do_preview(self, type, path):
+		fusePath = getFusePathFromSettings()
 		if os.name == "nt":
 			CREATE_NO_WINDOW = 0x08000000
-			p = subprocess.Popen(["fuse", "preview", "--target=" + type, "--name=Sublime Text 3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=CREATE_NO_WINDOW)
+			p = subprocess.Popen([fusePath, "preview", "--target=" + type, "--name=Sublime Text 3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=CREATE_NO_WINDOW)
 		else:			
-			p = subprocess.Popen(["fuse", "preview", "--target=" + type, "--name=Sublime Text 3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			p = subprocess.Popen([fusePath, "preview", "--target=" + type, "--name=Sublime Text 3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 		stdout, stderr = p.communicate()
 		if p.returncode != 0 and p.returncode != 10:
 			window = sublime.active_window()
 			error = window.create_output_panel("FuseError")
-			errorMsg = "Oh, unexpected fatal error, please report this to us.\n" + stdout.decode("utf-8") + stderr.decode("utf-8")				
+			errorMsg = "Unexpected fatal error! Please report this to us.\n" + stdout.decode("utf-8") + stderr.decode("utf-8")				
 			error.run_command("append", { "characters": errorMsg.replace("\r", "") })
 			window.run_command("show_panel", {"panel": "output.FuseError" })
 
