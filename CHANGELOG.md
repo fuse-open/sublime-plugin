@@ -1,3 +1,7 @@
+# Fuse Sublime package 1.4.5
+## Bug fixes
+* Preview build log was broken in last release, this is now fixed.
+
 # Fuse Sublime package 1.4.4
 ## Bug fixes
 * Fixed build tagging breaking build outputs
