@@ -454,9 +454,9 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 		fusePath = getFusePathFromSettings()
 		if os.name == "nt":
 			CREATE_NO_WINDOW = 0x08000000
-			p = subprocess.Popen([fusePath, "preview", "--target=" + type, "--name=Sublime Text 3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=CREATE_NO_WINDOW)
+			p = subprocess.Popen([fusePath, "preview", "--target=" + type, "--name=Sublime_Text_3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=CREATE_NO_WINDOW)
 		else:			
-			p = subprocess.Popen([fusePath, "preview", "--target=" + type, "--name=Sublime Text 3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			p = subprocess.Popen([fusePath, "preview", "--target=" + type, "--name=Sublime_Text_3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 		stdout, stderr = p.communicate()
 		if p.returncode != 0 and p.returncode != 10:
