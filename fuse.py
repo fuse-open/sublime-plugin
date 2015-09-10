@@ -496,6 +496,15 @@ class FusePreviewCurrent(sublime_plugin.TextCommand):
 class FuseToggleSelection(sublime_plugin.WindowCommand):
 	def run(self):
 		setSetting("fuse_selection_enabled", not getSetting("fuse_selection_enabled"))
+		isSet = getSetting("fuse_selection_enabled")
+		if isSet is False:
+			gFuse.msgManager.sendEvent(gFuse.interop, "Fuse.Preview.SelectionChanged", 
+			{
+				"Path": "",
+				"Text": "",
+				"CaretPosition": {"Line": 0, "Character": 0}
+			})
+
 
 	def is_checked(self):
 		return getSetting("fuse_selection_enabled")
