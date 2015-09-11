@@ -8,10 +8,7 @@ def getSetting(key,default=None):
 def getFusePathFromSettings():
 	path = getSetting("fuse_path_override")
 	if path == "" or path == None:
-		if os.path.isfile("/usr/bin/fuse"):
-			return "/usr/bin/fuse"
-		else:
-			return "/usr/local/bin/fuse"
+		return "fuse"
 	else:
 		return path+"/fuse"
 

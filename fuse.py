@@ -221,6 +221,7 @@ class Fuse():
 def plugin_loaded():
 	global gFuse
 	gFuse = Fuse()
+	fix_osx_path()
 
 	s = sublime.load_settings("Preferences.sublime-settings")
 	if getSetting("fuse_open_files_in_same_window"):
@@ -231,6 +232,12 @@ def plugin_loaded():
 	if getSetting("fuse_show_user_guide_on_start", True):
 		sublime.active_window().run_command("open_file", {"file":"${packages}/Fuse/UserGuide.txt"})
 		setSetting("fuse_show_user_guide_on_start", False)
+
+def fix_osx_path():
+	if str(sublime.platform()) == "osx":
+		capitan_path="/usr/local/bin"
+		if not capitan_path in os.environ["PATH"]:
+			os.environ["PATH"] += ":" + capitan_path
 
 def plugin_unloaded():
 	global gFuse
