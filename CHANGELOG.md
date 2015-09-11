@@ -1,3 +1,8 @@
+# Fuse Sublime package 1.4.6
+## Bug fixes
+* Fixed builds failing after altered Fuse install path
+* Disabling visual cues in the fuse menu should now correctly remove any active cues rather than let them linger.
+
 # Fuse Sublime package 1.4.5
 ## Bug fixes
 * Preview build log was broken in last release, this is now fixed.
