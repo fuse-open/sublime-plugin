@@ -509,7 +509,7 @@ class FuseToggleSelection(sublime_plugin.WindowCommand):
 			{
 				"Path": "",
 				"Text": "",
-				"CaretPosition": {"Line": 0, "Character": 0}
+				"CaretPosition": {"Line": 1, "Character": 1}
 			})
 
 
