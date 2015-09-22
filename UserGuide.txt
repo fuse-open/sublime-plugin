@@ -11,8 +11,7 @@ of the functionality available to you.
 Interactions with Fuse from Sublime take the following forms:
 
 Create 
-	Use Fuse to instantiate source files and other templates, including new
-	projects.
+	Use Fuse to instantiate source files and other templates.
 
 Edit
 	Use Fuse’s code completion service to aid in writing your UX markup and
@@ -39,10 +38,8 @@ Using Sublime Text, all fuse create options are available through either the
 sidebar context menu or through the Sublime command palette
 (ctrl/command+shift+p).
 
-Create a new Fuse project from Sublime by picking “New Fuse project…” from the
-Project menu. A text prompt will pop up asking for a project name. Hit enter,
-and another prompt will request a destination  directory. Hit enter again, and
-fuse will create your project for you and open it in the Sublime side-bar.
+For convenience, use the Fuse dashboard (accessible from the tray menu) to 
+create Fuse projects.
 
 To create generic files and folders for your Fuse project, simply create them
 directly via the side-bar; Fuse searches the file system for files to include

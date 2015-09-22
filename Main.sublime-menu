@@ -1,18 +1,5 @@
 [
     {
-        "caption": "Project",
-        "id": "project",
-        "children":
-        [
-            { "caption": "-", "id": "fuse-separator"},
-            {
-                "caption": "New Fuse project...",
-                "command":"create_project",
-                "children": []
-            }
-        ]
-    },
-    {
         "caption": "Preferences",
         "mnemonic": "n",
         "id": "preferences",
