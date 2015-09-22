@@ -321,7 +321,6 @@ class CreateProjectCommand(sublime_plugin.WindowCommand):
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
 		view = self.view
-		print("Gotodef")
 		syntaxName = getExtension(view.settings().get("syntax"))		
 		if not isSupportedSyntax(syntaxName) or len(view.sel()) == 0:
 			return
@@ -425,8 +424,6 @@ class FuseCreate(sublime_plugin.WindowCommand):
 	def on_done(self, text):
 		try:
 			args = [getFusePathFromSettings(), "create", self.targetTemplate, text, self.targetFolder]
-			print(os.environ["PATH"])
-			print(str(args))
 			proc = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 			code = proc.wait()
 			if code == 0:
