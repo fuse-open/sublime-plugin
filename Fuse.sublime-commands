@@ -1,14 +1,10 @@
 [
     { 
-    	"caption": "Fuse: Create project", 
-    	"command": "create_project" 
-    },
-    { 
     	"caption": "Fuse: Create UX file", 
     	"command":"fuse_create", 
     	"args": {
     		"type" : "ux", 
-    		"paths" : [] 
+    		"paths" : []
     	}
     },
     { 
@@ -42,7 +38,7 @@
     		"type" : "Local"
     	}
     },
-    { 
+    {
     	"caption": "Fuse: Android preview",
     	"command": "fuse_preview_current",
     	"args": {

@@ -300,7 +300,7 @@ class CreateProjectCommand(sublime_plugin.WindowCommand):
 			if not os.path.exists(text):
 				os.makedirs(text)
 
-			proc = subprocess.Popen([getFusePathFromSettings(), "create", "app", self.projectName, text], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+			proc = subprocess.Popen([getFusePathFromSettings(), "create", "app", self.projectName, text], shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 			code = proc.wait()
 			if code==0:
 				data = {
@@ -321,7 +321,6 @@ class CreateProjectCommand(sublime_plugin.WindowCommand):
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
 		view = self.view
-		print("Gotodef")
 		syntaxName = getExtension(view.settings().get("syntax"))		
 		if not isSupportedSyntax(syntaxName) or len(view.sel()) == 0:
 			return
@@ -424,7 +423,8 @@ class FuseCreate(sublime_plugin.WindowCommand):
 
 	def on_done(self, text):
 		try:
-			proc = subprocess.Popen([getFusePathFromSettings(), "create", self.targetTemplate, text, self.targetFolder], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+			args = [getFusePathFromSettings(), "create", self.targetTemplate, text, self.targetFolder]
+			proc = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 			code = proc.wait()
 			if code == 0:
 				if self.targetTemplate != "app":
