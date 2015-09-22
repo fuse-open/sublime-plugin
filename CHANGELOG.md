@@ -1,3 +1,10 @@
+# Fuse Sublime package 1.4.7
+## Changes
+* Removed project creation until a better gui can be supplied
+
+## Bug fixes
+* Fixed broken fuse create commands
+
 # Fuse Sublime package 1.4.6
 ## Bug fixes
 * Fixed builds failing after altered Fuse install path
