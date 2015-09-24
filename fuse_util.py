@@ -22,7 +22,12 @@ def isSupportedSyntax(syntaxName):
 
 def getExtension(path):
 	base = os.path.basename(path)
-	return os.path.splitext(base)[0]
+	ext = os.path.splitext(base)
+
+	if ext is None:
+		return ""
+	else:
+		return ext[0]
 
 def getRowCol(view, pos):
 	rowcol = view.rowcol(pos)

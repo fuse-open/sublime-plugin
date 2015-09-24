@@ -64,7 +64,7 @@ class BuildViewManager:
 			self.buildViews[event.data["PreviewId"]] = buildView
 		elif event.type == "Fuse.LogEvent":
 			for previewId, view in self.buildViews.items():
-				if previewId == event.data["PreviewId"]:
+				if previewId == event.data.get("PreviewId", "") or previewId == event.data.get("ClientId", ""):
 					view.tryHandleBuildEvent(event)
 		else:
 			for previewId, view in self.buildViews.items():

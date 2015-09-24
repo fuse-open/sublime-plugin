@@ -1,3 +1,11 @@
+# Fuse Sublime package 1.4.8
+## Changes
+* "Visual cues in preview" toggle button changed to "Select element at caret".
+* Build view was updated to include new type of debug data.
+
+## Bug fixes
+* Fixed possible exception when right clicking in a file without extension.
+
 # Fuse Sublime package 1.4.7
 ## Changes
 * Removed project creation until a better gui can be supplied
