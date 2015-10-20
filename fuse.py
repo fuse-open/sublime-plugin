@@ -44,6 +44,9 @@ class Fuse():
 		except:
 			traceback.print_exc()
 
+	def showFuseNotFound(self):
+		sublime.message_dialog("Fuse could not be found.\n\nAttempted to run from: '"+getFusePathFromSettings()+"'\n\nPlease verify installation.")		
+
 	def handleErrors(self, errors):
 		for error in errors:
 			print("Fuse - Error({Code}): {Message}".format(Code = error["Code"], Message = error["Message"]))
@@ -206,6 +209,8 @@ class Fuse():
 							subprocess.call([path, "daemon", "-b"])
 					except:
 						traceback.print_exc()
+						gFuse.showFuseNotFound()
+						return
 
 					self.interop.connect()
 					if self.fuseStartedCallback is not None:
@@ -376,6 +381,7 @@ class FuseBuild(sublime_plugin.WindowCommand):
 
 		cmd = gFuse.previousBuildCommand
 
+
 		if build_target != "Default":
 			cmd = [getFusePathFromSettings(), "build", "-t=" + build_target, "--name=Sublime_Text_3", "-c=Release"]
 			if run:
@@ -385,8 +391,11 @@ class FuseBuild(sublime_plugin.WindowCommand):
 			return
 
 		gFuse.previousBuildCommand = cmd
-
-		subprocess.Popen(gFuse.previousBuildCommand, cwd=working_dir)
+		
+		try:
+			subprocess.Popen(gFuse.previousBuildCommand, cwd=working_dir)
+		except:
+			gFuse.showFuseNotFound()
 
 
 class FuseCreate(sublime_plugin.WindowCommand):
@@ -424,7 +433,11 @@ class FuseCreate(sublime_plugin.WindowCommand):
 	def on_done(self, text):
 		try:
 			args = [getFusePathFromSettings(), "create", self.targetTemplate, text, self.targetFolder]
-			proc = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+			try:
+				proc = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+			except:
+				gFuse.showFuseNotFound()
+				return
 			code = proc.wait()
 			if code == 0:
 				if self.targetTemplate != "app":
@@ -459,11 +472,15 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 
 	def do_preview(self, type, path):
 		fusePath = getFusePathFromSettings()
-		if os.name == "nt":
-			CREATE_NO_WINDOW = 0x08000000
-			p = subprocess.Popen([fusePath, "preview", "--target=" + type, "--name=Sublime_Text_3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=CREATE_NO_WINDOW)
-		else:			
-			p = subprocess.Popen([fusePath, "preview", "--target=" + type, "--name=Sublime_Text_3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		try:
+			if os.name == "nt":
+				CREATE_NO_WINDOW = 0x08000000
+				p = subprocess.Popen([fusePath, "preview", "--target=" + type, "--name=Sublime_Text_3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=CREATE_NO_WINDOW)
+			else:			
+				p = subprocess.Popen([fusePath, "preview", "--target=" + type, "--name=Sublime_Text_3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		except:
+			gFuse.showFuseNotFound()
+			return
 
 		stdout, stderr = p.communicate()
 		if p.returncode != 0 and p.returncode != 10:
