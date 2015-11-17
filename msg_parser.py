@@ -49,6 +49,7 @@ class MsgManager:
 		if not waitResult:
 			return None
 
+		#TODO log res["response"]["Errors"] if any
 		return res["response"]
 
 	def sendRequestAsync(self, interop, requestName, arguments, callback):

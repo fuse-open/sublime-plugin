@@ -178,6 +178,7 @@ class Fuse():
 			callback)
 
 	def sendHello(self):
+                #TODO log
 		self.msgManager.sendRequest(self.interop, 
 		"Hello",
 		{
@@ -204,8 +205,10 @@ class Fuse():
 					try:		
 						if os.name == "nt":
 							CREATE_NO_WINDOW = 0x08000000			
+							#TODO log
 							subprocess.call([path, "daemon", "-b"], creationflags=CREATE_NO_WINDOW)
 						else:
+							#TODO log
 							subprocess.call([path, "daemon", "-b"])
 					except:
 						traceback.print_exc()
@@ -224,6 +227,7 @@ class Fuse():
 		self.startFuseEvent.set()
 
 def plugin_loaded():
+	#TODO log
 	global gFuse
 	gFuse = Fuse()
 	fix_osx_path()
@@ -237,6 +241,7 @@ def plugin_loaded():
 	if getSetting("fuse_show_user_guide_on_start", True):
 		sublime.active_window().run_command("open_file", {"file":"${packages}/Fuse/UserGuide.txt"})
 		setSetting("fuse_show_user_guide_on_start", False)
+	#TODO log
 
 def fix_osx_path():
 	if str(sublime.platform()) == "osx":
@@ -245,6 +250,7 @@ def fix_osx_path():
 			os.environ["PATH"] += ":" + capitan_path
 
 def plugin_unloaded():
+	#TODO log
 	global gFuse
 	gFuse.cleanup()
 	gFuse = None
@@ -282,6 +288,7 @@ class FuseEventListener(sublime_plugin.EventListener):
 	def on_query_completions(self, view, prefix, locations):
 		return gFuse.onQueryCompletion(view)
 
+#TODO delete, not in use
 class CreateProjectCommand(sublime_plugin.WindowCommand):
 	projectName = ""
 
@@ -325,6 +332,7 @@ class CreateProjectCommand(sublime_plugin.WindowCommand):
 
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
+		#TODO log
 		view = self.view
 		syntaxName = getExtension(view.settings().get("syntax"))		
 		if not isSupportedSyntax(syntaxName) or len(view.sel()) == 0:
@@ -355,6 +363,7 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 
 class FuseBuild(sublime_plugin.WindowCommand):
 	def run(self, working_dir, build_target, run, paths=[]):
+		#TODO log
 		
 		platform = str(sublime.platform())
 
@@ -403,6 +412,7 @@ class FuseCreate(sublime_plugin.WindowCommand):
 	targetTemplate = ""
 
 	def run(self, type, paths = []):
+		#TODO log
 		self.targetTemplate = type
 		folders = self.window.folders()
 		if len(paths) == 0:
@@ -454,6 +464,7 @@ class FuseCreate(sublime_plugin.WindowCommand):
 	def is_enabled(self, type, paths = []):
 		return True
 
+#TODO not in use, delete?
 class FuseOpenUrl(sublime_plugin.ApplicationCommand):
 	def run(self, url):
 		if sys.platform=='win32':
@@ -462,6 +473,7 @@ class FuseOpenUrl(sublime_plugin.ApplicationCommand):
 			subprocess.Popen(['open', url])
 
 class FusePreview(sublime_plugin.ApplicationCommand):
+	#TODO log
 	def run(self, type, paths = []):	
 		gFuse.tryConnect()
 
@@ -508,6 +520,7 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 		return True
 
 class FusePreviewCurrent(sublime_plugin.TextCommand):
+	#TODO log
 	def run(self, edit, type = "Local"):
 		sublime.run_command("fuse_preview", {"type": type, "paths": [self.view.file_name()]});
 
@@ -518,6 +531,7 @@ class FusePreviewCurrent(sublime_plugin.TextCommand):
 		return FusePreview.is_visible(None, type, [self.view.file_name()])
 
 class FuseToggleSelection(sublime_plugin.WindowCommand):
+	#TODO log
 	def run(self):
 		setSetting("fuse_selection_enabled", not getSetting("fuse_selection_enabled"))
 		isSet = getSetting("fuse_selection_enabled")
