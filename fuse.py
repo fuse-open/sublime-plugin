@@ -1,5 +1,5 @@
 import sublime, sublime_plugin, traceback
-import json, threading, time, sys, os, time, subprocess
+import json, threading, time, sys, os, time, subprocess, logging
 from types import *
 from .interop import *
 from .msg_parser import *
@@ -228,6 +228,8 @@ class Fuse():
 
 def plugin_loaded():
 	#TODO log
+	configure_logging()
+	print "ohai"
 	global gFuse
 	gFuse = Fuse()
 	fix_osx_path()
@@ -242,6 +244,16 @@ def plugin_loaded():
 		sublime.active_window().run_command("open_file", {"file":"${packages}/Fuse/UserGuide.txt"})
 		setSetting("fuse_show_user_guide_on_start", False)
 	#TODO log
+
+def configure_logging():
+	handler = logging.handlers.RotatingFileHandler(log_file(), maxBytes=1000, backupCount=5)
+	formatter = logging.Formatter('%(asctime)s [%(process)d:%(thread)d] %(levelname)s %(name)s - %(message)s')
+	handler.setFormatter(formatter)
+
+	log = logging.getLogger(__name__)
+	log.addHandler(handler)
+	log.info("Finished configuring logging")
+	
 
 def fix_osx_path():
 	if str(sublime.platform()) == "osx":
