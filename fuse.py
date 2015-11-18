@@ -254,7 +254,7 @@ def log_file():
 	"fuse.sublimeplugin.log")
 
 def configure_logging():
-	log = logging.getLogger(__name__)
+	log = logging.getLogger(__name__.split(".")[0])
 	if (len(log.handlers) > 0):
 		return
 
@@ -265,7 +265,7 @@ def configure_logging():
 	handler.setLevel(logging.INFO)
 	log.setLevel(logging.INFO)
 	log.addHandler(handler)
-	log.info("Finished configuring logging for " + __name__)
+	log.info("Finished configuring logging for " + log.name)
 
 
 def fix_osx_path():
