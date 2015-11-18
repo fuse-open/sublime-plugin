@@ -254,13 +254,15 @@ def log_file():
 	"fuse.sublimeplugin.log")
 
 def configure_logging():
+	log = logging.getLogger(__name__)
+	if (len(log.handlers) > 0):
+		return
+
 	print("logging to " + log_file())
 	handler = logging.handlers.RotatingFileHandler(log_file(), 'a', 500000, 5)
 	formatter = logging.Formatter('%(asctime)s [%(process)d] %(levelname)s %(message)s')
 	handler.setFormatter(formatter)
 	handler.setLevel(logging.INFO)
-
-	log = logging.getLogger(__name__)
 	log.setLevel(logging.INFO)
 	log.addHandler(handler)
 	log.info("Finished configuring logging for " + __name__)
