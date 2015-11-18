@@ -1,4 +1,4 @@
-import json, threading
+import json, threading, logging
 
 class Message:
 	def __init__(self, messageType):
@@ -49,7 +49,10 @@ class MsgManager:
 		if not waitResult:
 			return None
 
-		#TODO log res["response"]["Errors"] if any
+		if res['name'] == "Hello":
+			logging.getLogger(__name__).info("Got Hello response")
+		if (res["response"] != None and len(res["response"].errors) > 0):
+			logging.getLogger(__name__).info("Errors in response: '%s'", str(res["response"].errors))
 		return res["response"]
 
 	def sendRequestAsync(self, interop, requestName, arguments, callback):
