@@ -42,7 +42,7 @@ class Fuse():
 			if parsedRes.messageType == "Event":
 				self.buildViews.tryHandleBuildEvent(parsedRes)
 		except:
-			traceback.print_exc()
+			log().error(traceback.format_exc())
 
 	def showFuseNotFound(self):
 		sublime.message_dialog("Fuse could not be found.\n\nAttempted to run from: '"+getFusePathFromSettings()+"'\n\nPlease verify installation.")		
@@ -100,7 +100,7 @@ class Fuse():
 					self.items.append((outText, suggestionText))
 
 		except:
-			traceback.print_exc()
+			log().error(traceback.format_exc())
 
 	lastResponse = None
 
