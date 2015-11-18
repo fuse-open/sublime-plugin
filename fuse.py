@@ -427,7 +427,7 @@ class FuseBuild(sublime_plugin.WindowCommand):
 			if run:
 				cmd.append("-r")
 		elif cmd is None:
-			error_message("No Fuse build target set.\n\nGo to Tools/Build With... to choose one.\n\nFuture attempts to build will use that.") #TODO wrap all these too with info
+			error_message("No Fuse build target set.\n\nGo to Tools/Build With... to choose one.\n\nFuture attempts to build will use that.")
 			return
 
 		gFuse.previousBuildCommand = cmd
@@ -436,7 +436,7 @@ class FuseBuild(sublime_plugin.WindowCommand):
 			log().info("Trying to build with " + str(gFuse.previousBuildCommand))
 			subprocess.Popen(gFuse.previousBuildCommand, cwd=working_dir)
 		except:
-			gFuse.showFuseNotFound() #TODO inject logging here
+			gFuse.showFuseNotFound()
 
 #TODO delete unused class
 class FuseCreate(sublime_plugin.WindowCommand):
@@ -504,7 +504,6 @@ class FuseOpenUrl(sublime_plugin.ApplicationCommand):
 			subprocess.Popen(['open', url])
 
 class FusePreview(sublime_plugin.ApplicationCommand):
-	#TODO log
 	def run(self, type, paths = []):	
 		gFuse.tryConnect()
 
@@ -525,7 +524,7 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 			else:			
 				p = subprocess.Popen(start_preview, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		except:
-			gFuse.showFuseNotFound() #TODO wrap these
+			gFuse.showFuseNotFound()
 			return
 
 		stdout, stderr = p.communicate()
@@ -556,7 +555,6 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 
 #TODO delete unused class?
 class FusePreviewCurrent(sublime_plugin.TextCommand):
-	#TODO log
 	def run(self, edit, type = "Local"):
 		sublime.run_command("fuse_preview", {"type": type, "paths": [self.view.file_name()]});
 
