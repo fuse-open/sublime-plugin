@@ -45,7 +45,7 @@ class Fuse():
 			log().error(traceback.format_exc())
 
 	def showFuseNotFound(self):
-		sublime.message_dialog("Fuse could not be found.\n\nAttempted to run from: '"+getFusePathFromSettings()+"'\n\nPlease verify installation.")		
+		error_message("Fuse could not be found.\n\nAttempted to run from: '"+getFusePathFromSettings()+"'\n\nPlease verify installation.")		
 
 	def handleErrors(self, errors):
 		for error in errors:
@@ -349,7 +349,7 @@ class CreateProjectCommand(sublime_plugin.WindowCommand):
 				out = ""
 				for line in proc.stdout.readlines():
 					out += line.decode()
-				sublime.message_dialog("Could not create project:\n"+out)
+				error_message("Could not create project:\n"+out)
 
 		except ValueError:
 			pass
@@ -397,17 +397,17 @@ class FuseBuild(sublime_plugin.WindowCommand):
 
 		if platform == "windows":
 			if build_target == "iOS":
-				sublime.error_message("iOS builds are only available on OS X.") #TODO wrap all these to log too
+				error_message("iOS builds are only available on OS X.")
 				return
 			elif build_target == "CMake":
-				sublime.error_message("CMake builds are only available on OS X.")
+				error_message("CMake builds are only available on OS X.")
 				return
 		elif platform == "osx":
 			if build_target == "DotNetExe":
-				sublime.message_dialog(".Net builds are only available on Windows.")
+				error_message(".Net builds are only available on Windows.")
 				return
 			elif build_target == "MSVC12":
-				sublime.message_dialog("MSVC12 builds are only available on Windows.")
+				error_message("MSVC12 builds are only available on Windows.")
 				return
 
 		if working_dir is "":
@@ -425,7 +425,7 @@ class FuseBuild(sublime_plugin.WindowCommand):
 			if run:
 				cmd.append("-r")
 		elif cmd is None:
-			sublime.message_dialog("No Fuse build target set.\n\nGo to Tools/Build With... to choose one.\n\nFuture attempts to build will use that.") #TODO wrap all these too with info
+			error_message("No Fuse build target set.\n\nGo to Tools/Build With... to choose one.\n\nFuture attempts to build will use that.") #TODO wrap all these too with info
 			return
 
 		gFuse.previousBuildCommand = cmd
@@ -435,7 +435,6 @@ class FuseBuild(sublime_plugin.WindowCommand):
 			subprocess.Popen(gFuse.previousBuildCommand, cwd=working_dir)
 		except:
 			gFuse.showFuseNotFound() #TODO inject logging here
-
 
 #TODO delete unused class
 class FuseCreate(sublime_plugin.WindowCommand):
@@ -487,7 +486,7 @@ class FuseCreate(sublime_plugin.WindowCommand):
 				out += self.targetFolder+"\\"+text+"."+self.targetTemplate+"\n";
 				for line in proc.stdout.readlines():
 					out += line.decode()
-				sublime.message_dialog(out)
+				error_message(out)
 		except ValueError:
 			pass
 
@@ -581,3 +580,7 @@ class FuseToggleSelection(sublime_plugin.WindowCommand):
 
 	def is_checked(self):
 		return getSetting("fuse_selection_enabled")
+
+def error_message(message):
+	log().error(message.replace("\n", "\\n"))
+	sublime.error_message(message)
