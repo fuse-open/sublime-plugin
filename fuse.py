@@ -1,5 +1,5 @@
 import sublime, sublime_plugin, traceback
-import json, threading, time, sys, os, time, subprocess, logging
+import json, threading, time, sys, os, time, subprocess, logging, logging.handlers
 from types import *
 from .interop import *
 from .msg_parser import *
@@ -178,7 +178,7 @@ class Fuse():
 			callback)
 
 	def sendHello(self):
-                #TODO log
+		log().info("Sending hello request")
 		self.msgManager.sendRequest(self.interop, 
 		"Hello",
 		{
@@ -203,15 +203,15 @@ class Fuse():
 					path = getFusePathFromSettings()
 
 					try:		
+						start_daemon = [path, "daemon", "-b"]
+						log().info("Calling subprocess '%s'", str(start_daemon))
 						if os.name == "nt":
 							CREATE_NO_WINDOW = 0x08000000			
-							#TODO log
-							subprocess.call([path, "daemon", "-b"], creationflags=CREATE_NO_WINDOW)
+							subprocess.call(start_daemon, creationflags=CREATE_NO_WINDOW)
 						else:
-							#TODO log
-							subprocess.call([path, "daemon", "-b"])
+							subprocess.call(start_daemon)
 					except:
-						traceback.print_exc()
+						log().error("Fuse not found: " + traceback.format_exc())
 						gFuse.showFuseNotFound()
 						return
 
@@ -219,7 +219,7 @@ class Fuse():
 					if self.fuseStartedCallback is not None:
 						self.fuseStartedCallback()				
 			except:
-				traceback.print_exc()
+				log().error(traceback.format_exc())
 
 	def cleanup(self):
 		self.interop.disconnect()
@@ -227,9 +227,8 @@ class Fuse():
 		self.startFuseEvent.set()
 
 def plugin_loaded():
-	#TODO log
 	configure_logging()
-	print "ohai"
+	log().info("Loading plugin")
 	global gFuse
 	gFuse = Fuse()
 	fix_osx_path()
@@ -243,17 +242,29 @@ def plugin_loaded():
 	if getSetting("fuse_show_user_guide_on_start", True):
 		sublime.active_window().run_command("open_file", {"file":"${packages}/Fuse/UserGuide.txt"})
 		setSetting("fuse_show_user_guide_on_start", False)
-	#TODO log
+	log().info("Plugin loaded successfully")
+
+def log():
+	return logging.getLogger(__name__)
+
+def log_file():
+	return os.path.join(
+	os.path.join(os.getenv("HOME"), ".fuse") if os.name == "posix" else os.getenv("LOCALAPPDATA"),
+	"logs",
+	"fuse.sublimeplugin.log")
 
 def configure_logging():
-	handler = logging.handlers.RotatingFileHandler(log_file(), maxBytes=1000, backupCount=5)
-	formatter = logging.Formatter('%(asctime)s [%(process)d:%(thread)d] %(levelname)s %(name)s - %(message)s')
+	print("logging to " + log_file())
+	handler = logging.handlers.RotatingFileHandler(log_file(), 'a', 100000, 5)
+	formatter = logging.Formatter('%(asctime)s [%(process)d] %(levelname)s %(message)s')
 	handler.setFormatter(formatter)
+	handler.setLevel(logging.INFO)
 
 	log = logging.getLogger(__name__)
+	log.setLevel(logging.INFO)
 	log.addHandler(handler)
-	log.info("Finished configuring logging")
-	
+	log.info("Finished configuring logging for " + __name__)
+
 
 def fix_osx_path():
 	if str(sublime.platform()) == "osx":
@@ -262,10 +273,11 @@ def fix_osx_path():
 			os.environ["PATH"] += ":" + capitan_path
 
 def plugin_unloaded():
-	#TODO log
+	log().info("Unloading plugin")
 	global gFuse
 	gFuse.cleanup()
 	gFuse = None
+	log().info("Unloaded plugin")
 
 class FuseEventListener(sublime_plugin.EventListener):
 	lastCaret = -1
@@ -344,14 +356,16 @@ class CreateProjectCommand(sublime_plugin.WindowCommand):
 
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
-		#TODO log
 		view = self.view
 		syntaxName = getExtension(view.settings().get("syntax"))		
+		log().info("Requested goto definition for syntax type '%s'", syntaxName)
 		if not isSupportedSyntax(syntaxName) or len(view.sel()) == 0:
 			return
 
 		text = view.substr(sublime.Region(0,view.size()))
 		caret = view.sel()[0].a
+
+		log().info("Requested goto definition for '%s': '%s'", view.file_name(), getRowCol(view, caret))
 
 		response = gFuse.msgManager.sendRequest(
 			gFuse.interop,
@@ -365,9 +379,11 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 		)
 
 		if response == None:
+			log().info("No response for goto definition")
 			return
 
 		if response.status != "Success":
+			log().error("Error in goto definition: '%s'", response.status)
 			gFuse.handleErrors(response.errors)
 			return
 
@@ -375,13 +391,13 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 
 class FuseBuild(sublime_plugin.WindowCommand):
 	def run(self, working_dir, build_target, run, paths=[]):
-		#TODO log
 		
 		platform = str(sublime.platform())
+		log().info("Requested build: platform:'%s', build_target:'%s, working_dir:'%s'", platform, build_target, working_dir)
 
 		if platform == "windows":
 			if build_target == "iOS":
-				sublime.error_message("iOS builds are only available on OS X.")
+				sublime.error_message("iOS builds are only available on OS X.") #TODO wrap all these to log too
 				return
 			elif build_target == "CMake":
 				sublime.error_message("CMake builds are only available on OS X.")
@@ -402,29 +418,31 @@ class FuseBuild(sublime_plugin.WindowCommand):
 
 		cmd = gFuse.previousBuildCommand
 
+		log().info("Previous build command was '%s'", str(cmd))
 
 		if build_target != "Default":
 			cmd = [getFusePathFromSettings(), "build", "-t=" + build_target, "--name=Sublime_Text_3", "-c=Release"]
 			if run:
 				cmd.append("-r")
 		elif cmd is None:
-			sublime.message_dialog("No Fuse build target set.\n\nGo to Tools/Build With... to choose one.\n\nFuture attempts to build will use that.")
+			sublime.message_dialog("No Fuse build target set.\n\nGo to Tools/Build With... to choose one.\n\nFuture attempts to build will use that.") #TODO wrap all these too with info
 			return
 
 		gFuse.previousBuildCommand = cmd
 		
 		try:
+			log().info("Trying to build with " + str(gFuse.previousBuildCommand))
 			subprocess.Popen(gFuse.previousBuildCommand, cwd=working_dir)
 		except:
-			gFuse.showFuseNotFound()
+			gFuse.showFuseNotFound() #TODO inject logging here
 
 
+#TODO delete unused class
 class FuseCreate(sublime_plugin.WindowCommand):
 	targetFolder = ""
 	targetTemplate = ""
 
 	def run(self, type, paths = []):
-		#TODO log
 		self.targetTemplate = type
 		folders = self.window.folders()
 		if len(paths) == 0:
@@ -489,6 +507,7 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 	def run(self, type, paths = []):	
 		gFuse.tryConnect()
 
+		log().info("Starting preview for %s", str(paths))
 		for path in paths:
 			thread = threading.Thread(target = self.do_preview, args = (type, path))
 			thread.daemon = True
@@ -497,13 +516,15 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 	def do_preview(self, type, path):
 		fusePath = getFusePathFromSettings()
 		try:
+			start_preview = [fusePath, "preview", "--target=" + type, "--name=Sublime_Text_3", path]
+			log().info("Opening subprocess %s", str(start_preview))
 			if os.name == "nt":
 				CREATE_NO_WINDOW = 0x08000000
-				p = subprocess.Popen([fusePath, "preview", "--target=" + type, "--name=Sublime_Text_3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=CREATE_NO_WINDOW)
+				p = subprocess.Popen(start_preview, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=CREATE_NO_WINDOW)
 			else:			
-				p = subprocess.Popen([fusePath, "preview", "--target=" + type, "--name=Sublime_Text_3", path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+				p = subprocess.Popen(start_preview, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		except:
-			gFuse.showFuseNotFound()
+			gFuse.showFuseNotFound() #TODO wrap these
 			return
 
 		stdout, stderr = p.communicate()
@@ -511,6 +532,7 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 			window = sublime.active_window()
 			error = window.create_output_panel("FuseError")
 			errorMsg = "Unexpected fatal error! Please report this to us.\n" + stdout.decode("utf-8") + stderr.decode("utf-8")				
+			log().error(errorMsg.replace("\n", " \\n "))
 			error.run_command("append", { "characters": errorMsg.replace("\r", "") })
 			window.run_command("show_panel", {"panel": "output.FuseError" })
 
@@ -531,6 +553,7 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 
 		return True
 
+#TODO delete unused class?
 class FusePreviewCurrent(sublime_plugin.TextCommand):
 	#TODO log
 	def run(self, edit, type = "Local"):
@@ -543,10 +566,10 @@ class FusePreviewCurrent(sublime_plugin.TextCommand):
 		return FusePreview.is_visible(None, type, [self.view.file_name()])
 
 class FuseToggleSelection(sublime_plugin.WindowCommand):
-	#TODO log
 	def run(self):
 		setSetting("fuse_selection_enabled", not getSetting("fuse_selection_enabled"))
 		isSet = getSetting("fuse_selection_enabled")
+		log().info("Selection enabled was set to %s", str(isSet))
 		if isSet is False:
 			gFuse.msgManager.sendEvent(gFuse.interop, "Fuse.Preview.SelectionChanged", 
 			{
