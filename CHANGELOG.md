@@ -1,3 +1,6 @@
+# Fuse Sublime package 1.4.9
+* Improved error handling
+
 # Fuse Sublime package 1.4.8
 ## Changes
 * "Visual cues in preview" toggle button changed to "Select element at caret".
