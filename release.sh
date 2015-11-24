@@ -11,7 +11,7 @@ TOKEN=$2
 UPLOAD_URL=$3
 REDIRECT_URL=$4
 
-REDIRECT="" #TODO use "latest-sublime-plugin-2"
+REDIRECT="latest-sublime-plugin-2"
 
 echo "Uploading '$RELEASE_FILE' to '$UPLOAD_URL'"
 UPLOAD_CMD="curl -H 'X-API-Token: $TOKEN' -F \"file=@$RELEASE_FILE\" $UPLOAD_URL"
