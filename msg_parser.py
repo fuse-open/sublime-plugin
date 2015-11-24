@@ -51,7 +51,7 @@ class MsgManager:
 
 		if res['name'] == "Hello":
 			logging.getLogger(__name__).info("Got Hello response")
-		if (res["response"] != None and len(res["response"].errors) > 0):
+		if (res["response"] != None and res["response"].errors != None and len(res["response"].errors) > 0):
 			logging.getLogger(__name__).info("Errors in response: '%s'", str(res["response"].errors))
 		return res["response"]
 
