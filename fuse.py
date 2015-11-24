@@ -47,10 +47,6 @@ class Fuse():
 	def showFuseNotFound(self):
 		error_message("Fuse could not be found.\n\nAttempted to run from: '"+getFusePathFromSettings()+"'\n\nPlease verify installation.")		
 
-	def handleErrors(self, errors):
-		for error in errors:
-			print("Fuse - Error({Code}): {Message}".format(Code = error["Code"], Message = error["Message"]))
-
 	def handleCodeSuggestion(self, cmd):
 		suggestions = cmd["CodeSuggestions"]
 
@@ -124,7 +120,6 @@ class Fuse():
 		self.lastResponse = None
 
 		if response.status != "Success":
-		 	self.handleErrors(response.errors)
 		 	return
 
 		caret = view.sel()[0].a
@@ -386,7 +381,6 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 
 		if response.status != "Success":
 			log().error("Error in goto definition: '%s'", response.status)
-			gFuse.handleErrors(response.errors)
 			return
 
 		gotoDefinition(response.data)
