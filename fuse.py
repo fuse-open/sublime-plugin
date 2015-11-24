@@ -259,7 +259,7 @@ def configure_logging():
 		return
 
 	print("logging to " + log_file())
-	handler = logging.handlers.RotatingFileHandler(log_file(), 'a', 500000, 5)
+	handler = logging.handlers.RotatingFileHandler(log_file(), 'a', 500000, 5, "utf-8")
 	formatter = logging.Formatter('%(asctime)s [%(process)d] %(levelname)s %(message)s')
 	handler.setFormatter(formatter)
 	handler.setLevel(logging.INFO)
