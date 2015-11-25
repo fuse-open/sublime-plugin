@@ -224,6 +224,7 @@ class Fuse():
 def plugin_loaded():
 	configure_logging()
 	log().info("Loading plugin")
+	log().info("Sublime version '" + sublime.version() + "'")
 	global gFuse
 	gFuse = Fuse()
 	fix_osx_path()
