@@ -29,7 +29,7 @@
 		        <key>2</key>
 		        <dict>
 		            <key>name</key>
-		            <string>entity.name.tag.script.html</string>
+		            <string>entity.name.tag.localname.xml</string>
 		        </dict>
 		    </dict>
 		    <key>end</key>
@@ -63,7 +63,7 @@
 		                <key>2</key>
 		                <dict>
 		                    <key>name</key>
-		                    <string>entity.name.tag.script.html</string>
+		                    <string>entity.name.tag.localname.xml</string>
 		                </dict>
 		            </dict>
 		            <key>end</key>
