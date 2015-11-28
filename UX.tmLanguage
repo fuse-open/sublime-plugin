@@ -18,13 +18,13 @@
 	<array>
 		<dict>
 		    <key>begin</key>
-		    <string>(?:^\s+)?(&lt;)((?i:(JavaScript)))\b(?![^&gt;]*/&gt;)</string>
+		    <string>(?:(?i:(JavaScript)))</string>
 		    <key>beginCaptures</key>
 		    <dict>
 		        <key>1</key>
 		        <dict>
 		            <key>name</key>
-		            <string>punctuation.definition.tag.html</string>
+		            <string>punctuation.definition.tag.begin.xml</string>
 		        </dict>
 		        <key>2</key>
 		        <dict>
@@ -33,15 +33,7 @@
 		        </dict>
 		    </dict>
 		    <key>end</key>
-		    <string>(?&lt;=&lt;/(JavaScript))(&gt;)(?:\s*\n)?</string>
-		    <key>endCaptures</key>
-		    <dict>
-		        <key>2</key>
-		        <dict>
-		            <key>name</key>
-		            <string>punctuation.definition.tag.html</string>
-		        </dict>
-		    </dict>
+		    <string>(?&lt;=&lt;/JavaScript&gt;)</string>
 		    <key>name</key>
 		    <string>source.js.embedded.html</string>
 		    <key>patterns</key>
@@ -58,7 +50,7 @@
 		                <key>1</key>
 		                <dict>
 		                    <key>name</key>
-		                    <string>punctuation.definition.tag.html</string>
+		                    <string>punctuation.definition.tag.end.xml</string>
 		                </dict>
 		                <key>2</key>
 		                <dict>
