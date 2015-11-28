@@ -24,7 +24,7 @@
 		        <key>1</key>
 		        <dict>
 		            <key>name</key>
-		            <string>punctuation.definition.tag.html</string>
+		            <string>punctuation.definition.tag.begin.xml</string>
 		        </dict>
 		        <key>2</key>
 		        <dict>
@@ -39,7 +39,7 @@
 		        <key>2</key>
 		        <dict>
 		            <key>name</key>
-		            <string>punctuation.definition.tag.html</string>
+		            <string>punctuation.definition.tag.end.xml</string>
 		        </dict>
 		    </dict>
 		    <key>name</key>
@@ -58,7 +58,7 @@
 		                <key>1</key>
 		                <dict>
 		                    <key>name</key>
-		                    <string>punctuation.definition.tag.html</string>
+		                    <string>punctuation.definition.tag.end.xml</string>
 		                </dict>
 		                <key>2</key>
 		                <dict>
