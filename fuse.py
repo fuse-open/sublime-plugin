@@ -243,11 +243,14 @@ def plugin_loaded():
 def log():
 	return logging.getLogger(__name__)
 
+def userdata_dir():
+	if os.name == "posix":
+		return os.path.join(os.getenv("HOME"), ".fuse")
+	else:
+		return os.path.join(os.getenv("LOCALAPPDATA"), "Fusetools", "Fuse")
+
 def log_file():
-	return os.path.join(
-	os.path.join(os.getenv("HOME"), ".fuse") if os.name == "posix" else os.getenv("LOCALAPPDATA"),
-	"logs",
-	"fuse.sublimeplugin.log")
+	return os.path.join(userdata_dir(), "logs", "fuse.sublimeplugin.log")
 
 def configure_logging():
 	log = logging.getLogger(__name__.split(".")[0])
