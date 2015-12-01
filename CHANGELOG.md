@@ -1,3 +1,8 @@
+# Fuse Sublime package 1.4.10
+* Use correct logging directory on Windows
+* Create logging directory if it doesn't exist
+* Write Sublime version and plugin version to log
+
 # Fuse Sublime package 1.4.9
 * Improved error handling
 
