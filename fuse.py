@@ -7,6 +7,7 @@ from .fuse_parseutils import *
 from .fuse_util import *
 from .go_to_definition import *
 from .build_view import *
+from .version import VERSION
 
 gFuse = None
 
@@ -225,6 +226,7 @@ def plugin_loaded():
 	configure_logging()
 	log().info("Loading plugin")
 	log().info("Sublime version '" + sublime.version() + "'")
+	log().info("Fuse plugin version '" + VERSION + "'")
 	global gFuse
 	gFuse = Fuse()
 	fix_osx_path()
