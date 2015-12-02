@@ -24,22 +24,27 @@
 		        <key>1</key>
 		        <dict>
 		            <key>name</key>
-		            <string>punctuation.definition.tag.html</string>
+		            <string>punctuation.definition.tag.begin.xml</string>
 		        </dict>
 		        <key>2</key>
 		        <dict>
 		            <key>name</key>
-		            <string>entity.name.tag.script.html</string>
+		            <string>entity.name.tag.localname.xml</string>
 		        </dict>
 		    </dict>
 		    <key>end</key>
 		    <string>(?&lt;=&lt;/(JavaScript))(&gt;)(?:\s*\n)?</string>
 		    <key>endCaptures</key>
 		    <dict>
+		    	<key>1</key>
+		    	<dict>
+		    	    <key>name</key>
+		    	    <string>entity.name.tag.localname.xml</string>
+		    	</dict>
 		        <key>2</key>
 		        <dict>
 		            <key>name</key>
-		            <string>punctuation.definition.tag.html</string>
+		            <string>punctuation.definition.tag.end.xml</string>
 		        </dict>
 		    </dict>
 		    <key>name</key>
@@ -58,16 +63,24 @@
 		                <key>1</key>
 		                <dict>
 		                    <key>name</key>
-		                    <string>punctuation.definition.tag.html</string>
-		                </dict>
-		                <key>2</key>
-		                <dict>
-		                    <key>name</key>
-		                    <string>entity.name.tag.script.html</string>
+		                    <string>punctuation.definition.tag.end.js</string>
 		                </dict>
 		            </dict>
 		            <key>end</key>
 		            <string>(&lt;/)((?i:JavaScript))</string>
+		            <key>endCaptures</key>
+		            <dict>
+		                <key>1</key>
+		                <dict>
+		                    <key>name</key>
+		                    <string>punctuation.definition.tag.begin.xml</string>
+		                </dict>
+		                <key>2</key>
+		                <dict>
+		                    <key>name</key>
+		                    <string>entity.name.tag.localname.xml</string>
+		                </dict>
+		            </dict>
 		            <key>patterns</key>
 		            <array>
 		                <dict>
