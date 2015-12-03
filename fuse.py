@@ -46,7 +46,12 @@ class Fuse():
 			log().error(traceback.format_exc())
 
 	def showFuseNotFound(self):
-		error_message("Fuse could not be found.\n\nAttempted to run from: '"+getFusePathFromSettings()+"'\n\nPlease verify installation.")		
+		error_message("Fuse could not be found.\n\nAttempted to run from: '"+getFusePathFromSettings()+"'\n\nPlease verify your Fuse installation." + self.rebootMessage())
+
+	def rebootMessage(self):
+		if str(sublime.platform()) == "windows":
+			return " If this is the first time you are running Fuse, please try to restart your computer."
+		return ""
 
 	def handleCodeSuggestion(self, cmd):
 		suggestions = cmd["CodeSuggestions"]
