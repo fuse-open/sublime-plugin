@@ -1,3 +1,7 @@
+# Fuse Sublime package 1.4.11
+* Fixed code completion bug with closing `<JavaScript>` tags (it used to close the `<App>` tag instead)
+* Windows: Suggest to reboot if fuse is not in path
+
 # Fuse Sublime package 1.4.10
 * Use correct logging directory on Windows
 * Create logging directory if it doesn't exist
