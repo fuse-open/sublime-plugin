@@ -208,9 +208,13 @@ class Fuse():
 						log().info("Calling subprocess '%s'", str(start_daemon))
 						if os.name == "nt":
 							CREATE_NO_WINDOW = 0x08000000			
-							subprocess.call(start_daemon, creationflags=CREATE_NO_WINDOW)
+							subprocess.check_output(start_daemon, creationflags=CREATE_NO_WINDOW, stderr=subprocess.STDOUT)
 						else:
-							subprocess.call(start_daemon)
+							subprocess.check_output(start_daemon, stderr=subprocess.STDOUT)
+					except subprocess.CalledProcessError as e:
+						log().error("Fuse returned exit status " + str(e.returncode) + ". Output was '" + e.output.decode("utf-8") + "'.")
+						error_message("Error starting Fuse:\n\n" + e.output.decode("utf-8"))
+						return
 					except:
 						log().error("Fuse not found: " + traceback.format_exc())
 						gFuse.showFuseNotFound()
