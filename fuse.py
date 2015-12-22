@@ -459,7 +459,6 @@ class FuseBuild(sublime_plugin.WindowCommand):
 		except:
 			gFuse.showFuseNotFound()
 
-#TODO delete unused class
 class FuseCreate(sublime_plugin.WindowCommand):
 	targetFolder = ""
 	targetTemplate = ""
@@ -492,9 +491,10 @@ class FuseCreate(sublime_plugin.WindowCommand):
 
 		self.window.show_input_panel(header, "", self.on_done, None, None)
 
-	def on_done(self, text):
+	def on_done(self, file_name):
 		try:
-			args = [getFusePathFromSettings(), "create", self.targetTemplate, text, self.targetFolder]
+			log().info("Trying to create '" + self.full_path(file_name) +  "'")
+			args = [getFusePathFromSettings(), "create", self.targetTemplate, file_name, self.targetFolder]
 			try:
 				proc = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 			except:
@@ -502,11 +502,12 @@ class FuseCreate(sublime_plugin.WindowCommand):
 				return
 			code = proc.wait()
 			if code == 0:
+				log().info("Succssfully created '" + self.full_path(file_name) +  "'")
 				if self.targetTemplate != "app":
-					self.window.open_file(self.targetFolder + "/" + text + "." + self.targetTemplate);
+					self.window.open_file(self.full_path(file_name));
 			else:
 				out = "Could not create file:\n";
-				out += self.targetFolder+"\\"+text+"."+self.targetTemplate+"\n";
+				out += self.full_path(file_name) + "\n";
 				for line in proc.stdout.readlines():
 					out += line.decode()
 				error_message(out)
@@ -515,6 +516,9 @@ class FuseCreate(sublime_plugin.WindowCommand):
 
 	def is_enabled(self, type, paths = []):
 		return True
+
+	def full_path(self, file_name):
+	    return os.path.join(self.targetFolder, file_name) + "." + self.targetTemplate
 
 #TODO not in use, delete?
 class FuseOpenUrl(sublime_plugin.ApplicationCommand):
