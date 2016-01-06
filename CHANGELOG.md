@@ -1,3 +1,6 @@
+# Fuse Sublime package 1.4.12
+* Improved error handling
+
 # Fuse Sublime package 1.4.11
 * Fixed code completion bug with closing `<JavaScript>` tags (it used to close the `<App>` tag instead)
 * Windows: Suggest to reboot if fuse is not in path
