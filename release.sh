@@ -1,5 +1,9 @@
 #!/bin/bash
 set -e
+VERSION=$(cat VERSION.txt)
+
+echo "##teamcity[buildNumber '$VERSION+$BUILD_NUMBER']"
+echo "##teamcity[setParameter name='releaseVersion' value='$VERSION']"
 
 if [ $# != 4 ]; then
     echo "USAGE release.sh <zip file name> <token> <upload url> <redirect url>"
@@ -31,6 +35,3 @@ echo "Payload is '$PAYLOAD'"
 REDIRECT_CMD="curl -H 'Content-Type: application/json' -H 'X-API-Token: $TOKEN' -X PUT -d '$PAYLOAD' $REDIRECT_URL/$REDIRECT"
 echo $REDIRECT_CMD
 eval $REDIRECT_CMD
-
-echo
-echo "##teamcity[setParameter name='releaseVersion' value='$(cat VERSION.txt)']"
