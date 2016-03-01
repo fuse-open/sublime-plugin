@@ -31,22 +31,22 @@
             "paths" : [] 
         }
     },
-    { 
-    	"caption": "Fuse: Local preview",
+    {
+    	"caption": "Fuse: Preview Local",
     	"command": "fuse_preview_current",
     	"args": {
     		"type" : "Local"
     	}
     },
     {
-    	"caption": "Fuse: Android preview",
+    	"caption": "Fuse: Preview Android",
     	"command": "fuse_preview_current",
     	"args": {
     		"type" : "Android"
     	}
     },
-    { 
-    	"caption": "Fuse: iOS preview",
+    {
+    	"caption": "Fuse: Preview iOS",
     	"command": "fuse_preview_current",
     	"args": {
     		"type" : "iOS"
