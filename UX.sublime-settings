@@ -1,5 +1,5 @@
 {
-	"extensions": ["ux"],
+	"extensions": ["ux","ngux"],
 	"auto_complete_triggers":
 	[
 		{
