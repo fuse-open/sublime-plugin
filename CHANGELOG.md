@@ -1,3 +1,8 @@
+# Fuse Sublime package 1.4.13
+* Added UX syntax and completion for .ngux extension (Angular 2 integration)
+* Renamed 'Fuse: Local Preview' to 'Fuse: Preview Local', 'Fuse: Android Preview' to 'Fuse: Preview Android', and 'Fuse: iOS Preview' to 'Fuse: Preview iOS',
+	to be consistent with the naming scheme in the Atom plugin. 
+
 # Fuse Sublime package 1.4.12
 * Improved error handling
 
