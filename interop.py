@@ -1,4 +1,5 @@
 import socket, traceback, threading, queue
+from .log import log
 
 class Interop:
 	def __init__(self, on_recv, on_connect, on_not_connected):
@@ -20,9 +21,13 @@ class Interop:
 
 	def connect(self):		
 		try:			
+			host = "localhost"
+			port = 12122
+			log().info("Connecting to %s:%d" % (host, port))
 			tmpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			tmpSocket.connect(("localhost", 12122))
+			tmpSocket.connect((host, port))
 		except OSError:
+			log().info("Failed to connect to %s:%d" % (host, port))
 			tmpSocket.close()
 			return
 		
@@ -30,7 +35,7 @@ class Interop:
 		self.startPullMessages()
 		self.startSendMessages()
 		self.on_connect()
-		print("Connected to Fuse")		
+		log().info("Connected to Fuse")
 
 	def send(self, type, msg):
 		if not self.isConnected():
@@ -81,7 +86,7 @@ class Interop:
 			while not self.readWorkerStopEvent.is_set():
 				tmpData = self.socket.recv(4096)
 				if len(tmpData) == 0:
-					print("Lost connection")
+					log().info("Lost connection")
 					self.disconnect()
 					return
 
@@ -123,10 +128,11 @@ class Interop:
 		try:
 			return int(lenStr)
 		except ValueError:
-			print("Couldn't parse packet length, got " + lenStr)
+			log().info("Couldn't parse packet length, got " + lenStr)
 			return -1
 
 	def disconnect(self):		
+		log().info("Disconnecting")
 		if self.readWorkerStopEvent != None:
 			self.stopPullMessages()
 
@@ -149,4 +155,4 @@ class Interop:
 			self.sendWorker = None
 			self.sendDataEvent = None
 
-			print("Disconnected")
+			log().info("Disconnected")
