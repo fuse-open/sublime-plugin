@@ -1,3 +1,4 @@
+# Fuse Sublime package 1.4.14
 * Added logging for communication with the Fuse daemon
 
 # Fuse Sublime package 1.4.13
