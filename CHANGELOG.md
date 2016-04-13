@@ -1,3 +1,5 @@
+* Added logging for communication with the Fuse daemon
+
 # Fuse Sublime package 1.4.13
 * Added UX syntax and completion for .ngux extension (Angular 2 integration)
 * Renamed 'Fuse: Local Preview' to 'Fuse: Preview Local', 'Fuse: Android Preview' to 'Fuse: Preview Android', and 'Fuse: iOS Preview' to 'Fuse: Preview iOS',
