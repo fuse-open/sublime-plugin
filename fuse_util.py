@@ -21,6 +21,9 @@ def isSupportedSyntax(syntaxName):
 	return syntaxName == "Uno" or syntaxName == "UX"
 
 def getExtension(path):
+	if path is None:
+		return ""
+		
 	base = os.path.basename(path)
 	ext = os.path.splitext(base)
 
