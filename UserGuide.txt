@@ -31,7 +31,7 @@ We’ll run through each category.
 	# Fuse Create #
 	###############
 
-From the command-line, “fuse create” is the basic command used tovcreate Fuse
+From the command-line, “fuse create” is the basic command used to create Fuse
 project files. For instance a typical workflow would be to use “fuse create app
 MyProject” to create an entirely new project from the default “app” template.
 Using Sublime Text, all fuse create options are available through either the
