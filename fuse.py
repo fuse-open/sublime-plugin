@@ -488,6 +488,8 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 
 	def is_enabled(self, type, paths = []):
 		for path in paths:
+			if contains_unoproj(path):
+				return True
 			if path == None:
 				return False
 			fileName, fileExtension = os.path.splitext(path)
@@ -496,6 +498,9 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 				return False
 
 		return True
+
+def contains_unoproj(path):
+	return os.path.isdir(path) and len([f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and f.lower().endswith(".unoproj")])
 
 class FusePreviewCurrent(sublime_plugin.TextCommand):
 	def run(self, edit, type = "Local"):
