@@ -260,7 +260,8 @@ def fix_osx_path():
 def plugin_unloaded():
 	log().info("Unloading plugin")
 	global gFuse
-	gFuse.cleanup()
+	if gFuse != None:
+		gFuse.cleanup()
 	gFuse = None
 	log().info("Unloaded plugin")
 
