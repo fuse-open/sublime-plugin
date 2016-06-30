@@ -297,48 +297,6 @@ class FuseEventListener(sublime_plugin.EventListener):
 	def on_query_completions(self, view, prefix, locations):
 		return gFuse.onQueryCompletion(view)
 
-#TODO delete, not in use
-class CreateProjectCommand(sublime_plugin.WindowCommand):
-	projectName = ""
-
-	def run(self):
-		header = "Choose a project name:"
-		self.window.show_input_panel(header, "", self.on_name_done, None, None)
-
-	def on_name_done(self, text):
-		try:
-			self.projectName = text;
-			header = "Choose project destination:"
-			self.window.show_input_panel(header, "", self.on_destination_done, None, None)
-
-		except ValueError:
-			pass
-
-	def on_destination_done(self, text):
-		try:
-			text = text;
-
-			if not os.path.exists(text):
-				os.makedirs(text)
-
-			proc = subprocess.Popen([getFusePathFromSettings(), "create", "app", self.projectName, text], shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-			code = proc.wait()
-			if code==0:
-				data = {
-					"folders" : [
-						{ "path" : text + "/" + self.projectName }
-					]
-				}
-				self.window.set_project_data(data)
-			else:
-				out = ""
-				for line in proc.stdout.readlines():
-					out += line.decode()
-				error_message("Could not create project:\n"+out)
-
-		except ValueError:
-			pass
-
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
 		view = self.view
@@ -481,7 +439,6 @@ class FuseCreate(sublime_plugin.WindowCommand):
 	def full_path(self, file_name):
 	    return os.path.join(self.targetFolder, file_name) + "." + self.targetTemplate
 
-#TODO not in use, delete?
 class FuseOpenUrl(sublime_plugin.ApplicationCommand):
 	def run(self, url):
 		if sys.platform=='win32':
@@ -539,7 +496,6 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 
 		return True
 
-#TODO delete unused class?
 class FusePreviewCurrent(sublime_plugin.TextCommand):
 	def run(self, edit, type = "Local"):
 		sublime.run_command("fuse_preview", {"type": type, "paths": [self.view.file_name()]});
