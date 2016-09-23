@@ -1,3 +1,7 @@
+# Fuse Sublime package 1.4.15
+* Added support for starting preview when selecting a project folder that contains an unoproj
+* Fixed a bug where the plugin would crash
+
 # Fuse Sublime package 1.4.14
 * Added logging for communication with the Fuse daemon
 
