@@ -15,7 +15,7 @@ class BuildResultsManager:
 	def tryHandleBuildEvent(self, event):
 		if event.type == "Fuse.BuildStarted":
 			if event.data["BuildType"] == "LoadMarkup":
-				self.buildResults = BuildResults(sublime.active_window(), event.data["BuildId"])
+				self.buildResults = BuildResults()
 			return True
 		elif event.type == "Fuse.BuildIssueDetected":
 			self.buildResults.tryHandleBuildEvent(event)
@@ -23,16 +23,15 @@ class BuildResultsManager:
 		return False
 
 class BuildResults:
-	def __init__(self, window, buildId):
+	def __init__(self):
 		global paths	
 		paths = []
 
 		global buildResultPanel
-		buildResultPanel = window.create_output_panel("FuseBuildResults")
+		buildResultPanel = sublime.active_window().create_output_panel("FuseBuildResults")
 		buildResultPanel.set_name("Fuse - Auto Reload Result")
 		buildResultPanel.set_syntax_file("Packages/Fuse/BuildResults.hidden-tmLanguage")
 
-		self.buildId = buildId
 		self.projectPath = ""
 
 		self.__createViewModel()
