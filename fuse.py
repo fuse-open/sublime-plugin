@@ -6,6 +6,7 @@ from .msg_parser import *
 from .fuse_parseutils import *
 from .fuse_util import *
 from .go_to_definition import *
+from .build_results import *
 from .build_view import *
 from .version import VERSION
 from .log import log
@@ -22,6 +23,7 @@ class Fuse():
 	foldUXNameSpaces = False
 	completionSyntax = None
 	buildViews = BuildViewManager()
+	buildResultsManager = BuildResultsManager()
 	msgManager = MsgManager()
 	startFuseThread = None
 	startFuseThreadExit = False
@@ -42,6 +44,7 @@ class Fuse():
 				return
 
 			if parsedRes.messageType == "Event":
+				self.buildResultsManager.tryHandleBuildEvent(parsedRes)
 				self.buildViews.tryHandleBuildEvent(parsedRes)
 		except:
 			log().error(traceback.format_exc())

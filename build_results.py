@@ -7,6 +7,21 @@ buildResultPanel = None
 def NameRegions(view):
 	return view.find_by_selector("entity.name.filename.find-in-files.warning") + view.find_by_selector("entity.name.tag.error")
 
+class BuildResultsManager:
+
+	def __init__(self):
+		self.buildResults = None
+
+	def tryHandleBuildEvent(self, event):
+		if event.type == "Fuse.BuildStarted":
+			if event.data["BuildType"] == "LoadMarkup":
+				self.buildResults = BuildResults(sublime.active_window(), event.data["BuildId"])
+			return True
+		elif event.type == "Fuse.BuildIssueDetected":
+			self.buildResults.tryHandleBuildEvent(event)
+			return True
+		return False
+
 class BuildResults:
 	def __init__(self, window, buildId):
 		global paths	

@@ -3,6 +3,7 @@ import queue, threading, time, os
 from .msg_parser import *
 from .build_results import BuildResults
 from .fuse_util import *
+from .log import log
 
 class BuildStatus:
 	success = 1,
@@ -21,7 +22,6 @@ class BuildViewManager:
 			"Fuse.BuildStarted", 
 			"Fuse.BuildEnded", 
 			"Fuse.BuildStageChanged", 
-			"Fuse.BuildIssueDetected",
 			"Fuse.BuildLogged"]
 
 		if not event.type in validTypes:
@@ -56,8 +56,6 @@ class BuildViewManager:
 
 				if buildView is None:
 					buildView = self.createFullCompileView(fileName, projectPath, target, buildId)
-			elif event.data["BuildType"] == "LoadMarkup":
-				buildView = self.createLoadMarkupView(fileName, buildId)
 			else:
 				print("Invalid buildtype: " + event.data["BuildType"])			
 
@@ -73,9 +71,6 @@ class BuildViewManager:
 
 		return True
 	
-	def createLoadMarkupView(self, name, buildId):		
-		return BuildResults(sublime.active_window(), buildId)
-
 	def createFullCompileView(self, name, projectPath, target, buildId):
 		return BuildView(name, projectPath, target, buildId)
 
