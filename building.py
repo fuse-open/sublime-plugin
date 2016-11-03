@@ -6,6 +6,27 @@ import sublime
 from .fuse_util import getFusePathFromSettings
 from .log import log
 
+class BuildManager:
+	def __init__(self, fuseNotFoundHandler):
+		self.builds = {}
+		self.fuseNotFoundHandler = fuseNotFoundHandler
+
+	def preview(self, target, path):
+		fusePath = getFusePathFromSettings()
+		start_preview = [fusePath, "preview", "--target=" + target, "--name=Sublime_Text_3", path]
+		name = target.capitalize() + " Preview"
+		self.__start(target, start_preview, name)
+
+	def build(self, target):
+		self.__start(target, [], target.capitalize() + " Build")
+
+	def __start(self, target, cmd, name):
+		if name in self.builds:
+			self.builds[name].stop()
+		build = BuildInstance(cmd, name, self.fuseNotFoundHandler)
+		self.builds[name] = build
+		build.start()
+
 class BuildInstance(threading.Thread):
 	def __init__(self, cmd, title, fuseNotFoundHandler):
 		threading.Thread.__init__(self)
@@ -57,24 +78,3 @@ class OutputView:
 			window.run_command("close_by_index", { "group": groupIndex, "index": viewIndex })
 		except:
 			pass #Failing to close a tab is not critical
-
-class BuildManager:
-	def __init__(self, fuseNotFoundHandler):
-		self.builds = {}
-		self.fuseNotFoundHandler = fuseNotFoundHandler
-
-	def preview(self, target, path):
-		fusePath = getFusePathFromSettings()
-		start_preview = [fusePath, "preview", "--target=" + target, "--name=Sublime_Text_3", path]
-		name = target.capitalize() + " Preview"
-		self.__start(target, start_preview, name)
-
-	def build(self, target):
-		self.__start(target, [], target.capitalize() + " Build")
-
-	def __start(self, target, cmd, name):
-		if name in self.builds:
-			self.builds[name].stop()
-		build = BuildInstance(cmd, name, self.fuseNotFoundHandler)
-		self.builds[name] = build
-		build.start()
