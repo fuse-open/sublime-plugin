@@ -1,36 +1,29 @@
 import sublime, sublime_plugin
 from .fuse_util import *
 
-paths = []
-buildResultPanel = None
-
 def NameRegions(view):
 	return view.find_by_selector("entity.name.filename.find-in-files.warning") + view.find_by_selector("entity.name.tag.error")
 
-class BuildResultsManager:
-
-	def __init__(self):
-		self.buildResults = None
-
-	def tryHandleBuildEvent(self, event):
-		if event.type == "Fuse.BuildStarted":
-			if event.data["BuildType"] == "LoadMarkup":
-				self.buildResults = BuildResults()
-			return True
-		elif event.type == "Fuse.BuildIssueDetected":
-			self.buildResults.tryHandleBuildEvent(event)
-			return True
-		return False
+def tryHandleBuildEvent(event):
+	if event.type == "Fuse.BuildStarted":
+		if event.data["BuildType"] == "LoadMarkup":
+			BuildResults.instance = BuildResults()
+		return True
+	elif event.type == "Fuse.BuildIssueDetected":
+		BuildResults.instance.tryHandleBuildEvent(event)
+		return True
+	return False
 
 class BuildResults:
-	def __init__(self):
-		global paths	
-		paths = []
 
-		global buildResultPanel
-		buildResultPanel = sublime.active_window().create_output_panel("FuseBuildResults")
-		buildResultPanel.set_name("Fuse - Auto Reload Result")
-		buildResultPanel.set_syntax_file("Packages/Fuse/BuildResults.hidden-tmLanguage")
+	instance = None
+
+	def __init__(self):
+		self.paths = []
+
+		self.buildResultPanel = sublime.active_window().create_output_panel("FuseBuildResults")
+		self.buildResultPanel.set_name("Fuse - Auto Reload Result")
+		self.buildResultPanel.set_syntax_file("Packages/Fuse/BuildResults.hidden-tmLanguage")
 
 		self.projectPath = ""
 
@@ -60,7 +53,7 @@ class BuildResults:
 
 		output = ""
 
-		paths.append([buildResultPanel.size() + 1, filePath, int(startLine)])
+		self.paths.append([self.buildResultPanel.size() + 1, filePath, int(startLine)])
 
 		if eventType == "Error" or eventType == "FatalError":
 			output += "\n{Message} - {Path}({Line}:{Col}):E\n".format(Path = filePath, Message = message, 
@@ -72,7 +65,7 @@ class BuildResults:
 		self.append(output)
 
 	def append(self, data):
-		view = buildResultPanel
+		view = self.buildResultPanel
 		view.run_command("append", {"characters": data})
 
 		codePoints = view.find_by_selector("constant.numeric.line-number.match.find-in-files")
@@ -97,7 +90,7 @@ class FuseBuildResultsCommand(sublime_plugin.WindowCommand):
 
 class FuseGotoLocationCommand(sublime_plugin.TextCommand):
 	def getPath(self, region):
-		for path in paths:
+		for path in BuildResults.instance.paths:
 			if region.contains(path[0]):
 				return (path[1], path[2])
 
