@@ -9,6 +9,7 @@ from .go_to_definition import *
 from .build_view import *
 from .version import VERSION
 from .log import log
+from .building import BuildManager
 from . import build_results
 
 gFuse = None
@@ -23,6 +24,7 @@ class Fuse():
 	foldUXNameSpaces = False
 	completionSyntax = None
 	buildViews = BuildViewManager()
+	buildManager = BuildManager()
 	msgManager = MsgManager()
 	startFuseThread = None
 	startFuseThreadExit = False
@@ -455,37 +457,14 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 
 		log().info("Starting preview for %s", str(paths))
 		for path in paths:
-			thread = threading.Thread(target = self.do_preview, args = (type, path))
-			thread.daemon = True
-			thread.start()
+			self.do_preview(type, path)
 
 	def do_preview(self, type, path):
-		fusePath = getFusePathFromSettings()
-		try:
-			start_preview = [fusePath, "preview", "--target=" + type, "--name=Sublime_Text_3", path]
-			log().info("Opening subprocess %s", str(start_preview))
-			if os.name == "nt":
-				CREATE_NO_WINDOW = 0x08000000
-				p = subprocess.Popen(start_preview, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=CREATE_NO_WINDOW)
-			else:			
-				p = subprocess.Popen(start_preview, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		except:
-			gFuse.showFuseNotFound()
-			return
-
-		stdout, stderr = p.communicate()
-		if p.returncode != 0 and p.returncode != 10:
-			window = sublime.active_window()
-			error = window.create_output_panel("FuseError")
-			errorMsg = "Unexpected fatal error! Please report this to us.\n" + stdout.decode("utf-8") + stderr.decode("utf-8")				
-			log().error(errorMsg.replace("\n", " \\n "))
-			error.run_command("append", { "characters": errorMsg.replace("\r", "") })
-			window.run_command("show_panel", {"panel": "output.FuseError" })
+		gFuse.buildManager.preview(type, path)
 
 	def is_visible(self, type, paths = []):
 		if os.name == "nt" and type == "iOS":
 			return False
-
 		return True
 
 	def is_enabled(self, type, paths = []):
