@@ -24,7 +24,6 @@ class Fuse():
 	foldUXNameSpaces = False
 	completionSyntax = None
 	buildViews = BuildViewManager()
-	buildManager = BuildManager()
 	msgManager = MsgManager()
 	startFuseThread = None
 	startFuseThreadExit = False
@@ -36,6 +35,7 @@ class Fuse():
 		self.startFuseThread = threading.Thread(target = self.tryConnectThread)
 		self.startFuseThread.daemon = True
 		self.startFuseThread.start()
+		self.buildManager = BuildManager(self.showFuseNotFound)
 
 	def recv(self, msg):
 		try:
