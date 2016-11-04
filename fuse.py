@@ -338,50 +338,10 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 
 class FuseBuild(sublime_plugin.WindowCommand):
 	def run(self, working_dir, build_target, run, paths=[]):
-		
-		platform = str(sublime.platform())
-		log().info("Requested build: platform:'%s', build_target:'%s, working_dir:'%s'", platform, build_target, working_dir)
-
-		if platform == "windows":
-			if build_target == "iOS":
-				error_message("iOS builds are only available on OS X.")
-				return
-			elif build_target == "CMake":
-				error_message("CMake builds are only available on OS X.")
-				return
-		elif platform == "osx":
-			if build_target == "DotNet":
-				error_message(".Net builds are only available on Windows.")
-				return
-			elif build_target == "MSVC":
-				error_message("MSVC builds are only available on Windows.")
-				return
-
-		if working_dir is "":
-			working_dir = os.path.dirname(paths[0])
-
-
+		log().info("Requested build: platform:'%s', build_target:'%s', working_dir:'%s'", str(sublime.platform()), build_target, working_dir)
 		gFuse.tryConnect()
-
-		cmd = gFuse.previousBuildCommand
-
-		log().info("Previous build command was '%s'", str(cmd))
-
-		if build_target != "Default":
-			cmd = [getFusePathFromSettings(), "build", "-t=" + build_target, "--name=Sublime_Text_3", "-c=Release"]
-			if run:
-				cmd.append("-r")
-		elif cmd is None:
-			error_message("No Fuse build target set.\n\nGo to Tools/Build With... to choose one.\n\nFuture attempts to build will use that.")
-			return
-
-		gFuse.previousBuildCommand = cmd
-		
-		try:
-			log().info("Trying to build with " + str(gFuse.previousBuildCommand))
-			subprocess.Popen(gFuse.previousBuildCommand, cwd=working_dir)
-		except:
-			gFuse.showFuseNotFound()
+		working_dir = working_dir or os.path.dirname(paths[0])
+		gFuse.buildManager.build(build_target, run, working_dir, error_message)
 
 class FuseCreate(sublime_plugin.WindowCommand):
 	targetFolder = ""
@@ -453,14 +413,10 @@ class FuseOpenUrl(sublime_plugin.ApplicationCommand):
 
 class FusePreview(sublime_plugin.ApplicationCommand):
 	def run(self, type, paths = []):	
-		gFuse.tryConnect()
-
 		log().info("Starting preview for %s", str(paths))
+		gFuse.tryConnect()
 		for path in paths:
-			self.do_preview(type, path)
-
-	def do_preview(self, type, path):
-		gFuse.buildManager.preview(type, path)
+			gFuse.buildManager.preview(type, path)
 
 	def is_visible(self, type, paths = []):
 		if os.name == "nt" and type == "iOS":
