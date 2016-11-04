@@ -3,7 +3,7 @@ import threading
 import os
 import sublime
 
-from .fuse_util import getFusePathFromSettings
+from .fuse_util import getFusePathFromSettings, getSetting
 from .log import log
 
 class BuildManager:
@@ -60,7 +60,7 @@ class BuildInstance(threading.Thread):
 		threading.Thread.__init__(self)
 		self.cmd = cmd
 		self.daemon = True
-		self.output = OutputView(title)
+		self.output = OutputView(title) if getSetting("fuse_show_build_results") else NullOutputView()
 		self.fuseNotFoundHandler = fuseNotFoundHandler
 		self.process = None
 		self.working_dir = working_dir
@@ -104,3 +104,10 @@ class OutputView:
 			window.run_command("close_by_index", { "group": groupIndex, "index": viewIndex })
 		except:
 			pass #Failing to close a tab is not critical
+
+class NullOutputView:
+	def append(self, line):
+		pass
+
+	def close(self):
+		pass
