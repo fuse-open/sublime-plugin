@@ -26,11 +26,11 @@
         },
         { 
         	"name": ".NET",
-            "build_target":"DotNetExe"
+            "build_target":"DotNet"
         },
         { 
         	"name": ".NET build & run",
-            "build_target":"DotNetExe",
+            "build_target":"DotNet",
             "run":true
         },
         { 
@@ -43,12 +43,12 @@
             "run":true
         },
         { 
-        	"name": "C++ (MSVC12)",
-            "build_target":"MSVC12"
+            "name": "C++ (MSVC)",
+            "build_target":"MSVC"
         },
         { 
-        	"name": "C++ (MSVC12) build & run",
-            "build_target":"MSVC12",
+            "name": "C++ (MSVC) build & run",
+            "build_target":"MSVC",
             "run":true
         },
         { 

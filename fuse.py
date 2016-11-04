@@ -350,11 +350,11 @@ class FuseBuild(sublime_plugin.WindowCommand):
 				error_message("CMake builds are only available on OS X.")
 				return
 		elif platform == "osx":
-			if build_target == "DotNetExe":
+			if build_target == "DotNet":
 				error_message(".Net builds are only available on Windows.")
 				return
-			elif build_target == "MSVC12":
-				error_message("MSVC12 builds are only available on Windows.")
+			elif build_target == "MSVC":
+				error_message("MSVC builds are only available on Windows.")
 				return
 
 		if working_dir is "":
