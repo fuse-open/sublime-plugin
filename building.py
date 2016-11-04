@@ -75,7 +75,7 @@ class BuildInstance(threading.Thread):
 			self.output.close()
 			return
 		for line in iter(self.process.stdout.readline,b''):
-			self.output.append(line.decode("utf-8"))
+			self.output.append(line.decode("utf-8").replace('\r',''))
 		self.process.wait()
 
 	def stop(self):
