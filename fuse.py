@@ -6,9 +6,10 @@ from .msg_parser import *
 from .fuse_parseutils import *
 from .fuse_util import *
 from .go_to_definition import *
-from .build_view import *
 from .version import VERSION
 from .log import log
+from .building import BuildManager
+from . import build_results
 
 gFuse = None
 
@@ -21,7 +22,6 @@ class Fuse():
 	doCompleteAttribs = False
 	foldUXNameSpaces = False
 	completionSyntax = None
-	buildViews = BuildViewManager()
 	msgManager = MsgManager()
 	startFuseThread = None
 	startFuseThreadExit = False
@@ -33,6 +33,7 @@ class Fuse():
 		self.startFuseThread = threading.Thread(target = self.tryConnectThread)
 		self.startFuseThread.daemon = True
 		self.startFuseThread.start()
+		self.buildManager = BuildManager(self.showFuseNotFound)
 
 	def recv(self, msg):
 		try:
@@ -42,7 +43,7 @@ class Fuse():
 				return
 
 			if parsedRes.messageType == "Event":
-				self.buildViews.tryHandleBuildEvent(parsedRes)
+				build_results.tryHandleBuildEvent(parsedRes)
 		except:
 			log().error(traceback.format_exc())
 
@@ -334,50 +335,10 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 
 class FuseBuild(sublime_plugin.WindowCommand):
 	def run(self, working_dir, build_target, run, paths=[]):
-		
-		platform = str(sublime.platform())
-		log().info("Requested build: platform:'%s', build_target:'%s, working_dir:'%s'", platform, build_target, working_dir)
-
-		if platform == "windows":
-			if build_target == "iOS":
-				error_message("iOS builds are only available on OS X.")
-				return
-			elif build_target == "CMake":
-				error_message("CMake builds are only available on OS X.")
-				return
-		elif platform == "osx":
-			if build_target == "DotNetExe":
-				error_message(".Net builds are only available on Windows.")
-				return
-			elif build_target == "MSVC12":
-				error_message("MSVC12 builds are only available on Windows.")
-				return
-
-		if working_dir is "":
-			working_dir = os.path.dirname(paths[0])
-
-
+		log().info("Requested build: platform:'%s', build_target:'%s', working_dir:'%s'", str(sublime.platform()), build_target, working_dir)
 		gFuse.tryConnect()
-
-		cmd = gFuse.previousBuildCommand
-
-		log().info("Previous build command was '%s'", str(cmd))
-
-		if build_target != "Default":
-			cmd = [getFusePathFromSettings(), "build", "-t=" + build_target, "--name=Sublime_Text_3", "-c=Release"]
-			if run:
-				cmd.append("-r")
-		elif cmd is None:
-			error_message("No Fuse build target set.\n\nGo to Tools/Build With... to choose one.\n\nFuture attempts to build will use that.")
-			return
-
-		gFuse.previousBuildCommand = cmd
-		
-		try:
-			log().info("Trying to build with " + str(gFuse.previousBuildCommand))
-			subprocess.Popen(gFuse.previousBuildCommand, cwd=working_dir)
-		except:
-			gFuse.showFuseNotFound()
+		working_dir = working_dir or os.path.dirname(paths[0])
+		gFuse.buildManager.build(build_target, run, working_dir, error_message)
 
 class FuseCreate(sublime_plugin.WindowCommand):
 	targetFolder = ""
@@ -449,41 +410,14 @@ class FuseOpenUrl(sublime_plugin.ApplicationCommand):
 
 class FusePreview(sublime_plugin.ApplicationCommand):
 	def run(self, type, paths = []):	
-		gFuse.tryConnect()
-
 		log().info("Starting preview for %s", str(paths))
+		gFuse.tryConnect()
 		for path in paths:
-			thread = threading.Thread(target = self.do_preview, args = (type, path))
-			thread.daemon = True
-			thread.start()
-
-	def do_preview(self, type, path):
-		fusePath = getFusePathFromSettings()
-		try:
-			start_preview = [fusePath, "preview", "--target=" + type, "--name=Sublime_Text_3", path]
-			log().info("Opening subprocess %s", str(start_preview))
-			if os.name == "nt":
-				CREATE_NO_WINDOW = 0x08000000
-				p = subprocess.Popen(start_preview, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=CREATE_NO_WINDOW)
-			else:			
-				p = subprocess.Popen(start_preview, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		except:
-			gFuse.showFuseNotFound()
-			return
-
-		stdout, stderr = p.communicate()
-		if p.returncode != 0 and p.returncode != 10:
-			window = sublime.active_window()
-			error = window.create_output_panel("FuseError")
-			errorMsg = "Unexpected fatal error! Please report this to us.\n" + stdout.decode("utf-8") + stderr.decode("utf-8")				
-			log().error(errorMsg.replace("\n", " \\n "))
-			error.run_command("append", { "characters": errorMsg.replace("\r", "") })
-			window.run_command("show_panel", {"panel": "output.FuseError" })
+			gFuse.buildManager.preview(type, path)
 
 	def is_visible(self, type, paths = []):
 		if os.name == "nt" and type == "iOS":
 			return False
-
 		return True
 
 	def is_enabled(self, type, paths = []):
