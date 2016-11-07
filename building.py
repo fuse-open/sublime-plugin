@@ -33,7 +33,6 @@ class BuildManager:
 		self._start(target, cmd, name, working_dir)
 
 	def _tryCreateBuildCommand(self, target, run):
-		log().info(target)
 		if target != "Default":
 			return [getFusePathFromSettings(), "build", "-t=" + target, "-c=Release"] + (["-r"] if run else [])
 		if self.previousBuildCommand:
