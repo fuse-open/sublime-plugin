@@ -4,6 +4,13 @@ class Message:
 	def __init__(self, messageType):
 		self.messageType = messageType
 
+class Request(Message):
+	def __init__(self, name, id, arguments):
+		super(Request, self).__init__("Request")
+		self.name = name
+		self.id = id
+		self.arguments = arguments
+
 class Response(Message):
 	def __init__(self, type, id, status, errors, data):
 		super(Response, self).__init__("Response")
@@ -79,6 +86,16 @@ class MsgManager:
 				"Data": data
 			}))
 
+	def sendResponse(self, interop, id, status, result={}, errors=[]):
+		interop.send("Response",
+			json.dumps(
+			{
+				"Id": id,
+				"Status": status,
+				"Result": result,
+				"Errors": errors
+			}))
+
 	def callCallback(self, curId, response, callback):
 		self.requestsPending.pop(curId)
 		callback(response)
@@ -99,7 +116,9 @@ class MsgManager:
 					self.requestsPending[resId]["callback"](response)
 		elif messageType == "Event":
 			return Event(messageParsed["Name"], messageParsed["Data"])
+		elif messageType == "Request":
+			return Request(messageParsed["Name"], messageParsed["Id"], messageParsed["Arguments"])
 		else:
-			print("Fuse: Message type unknown.")
+			logging.getLogger(__name__).info("Fuse: Message type '" + messageType + "' unknown.")
 
 		return None

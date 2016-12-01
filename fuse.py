@@ -57,6 +57,10 @@ class Fuse():
 
 			if parsedRes.messageType == "Event":
 				build_results.tryHandleBuildEvent(parsedRes)
+			elif parsedRes.messageType == "Request":
+				log().info("Got Request" + parsedRes.name + str(parsedRes.id) + str(parsedRes.arguments))
+				self.msgManager.sendResponse(self.interop, parsedRes.id, "Success")
+
 		except:
 			log().error(traceback.format_exc())
 
