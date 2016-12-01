@@ -29,11 +29,24 @@ class Fuse():
 	previousBuildCommand = None
 
 	def __init__(self):
-		self.interop = Interop(self.recv, self.sendHello, self.tryConnect)
+		self.interop = Interop(self.recv, self.onConnected, self.tryConnect)
 		self.startFuseThread = threading.Thread(target = self.tryConnectThread)
 		self.startFuseThread.daemon = True
 		self.startFuseThread.start()
 		self.buildManager = BuildManager(self.showFuseNotFound)
+
+	#TODO make module
+	def publishFocusEditorService(self):
+		self.msgManager.sendRequestAsync(
+			self.interop,
+			"PublishService",
+			{
+				"RequestNames" : ["FocusEditor"]
+			},
+			self.focusEditorServiceSuccess)
+
+	def focusEditorServiceSuccess(self, _):
+		log().info("Successfully registered FocusEditor service")
 
 	def recv(self, msg):
 		try:
@@ -179,6 +192,10 @@ class Fuse():
 				"CaretPosition": getRowCol(view, caret)
 			},
 			callback)
+
+	def onConnected(self):
+		self.sendHello()
+		self.publishFocusEditorService()
 
 	def sendHello(self):
 		log().info("Sending hello request")
