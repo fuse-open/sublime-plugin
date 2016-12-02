@@ -26,10 +26,16 @@ class FocusEditorService:
 		if request.name != "FocusEditor":
 			return false
 		if self._projectIsOpen(request.arguments["Project"]):
+			fileName = request.arguments["File"]
+			line = request.arguments["Line"]
+			column = request.arguments["Column"]
+			if not os.path.isfile(fileName):
+				msg = "File '{}' does not exist".format(fileName)
+				log().info("FocusEditorService: " + msg)
+				self.msgManager.sendResponse(self.interop, request.id, "Error", {}, [{"Code":2, "Message": msg}])
+				return True
 			window = sublime.active_window()
-			view = window.open_file(
-				"{}:{}:{}".format(*[request.arguments[field] for field in ("File", "Line", "Column")]),
-				sublime.ENCODED_POSITION)
+			view = window.open_file( "{}:{}:{}".format(fileName, line, column), sublime.ENCODED_POSITION)
 			if sublime.platform() == "osx":
 				self._focusWindowOSX()
 				self.msgManager.sendResponse(self.interop, request.id, "Success")
