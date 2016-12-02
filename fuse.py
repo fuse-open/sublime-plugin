@@ -58,11 +58,44 @@ class Fuse():
 			if parsedRes.messageType == "Event":
 				build_results.tryHandleBuildEvent(parsedRes)
 			elif parsedRes.messageType == "Request":
-				log().info("Got Request" + parsedRes.name + str(parsedRes.id) + str(parsedRes.arguments))
-				self.msgManager.sendResponse(self.interop, parsedRes.id, "Success")
+				self.handleRequest(parsedRes)
 
 		except:
 			log().error(traceback.format_exc())
+
+	def handleRequest(self, request):
+		if request.name == "FocusEditor":
+			if self.tryHandleFocusRequest(request):
+				return
+		self.msgManager.sendResponse(self.interop, request.id, "Unhandled")
+
+	def tryHandleFocusRequest(self, request):
+		if self.projectIsOpen(request.arguments["Project"]):
+			window = sublime.active_window()
+			view = window.open_file(
+				"{}:{}:{}".format(*[request.arguments[field] for field in ("File", "Line", "Column")]),
+				sublime.ENCODED_POSITION)
+			window.focus_view(view)
+			if sublime.platform() == "osx":
+				self.focusWindowOSX()
+			self.msgManager.sendResponse(self.interop, request.id, "Success")
+			return True
+		return False
+
+	def projectIsOpen(self, project):
+		if not os.path.isfile(project):
+			return False
+		for folder in sublime.active_window().folders():
+			if project.startswith(folder):
+				return True
+		return False
+
+	def focusWindowOSX(self):
+		cmd = """
+			tell application "System Events"
+				activate application "Sublime Text"
+			end tell"""
+		subprocess.Popen(['/usr/bin/osascript', "-e", cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 	def showFuseNotFound(self):
 		error_message("Fuse could not be found.\n\nAttempted to run from: '"+getFusePathFromSettings()+"'\n\nPlease verify your Fuse installation." + self.rebootMessage())
