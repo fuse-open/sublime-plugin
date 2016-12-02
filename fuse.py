@@ -75,11 +75,13 @@ class Fuse():
 			view = window.open_file(
 				"{}:{}:{}".format(*[request.arguments[field] for field in ("File", "Line", "Column")]),
 				sublime.ENCODED_POSITION)
-			window.focus_view(view)
 			if sublime.platform() == "osx":
 				self.focusWindowOSX()
-			self.msgManager.sendResponse(self.interop, request.id, "Success")
-			return True
+				self.msgManager.sendResponse(self.interop, request.id, "Success")
+				return True
+			elif sublime.platform() == "windows":
+				self.msgManager.sendResponse(self.interop, request.id, "Success", {"FocusHwnd":window.hwnd()})
+				return True
 		return False
 
 	def projectIsOpen(self, project):
