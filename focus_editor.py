@@ -64,4 +64,12 @@ class FocusEditorService:
 			tell application "System Events"
 				activate application "Sublime Text"
 			end tell"""
-		subprocess.Popen(['/usr/bin/osascript', "-e", cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		proc = subprocess.Popen(['/usr/bin/osascript', "-e", cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		stdout = stderr = ""
+		try:
+			stdoout, stderr = proc.communicate(timeout=2)
+		except TimeoutExpired:
+			proc.kill()
+			stdoout, stderr = proc.communicate()
+		if proc.returncode != 0:
+			log().info("Failed to focus window via osaxcript: '" + str(stdout) + "', '" + str(stderr) + "'")
