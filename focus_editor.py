@@ -30,20 +30,26 @@ class FocusEditorService:
 			line = request.arguments["Line"]
 			column = request.arguments["Column"]
 			if not os.path.isfile(fileName):
-				msg = "File '{}' does not exist".format(fileName)
-				log().info("FocusEditorService: " + msg)
-				self.msgManager.sendResponse(self.interop, request.id, "Error", {}, [{"Code":2, "Message": msg}])
+				self.returnFailure("File '{}' does not exist".format(fileName), request.id)
 				return True
-			window = sublime.active_window()
-			view = window.open_file( "{}:{}:{}".format(fileName, line, column), sublime.ENCODED_POSITION)
-			if sublime.platform() == "osx":
-				self._focusWindowOSX()
-				self.msgManager.sendResponse(self.interop, request.id, "Success")
-				return True
-			elif sublime.platform() == "windows":
-				self.msgManager.sendResponse(self.interop, request.id, "Success", {"FocusHwnd":window.hwnd()})
+			try:
+				window = sublime.active_window()
+				view = window.open_file( "{}:{}:{}".format(fileName, line, column), sublime.ENCODED_POSITION)
+				if sublime.platform() == "osx":
+					self._focusWindowOSX()
+					self.msgManager.sendResponse(self.interop, request.id, "Success")
+					return True
+				elif sublime.platform() == "windows":
+					self.msgManager.sendResponse(self.interop, request.id, "Success", {"FocusHwnd":window.hwnd()})
+					return True
+			except Exception as e:
+				self.returnFailure(str(e), request.id)
 				return True
 		return False
+
+	def returnFailure(self, msg, id):
+		log().info("FocusEditorService: " + msg)
+		self.msgManager.sendResponse(self.interop, id, "Error", {}, [{"Code":2, "Message": msg}])
 
 	def _projectIsOpen(self, project):
 		if not os.path.isfile(project):
