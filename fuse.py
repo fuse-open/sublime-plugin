@@ -26,11 +26,10 @@ class Fuse():
 	msgManager = MsgManager()
 	startFuseThread = None
 	startFuseThreadExit = False
-	startFuseEvent = threading.Event()
 	previousBuildCommand = None
 
 	def __init__(self):
-		self.interop = Interop(self.recv, self.onConnected, self.tryConnect)
+		self.interop = Interop(self.recv, self.onConnected)
 		self.startFuseThread = threading.Thread(target = self.tryConnectThread)
 		self.startFuseThread.daemon = True
 		self.startFuseThread.start()
@@ -206,49 +205,43 @@ class Fuse():
 			"EventFilter": ""
 		})
 
-	fuseStartedCallback = None
-
-	def tryConnect(self, callback = None):
-		self.fuseStartedCallback = callback
-		self.startFuseEvent.set()
-
 	def tryConnectThread(self):
+		self.previousConnectionFailed = False
 		while not self.startFuseThreadExit:
 			try:				
-				self.startFuseEvent.wait()
-				self.startFuseEvent.clear()
-					
-				if getSetting("fuse_enabled") == True and not self.interop.isConnected():
-
-					path = getFusePathFromSettings()
-
-					try:		
-						start_daemon = [path, "daemon", "-b"]
-						log().info("Calling subprocess '%s'", str(start_daemon))
-						if os.name == "nt":
-							CREATE_NO_WINDOW = 0x08000000			
-							subprocess.check_output(start_daemon, creationflags=CREATE_NO_WINDOW, stderr=subprocess.STDOUT)
-						else:
-							subprocess.check_output(start_daemon, stderr=subprocess.STDOUT)
-					except subprocess.CalledProcessError as e:
-						log().error("Fuse returned exit status " + str(e.returncode) + ". Output was '" + e.output.decode("utf-8") + "'.")
-						error_message("Error starting Fuse:\n\n" + e.output.decode("utf-8"))
-						return
-					except:
-						log().error("Fuse not found: " + traceback.format_exc())
-						gFuse.showFuseNotFound()
-						return
-
-					self.interop.connect()
-					if self.fuseStartedCallback is not None:
-						self.fuseStartedCallback()				
+				self.previousConnectionFailed = not self.ensureConnected(self.previousConnectionFailed)
 			except:
 				log().error(traceback.format_exc())
+				self.previousConnectionFailed = True
+			time.sleep(1)
+
+	def ensureConnected(self, quiet=False):
+		if getSetting("fuse_enabled") == True and not self.interop.isConnected():
+			self.interop.connect(quiet)
+
+	def ensureDaemonIsRunning(self):
+		if not self.interop.isConnected():
+			try:
+				path = getFusePathFromSettings()
+				start_daemon = [path, "daemon", "-b"]
+				log().info("Calling subprocess '%s'", str(start_daemon))
+				if os.name == "nt":
+					CREATE_NO_WINDOW = 0x08000000
+					subprocess.check_output(start_daemon, creationflags=CREATE_NO_WINDOW, stderr=subprocess.STDOUT)
+				else:
+					subprocess.check_output(start_daemon, stderr=subprocess.STDOUT)
+			except subprocess.CalledProcessError as e:
+				log().error("Fuse returned exit status " + str(e.returncode) + ". Output was '" + e.output.decode("utf-8") + "'.")
+				error_message("Error starting Fuse:\n\n" + e.output.decode("utf-8"))
+				return
+			except:
+				log().error("Fuse not found: " + traceback.format_exc())
+				gFuse.showFuseNotFound()
+				return
 
 	def cleanup(self):
 		self.interop.disconnect()
 		self.startFuseThreadExit = True
-		self.startFuseEvent.set()
 
 def plugin_loaded():
 	log().info("Loading plugin")
@@ -311,7 +304,7 @@ class FuseEventListener(sublime_plugin.EventListener):
 		syntaxName = getExtension(view.settings().get("syntax"))
 		if not isSupportedSyntax(syntaxName):
 			return
-		gFuse.tryConnect();
+		gFuse.ensureDaemonIsRunning();
 
 	def on_query_completions(self, view, prefix, locations):
 		return gFuse.onQueryCompletion(view)
@@ -353,7 +346,7 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 class FuseBuild(sublime_plugin.WindowCommand):
 	def run(self, working_dir, build_target, run, paths=[]):
 		log().info("Requested build: platform:'%s', build_target:'%s', working_dir:'%s'", str(sublime.platform()), build_target, working_dir)
-		gFuse.tryConnect()
+		gFuse.ensureConnected()
 		working_dir = working_dir or os.path.dirname(paths[0])
 		gFuse.buildManager.build(build_target, run, working_dir, error_message)
 
@@ -428,7 +421,7 @@ class FuseOpenUrl(sublime_plugin.ApplicationCommand):
 class FusePreview(sublime_plugin.ApplicationCommand):
 	def run(self, type, paths = []):	
 		log().info("Starting preview for %s", str(paths))
-		gFuse.tryConnect()
+		gFuse.ensureConnected()
 		for path in paths:
 			gFuse.buildManager.preview(type, path)
 
