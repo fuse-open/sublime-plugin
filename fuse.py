@@ -473,6 +473,36 @@ class FuseToggleSelection(sublime_plugin.WindowCommand):
 	def is_checked(self):
 		return getSetting("fuse_selection_enabled")
 
+class FuseFocusDesigner(sublime_plugin.TextCommand):
+	def run(self, type):
+		fileName = self.view.file_name()
+		caret = getRowCol(self.view, self.view.sel()[0].a)
+		line = caret['Line']
+		column = caret['Character']
+
+		log().info("Focusing designer for '%s:%s:%s'", fileName, str(line), str(column))
+
+		response = gFuse.msgManager.sendRequest(
+			gFuse.interop,
+			"FocusDesigner",
+			{
+				"File": fileName,
+				"Line": line,
+				"Column": column
+			}
+		)
+
+		if response == None:
+			log().info("No response for 'focus designer'")
+			return
+
+		if response.status != "Success":
+			log().error("Error in 'focus designer': '%s'", response.status)
+			return
+
+	def is_enabled(self):
+		return os.path.splitext(self.view.file_name())[1].lower() == ".ux"
+
 def error_message(message):
 	log().error(message.replace("\n", "\\n"))
 	sublime.error_message(message)
