@@ -6,5 +6,6 @@
 	"fuse_ux_attrib_completion": true, /* When completing an attribute on a UX node, this appends ="" and moves the caret. */
 	"fuse_ux_attrib_folding": true, /* Enables folding of namespaced attributes into single suggestions until the : has been typed past */
 	"fuse_show_build_results": true, /* Enables showing of build results */
-	"fuse_selection_enabled": false /* Enables or disables selection in UX */
+	"fuse_selection_enabled": false, /* Enables or disables selection in UX */
+	"fuse_auto_save_enabled": true /* When enabled, open files are saved when running "fuse preview", "fuse build" or "focus designer" commands */
 }
