@@ -119,6 +119,6 @@ class MsgManager:
 		elif messageType == "Request":
 			return Request(messageParsed["Name"], messageParsed["Id"], messageParsed["Arguments"])
 		else:
-			logging.getLogger(__name__).info("Fuse: Message type '" + messageType + "' unknown.")
+			logging.getLogger(__name__).warning("Fuse: Message type '" + messageType + "' unknown.")
 
 		return None
