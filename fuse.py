@@ -347,7 +347,7 @@ class FuseBuild(sublime_plugin.WindowCommand):
 	def run(self, working_dir, build_target, run, paths=[]):
 		log().info("Requested build: platform:'%s', build_target:'%s', working_dir:'%s'", str(sublime.platform()), build_target, working_dir)
 		gFuse.ensureConnected()
-		save_open_views()
+		save_current_view()
 		working_dir = working_dir or os.path.dirname(paths[0])
 		gFuse.buildManager.build(build_target, run, working_dir, error_message)
 
@@ -423,7 +423,7 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 	def run(self, type, paths = []):	
 		log().info("Starting preview for %s", str(paths))
 		gFuse.ensureConnected()
-		save_open_views()
+		save_current_view()
 		for path in paths:
 			gFuse.buildManager.preview(type, path)
 
@@ -448,11 +448,10 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 def contains_unoproj(path):
 	return os.path.isdir(path) and len([f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and f.lower().endswith(".unoproj")])
 
-def save_open_views():
-	if getSetting("fuse_auto_save_enabled"):
-		for view in sublime.active_window().views():
-			if (view.is_dirty()):
-				view.run_command("save")
+def save_current_view():
+	view = sublime.active_window().active_view()
+	if (view.is_dirty()):
+		view.run_command("save")
 
 class FusePreviewCurrent(sublime_plugin.TextCommand):
 	def run(self, edit, type = "Local"):
@@ -483,7 +482,7 @@ class FuseToggleSelection(sublime_plugin.WindowCommand):
 
 class FuseFocusDesigner(sublime_plugin.TextCommand):
 	def run(self, type):
-		save_open_views()
+		save_current_view()
 		fileName = self.view.file_name()
 		caret = getRowCol(self.view, self.view.sel()[0].a)
 		line = caret['Line']
