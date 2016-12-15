@@ -5,10 +5,12 @@ from .interop import *
 from .msg_parser import *
 from .fuse_parseutils import *
 from .fuse_util import *
+from .settings import *
 from .go_to_definition import *
 from .version import VERSION
 from .log import log
 from .building import BuildManager
+from .focus_editor import FocusEditorService
 from . import build_results
 
 gFuse = None
@@ -25,15 +27,16 @@ class Fuse():
 	msgManager = MsgManager()
 	startFuseThread = None
 	startFuseThreadExit = False
-	startFuseEvent = threading.Event()
 	previousBuildCommand = None
 
 	def __init__(self):
-		self.interop = Interop(self.recv, self.sendHello, self.tryConnect)
+		self.interop = Interop(self.recv, self.onConnected)
 		self.startFuseThread = threading.Thread(target = self.tryConnectThread)
 		self.startFuseThread.daemon = True
 		self.startFuseThread.start()
 		self.buildManager = BuildManager(self.showFuseNotFound)
+		self.services = []
+		self.services.append(FocusEditorService(self.msgManager, self.interop))
 
 	def recv(self, msg):
 		try:
@@ -44,8 +47,17 @@ class Fuse():
 
 			if parsedRes.messageType == "Event":
 				build_results.tryHandleBuildEvent(parsedRes)
+			elif parsedRes.messageType == "Request":
+				self.handleRequest(parsedRes)
+
 		except:
 			log().error(traceback.format_exc())
+
+	def handleRequest(self, request):
+		for service in self.services:
+			if service.tryHandle(request):
+				return
+		self.msgManager.sendResponse(self.interop, request.id, "Unhandled")
 
 	def showFuseNotFound(self):
 		error_message("Fuse could not be found.\n\nAttempted to run from: '"+getFusePathFromSettings()+"'\n\nPATH is: '" + os.environ['PATH'] + "'\n\nPlease verify your Fuse installation." + self.rebootMessage())
@@ -112,7 +124,7 @@ class Fuse():
 		if getSetting("fuse_completion") == False:
 		 	return
 
-		syntaxName = getExtension(view.settings().get("syntax"))
+		syntaxName = getSyntax(view)
 		if not isSupportedSyntax(syntaxName):
 		 	return
 
@@ -180,6 +192,11 @@ class Fuse():
 			},
 			callback)
 
+	def onConnected(self):
+		self.sendHello()
+		for service in self.services:
+			service.publish()
+
 	def sendHello(self):
 		log().info("Sending hello request")
 		self.msgManager.sendRequest(self.interop, 
@@ -189,49 +206,43 @@ class Fuse():
 			"EventFilter": ""
 		})
 
-	fuseStartedCallback = None
-
-	def tryConnect(self, callback = None):
-		self.fuseStartedCallback = callback
-		self.startFuseEvent.set()
-
 	def tryConnectThread(self):
+		self.previousConnectionFailed = False
 		while not self.startFuseThreadExit:
 			try:				
-				self.startFuseEvent.wait()
-				self.startFuseEvent.clear()
-					
-				if getSetting("fuse_enabled") == True and not self.interop.isConnected():
-
-					path = getFusePathFromSettings()
-
-					try:		
-						start_daemon = [path, "daemon", "-b"]
-						log().info("Calling subprocess '%s'", str(start_daemon))
-						if os.name == "nt":
-							CREATE_NO_WINDOW = 0x08000000			
-							subprocess.check_output(start_daemon, creationflags=CREATE_NO_WINDOW, stderr=subprocess.STDOUT)
-						else:
-							subprocess.check_output(start_daemon, stderr=subprocess.STDOUT)
-					except subprocess.CalledProcessError as e:
-						log().error("Fuse returned exit status " + str(e.returncode) + ". Output was '" + e.output.decode("utf-8") + "'.")
-						error_message("Error starting Fuse:\n\n" + e.output.decode("utf-8"))
-						return
-					except:
-						log().error("Fuse not found: " + traceback.format_exc())
-						gFuse.showFuseNotFound()
-						return
-
-					self.interop.connect()
-					if self.fuseStartedCallback is not None:
-						self.fuseStartedCallback()				
+				self.previousConnectionFailed = not self.ensureConnected(self.previousConnectionFailed)
 			except:
 				log().error(traceback.format_exc())
+				self.previousConnectionFailed = True
+			time.sleep(1)
+
+	def ensureConnected(self, quiet=False):
+		if getSetting("fuse_enabled") == True and not self.interop.isConnected():
+			self.interop.connect(quiet)
+
+	def ensureDaemonIsRunning(self):
+		if not self.interop.isConnected():
+			try:
+				path = getFusePathFromSettings()
+				start_daemon = [path, "daemon", "-b"]
+				log().info("Calling subprocess '%s'", str(start_daemon))
+				if os.name == "nt":
+					CREATE_NO_WINDOW = 0x08000000
+					subprocess.check_output(start_daemon, creationflags=CREATE_NO_WINDOW, stderr=subprocess.STDOUT)
+				else:
+					subprocess.check_output(start_daemon, stderr=subprocess.STDOUT)
+			except subprocess.CalledProcessError as e:
+				log().error("Fuse returned exit status " + str(e.returncode) + ". Output was '" + e.output.decode("utf-8") + "'.")
+				error_message("Error starting Fuse:\n\n" + e.output.decode("utf-8"))
+				return
+			except:
+				log().error("Fuse not found: " + traceback.format_exc())
+				gFuse.showFuseNotFound()
+				return
 
 	def cleanup(self):
 		self.interop.disconnect()
 		self.startFuseThreadExit = True
-		self.startFuseEvent.set()
 
 def plugin_loaded():
 	log().info("Loading plugin")
@@ -270,7 +281,7 @@ class FuseEventListener(sublime_plugin.EventListener):
 	lastCaret = -1
 
 	def on_selection_modified_async(self, view):
-		syntaxName = getExtension(view.settings().get("syntax"))
+		syntaxName = getSyntax(view)
 		if not syntaxName == "UX" or not getSetting("fuse_selection_enabled"):
 		 	return
 
@@ -291,10 +302,10 @@ class FuseEventListener(sublime_plugin.EventListener):
 		})
 
 	def on_activated_async(self, view):
-		syntaxName = getExtension(view.settings().get("syntax"))
+		syntaxName = getSyntax(view)
 		if not isSupportedSyntax(syntaxName):
 			return
-		gFuse.tryConnect();
+		gFuse.ensureDaemonIsRunning();
 
 	def on_query_completions(self, view, prefix, locations):
 		return gFuse.onQueryCompletion(view)
@@ -302,7 +313,7 @@ class FuseEventListener(sublime_plugin.EventListener):
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
 		view = self.view
-		syntaxName = getExtension(view.settings().get("syntax"))		
+		syntaxName = getSyntax(view)
 		log().info("Requested goto definition for syntax type '%s'", syntaxName)
 		if not isSupportedSyntax(syntaxName) or len(view.sel()) == 0:
 			return
@@ -336,7 +347,8 @@ class GotoDefinitionCommand(sublime_plugin.TextCommand):
 class FuseBuild(sublime_plugin.WindowCommand):
 	def run(self, working_dir, build_target, run, paths=[]):
 		log().info("Requested build: platform:'%s', build_target:'%s', working_dir:'%s'", str(sublime.platform()), build_target, working_dir)
-		gFuse.tryConnect()
+		gFuse.ensureConnected()
+		save_current_view()
 		working_dir = working_dir or os.path.dirname(paths[0])
 		gFuse.buildManager.build(build_target, run, working_dir, error_message)
 
@@ -411,7 +423,8 @@ class FuseOpenUrl(sublime_plugin.ApplicationCommand):
 class FusePreview(sublime_plugin.ApplicationCommand):
 	def run(self, type, paths = []):	
 		log().info("Starting preview for %s", str(paths))
-		gFuse.tryConnect()
+		gFuse.ensureConnected()
+		save_current_view()
 		for path in paths:
 			gFuse.buildManager.preview(type, path)
 
@@ -435,6 +448,11 @@ class FusePreview(sublime_plugin.ApplicationCommand):
 
 def contains_unoproj(path):
 	return os.path.isdir(path) and len([f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and f.lower().endswith(".unoproj")])
+
+def save_current_view():
+	view = sublime.active_window().active_view()
+	if (view.is_dirty()):
+		view.run_command("save")
 
 class FusePreviewCurrent(sublime_plugin.TextCommand):
 	def run(self, edit, type = "Local"):
@@ -462,6 +480,37 @@ class FuseToggleSelection(sublime_plugin.WindowCommand):
 
 	def is_checked(self):
 		return getSetting("fuse_selection_enabled")
+
+class FuseFocusDesigner(sublime_plugin.TextCommand):
+	def run(self, type):
+		save_current_view()
+		fileName = self.view.file_name()
+		caret = getRowCol(self.view, self.view.sel()[0].a)
+		line = caret['Line']
+		column = caret['Character']
+
+		log().info("Focusing designer for '%s:%s:%s'", fileName, str(line), str(column))
+
+		response = gFuse.msgManager.sendRequest(
+			gFuse.interop,
+			"FocusDesigner",
+			{
+				"File": fileName,
+				"Line": line,
+				"Column": column
+			}
+		)
+
+		if response == None:
+			log().info("No response for 'focus designer'")
+			return
+
+		if response.status != "Success":
+			log().error("Error in 'focus designer': '%s'", response.status)
+			return
+
+	def is_enabled(self):
+		return getExtension(self.view.file_name()).lower() == "ux"
 
 def error_message(message):
 	log().error(message.replace("\n", "\\n"))

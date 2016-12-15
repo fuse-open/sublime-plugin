@@ -3,7 +3,7 @@ import threading
 import os
 import sublime
 
-from .fuse_util import getFusePathFromSettings, getSetting
+from .settings import getFusePathFromSettings, getSetting
 from .log import log
 
 class BuildManager:

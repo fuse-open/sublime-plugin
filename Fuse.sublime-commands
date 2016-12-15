@@ -52,6 +52,10 @@
     		"type" : "iOS"
     	}
     },
+	{
+		"caption": "Fuse: Focus designer",
+		"command": "fuse_focus_designer"
+	},
     { 
         "caption": "Fuse: Sublime user guide",
         "command": "open_file",

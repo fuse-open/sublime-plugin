@@ -1,1 +1,3 @@
-[]
+[
+	{ "keys": ["control+alt+l"], "command": "fuse_focus_designer" }
+]

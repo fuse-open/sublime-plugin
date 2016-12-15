@@ -2,14 +2,13 @@ import socket, traceback, threading, queue
 from .log import log
 
 class Interop:
-	def __init__(self, on_recv, on_connect, on_not_connected):
+	def __init__(self, on_recv, on_connect):
 		self.readWorker = None
 		self.readWorkerStopEvent = None
 		self.readBuffer = bytes()
 		self.socket = None
 		self.on_connect = on_connect
 		self.on_recv = on_recv
-		self.on_not_connected = on_not_connected
 		self.sendWorker = None
 		self.sendQueue = queue.Queue()		
 		self.sendDataEvent = None
@@ -19,27 +18,30 @@ class Interop:
 		isConnected = self.socket != None
 		return isConnected
 
-	def connect(self):		
+	def connect(self, quiet=False):
 		try:			
 			host = "localhost"
 			port = 12122
-			log().info("Connecting to %s:%d" % (host, port))
+			if not quiet:
+				log().info("Connecting to %s:%d" % (host, port))
 			tmpSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			tmpSocket.connect((host, port))
 		except OSError:
-			log().info("Failed to connect to %s:%d" % (host, port))
+			if not quiet:
+				log().info("Failed to connect to %s:%d" % (host, port))
 			tmpSocket.close()
-			return
+			return False
 		
 		self.socket = tmpSocket
 		self.startPullMessages()
 		self.startSendMessages()
 		self.on_connect()
 		log().info("Connected to Fuse")
+		return True
 
 	def send(self, type, msg):
 		if not self.isConnected():
-			self.on_not_connected()
+			connect()
 			if not self.isConnected():
 				return
 
