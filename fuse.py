@@ -123,7 +123,7 @@ class Fuse():
 		if getSetting("fuse_completion") == False:
 		 	return
 
-		syntaxName = getExtension(view.settings().get("syntax"))
+		syntaxName = getSyntax(view)
 		if not isSupportedSyntax(syntaxName):
 		 	return
 
@@ -280,7 +280,7 @@ class FuseEventListener(sublime_plugin.EventListener):
 	lastCaret = -1
 
 	def on_selection_modified_async(self, view):
-		syntaxName = getExtension(view.settings().get("syntax"))
+		syntaxName = getSyntax(view)
 		if not syntaxName == "UX" or not getSetting("fuse_selection_enabled"):
 		 	return
 
@@ -301,7 +301,7 @@ class FuseEventListener(sublime_plugin.EventListener):
 		})
 
 	def on_activated_async(self, view):
-		syntaxName = getExtension(view.settings().get("syntax"))
+		syntaxName = getSyntax(view)
 		if not isSupportedSyntax(syntaxName):
 			return
 		gFuse.ensureDaemonIsRunning();
@@ -312,7 +312,7 @@ class FuseEventListener(sublime_plugin.EventListener):
 class GotoDefinitionCommand(sublime_plugin.TextCommand):
 	def run(self, edit):		
 		view = self.view
-		syntaxName = getExtension(view.settings().get("syntax"))		
+		syntaxName = getSyntax(view)
 		log().info("Requested goto definition for syntax type '%s'", syntaxName)
 		if not isSupportedSyntax(syntaxName) or len(view.sel()) == 0:
 			return
@@ -509,7 +509,7 @@ class FuseFocusDesigner(sublime_plugin.TextCommand):
 			return
 
 	def is_enabled(self):
-		return os.path.splitext(self.view.file_name())[1].lower() == ".ux"
+		return getExtension(self.view.file_name()).lower() == "ux"
 
 def error_message(message):
 	log().error(message.replace("\n", "\\n"))

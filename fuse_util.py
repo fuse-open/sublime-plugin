@@ -20,6 +20,12 @@ def setSetting(key,value):
 def isSupportedSyntax(syntaxName):	
 	return syntaxName == "Uno" or syntaxName == "UX"
 
+def getSyntax(view):
+	try:
+		return view.settings().get("syntax").split("/")[-1].split(".")[0]
+	except:
+		return ""
+
 def getExtension(path):
 	if path is None:
 		return ""
@@ -30,7 +36,7 @@ def getExtension(path):
 	if ext is None:
 		return ""
 	else:
-		return ext[0]
+		return ext[1].strip(".")
 
 def getRowCol(view, pos):
 	rowcol = view.rowcol(pos)
