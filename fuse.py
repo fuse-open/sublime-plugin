@@ -5,6 +5,7 @@ from .interop import *
 from .msg_parser import *
 from .fuse_parseutils import *
 from .fuse_util import *
+from .settings import *
 from .go_to_definition import *
 from .version import VERSION
 from .log import log
