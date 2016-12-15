@@ -1,0 +1,18 @@
+<snippet>
+	<content>
+		<![CDATA[<Page ux:Name="$1">
+		<DockPanel>
+			<StackPanel Orientation="Horizontal" Dock="Bottom" Height="44" ContentAlignment="Center" Background="#F1F1F1">
+				<Text ux:Name="$1_footerText" Value="${2:Footer Text}" Alignment="Center"/>
+			</StackPanel>
+			<Rectangle Height="1" Color="#CCCCCC" Dock="Bottom"/>
+			<StackPanel Dock="Fill">
+				$3
+			</StackPanel>
+		</DockPanel>
+	</Page>]]>
+</content>
+<tabTrigger>pageF</tabTrigger>
+<scope>text.xml</scope>
+<description>Page with docked Footer Snippet</description>
+</snippet>

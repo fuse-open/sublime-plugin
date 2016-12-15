@@ -1,0 +1,18 @@
+<snippet>
+	<content>
+		<![CDATA[<Page ux:Name="$1">
+		<DockPanel>
+			<StackPanel Orientation="Horizontal" Dock="Top" Height="44" ContentAlignment="Center" Background="#F1F1F1">
+				<Text ux:Name="$1_title" Value="${2:Page Title}" Alignment="Center"/>
+			</StackPanel>
+			<Rectangle Height="1" Color="#CCCCCC" Dock="Top"/>
+			<StackPanel Dock="Fill">
+				$3
+			</StackPanel>
+		</DockPanel>
+	</Page>]]>
+</content>
+<tabTrigger>pageH</tabTrigger>
+<scope>text.xml</scope>
+<description>Page with docked Header Snippet</description>
+</snippet>
