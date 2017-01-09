@@ -461,10 +461,10 @@ class FusePreviewCurrent(sublime_plugin.TextCommand):
 		sublime.run_command("fuse_preview", {"type": type, "paths": [self.view.file_name()]});
 
 	def is_enabled(self, type):
-		return FusePreview.is_enabled(None, type, [self.view.file_name()])
+		return self.view.file_name() != None and FusePreview.is_enabled(None, type, [self.view.file_name()])
 
 	def is_visible(self, type):
-		return FusePreview.is_visible(None, type, [self.view.file_name()])
+		return self.view.file_name() != None and FusePreview.is_visible(None, type, [self.view.file_name()])
 
 class FuseToggleSelection(sublime_plugin.WindowCommand):
 	def run(self):
