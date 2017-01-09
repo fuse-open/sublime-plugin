@@ -450,9 +450,11 @@ def contains_unoproj(path):
 	return os.path.isdir(path) and len([f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and f.lower().endswith(".unoproj")])
 
 def save_current_view():
-	view = sublime.active_window().active_view()
-	if (view.is_dirty()):
-		view.run_command("save")
+	window = sublime.active_window()
+	if window:
+		view = window.active_view()
+		if (view and view.is_dirty()):
+			view.run_command("save")
 
 class FusePreviewCurrent(sublime_plugin.TextCommand):
 	def run(self, edit, type = "Local"):
