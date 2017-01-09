@@ -1,3 +1,9 @@
+# Fuse Sublime package 1.5.0
+* Fixed a bug in goto definition implementation
+* The current focused file is saved when previewed
+* Added support for focusing the editor on a specific line in a file, 
+on request from the daemon
+
 # Fuse Sublime package 1.4.16
 * Switched to using stdout instead of Fuse Protocol events for output, to support future versions of Fuse
 
