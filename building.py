@@ -11,6 +11,7 @@ class BuildManager:
 		self.builds = {}
 		self.fuseNotFoundHandler = fuseNotFoundHandler
 		self.previousBuildCommand = None
+		self._closeOldOutputViews()
 
 	def preview(self, target, path):
 		fusePath = getFusePathFromSettings()
@@ -53,6 +54,12 @@ class BuildManager:
 		}
 		return platform.lower() in unsupported and target.lower() in unsupported[platform]
 
+	def _closeOldOutputViews(self):
+		for window in sublime.windows():
+			for view in window.views():
+				if view.settings().has("is_fuse_output_view"):
+				    view.close()
+
 
 class BuildInstance(threading.Thread):
 	def __init__(self, cmd, title, working_dir, fuseNotFoundHandler):
@@ -92,6 +99,7 @@ class OutputView:
 		self.view = window.new_file()
 		self.view.set_scratch(True)
 		self.view.set_name(title)
+		self.view.settings().set("is_fuse_output_view", True)
 
 	def append(self, line):
 		self.view.run_command("append", {"characters": line})
