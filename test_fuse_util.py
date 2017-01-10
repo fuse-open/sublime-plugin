@@ -1,5 +1,8 @@
 import unittest
-from fuse_util import *
+try:
+    from .fuse_util import *
+except:
+    from fuse_util import *
 
 class TestFuseUtil(unittest.TestCase):
 
